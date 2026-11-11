@@ -133,7 +133,9 @@ def test_the_size_figures_on_the_front_page_are_the_measured_ones():
         readme = f.read()
     with open(os.path.join(ROOT, "docs", "REFERENCE.md"), encoding="utf-8") as f:
         reference = f.read()
-    for figure in ("552 MB", "17.9 MB", "100,000 cases"):
+    for figure in ("318 MB", "17.9 MB", "1.4 GB", "100,000"):
         assert figure in readme and figure in reference, figure
-    assert "not on Windows or macOS and not in the browser" in " ".join(readme.split())
+    assert "not on Windows or macOS" in " ".join(readme.split())
+    for old in ("552 MB", "opens in about 7 seconds"):          # the figures before records were read one at a time
+        assert old not in readme and old not in reference, old
 

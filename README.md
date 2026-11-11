@@ -201,10 +201,10 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
   counts and the decision stays yours.
 - Agents that use tools or keep state have a documented pattern and a stand-in example, but the tool has
   not been tried on a production agent. Not in this version: model-based judging, statistical tests.
-- Size was measured on Linux with Python 3.13 only, not on Windows or macOS and not in the browser
-  version. There, 100,000 cases with three runs of each version take about 6 seconds and 552 MB in
-  `report`; the HTML report for them is 17.9 MB and opens in about 7 seconds; and a cell above 64 MB is
-  refused with a message. The whole file is held in memory. The
+- Size was measured on Linux with Python 3.13 and Chromium only, not on Windows or macOS. There, 100,000
+  cases with three runs of each version take about 6 seconds and 318 MB in `report`; the HTML report for
+  them is 17.9 MB and opens in under a second, fifty cards at a time; the browser version reads the same
+  file in about 6 seconds and uses about 1.4 GB; and a cell above 64 MB is refused with a message. The
   [measured limits](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#measured-limits)
   have the full table.
 

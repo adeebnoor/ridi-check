@@ -6,6 +6,14 @@ library API may change between minor versions.
 ## Unreleased
 
 ### Changed
+- Large files need much less memory. A `results.csv` is read one record at a time, repeated answers and
+  passage names are kept once, and `run` keeps only the answer and the passages of each recorded call. At
+  100,000 cases with three runs: `gate` 207 MB (was 552 MB), `report` 318 MB (was 552 MB); `run` with
+  120,000 calls 260 MB (was 469 MB). The results are unchanged.
+- The report and the browser version draw the cards fifty at a time, with "Show 50 more" and "Show all".
+  Above 2,000 cases the strip is one bar of each state's share, and the list of cases wrong in both
+  versions shows its first 500. A report for 100,000 cases opens in 0.6 s (was 7 s).
+- Browser version: a file above two million characters is checked without being copied into the text box.
 - When the retrieved passages differ in every case that lists them, or in none, the report and the printed
   summary say so in one sentence instead of giving a count per state that is the same for every state. The
   built-in demo is such a case. `summary.json` is unchanged.

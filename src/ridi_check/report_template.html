@@ -78,6 +78,9 @@ section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .cell { width: 18px; height: 18px; border-radius: 3px; border: 0; padding: 0; cursor: default; }
 button.cell { cursor: pointer; } button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 .cell.open { opacity: 0.55; }
+.bar { display: flex; height: 18px; border-radius: 4px; overflow: hidden; gap: 2px; }
+.bar .seg { background: var(--c); min-width: 3px; }
+.more { margin-top: 4px; }
 .bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 10px 12px; align-items: center; }
 .bars .track { height: 14px; background: var(--ok-bg); border-radius: 3px; position: relative; min-width: 40px; }
 .bars .fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 3px; background: var(--ok); min-width: 2px; }
@@ -117,7 +120,7 @@ details.wrongs li { overflow-wrap: anywhere; }
 .out { display: flex; flex-direction: column; gap: 8px; }
 @media (max-width: 520px) { .bars { grid-template-columns: minmax(0, 1fr); gap: 4px 0; } .bars .val { margin-bottom: 8px; } h1 { font-size: 1.35rem; } }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
-@media print { button, .filters, .out { display: none !important; } .card[hidden] { display: flex; } body { background: #fff; } }
+@media print { button, .filters, .out { display: none !important; } body { background: #fff; } }
 </style>
 </head>
 <body>
@@ -142,7 +145,8 @@ details.wrongs li { overflow-wrap: anywhere; }
 /* All analysis is done by `ridi-check report`. This script only draws what is in the data block. */
 const D = JSON.parse(document.getElementById("ridi-data").textContent);
 const M = D.meta, S = D.summary, KEY = M.mode === "key";
-const state = { lang: "en", filter: "all", judge: Object.assign({}, D.judgments) };
+const PAGE = 50, STRIP_MAX = 2000, LIST_MAX = 500;
+const state = { lang: "en", filter: "all", shown: PAGE, judge: Object.assign({}, D.judgments) };
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -214,15 +218,40 @@ function judgedText() {
   const w = cnt("worse"), b = cnt("better"), s = cnt("same_meaning");
   return t("judged", { w, b, s, u: D.stable_change_ids.length - w - b - s });
 }
+/* Cards are drawn a page at a time, so a report with thousands of cases to review opens at once. */
+function matching() {
+  const out = [];
+  D.cards.forEach((c, i) => { if (state.filter === "all" || (state.filter === "uns" ? c.state === "unstable" : isStable(c))) out.push(i); });
+  return out;
+}
 function applyFilter() {
-  let shown = 0;
-  document.querySelectorAll("#cards .card").forEach((el) => {
-    const c = D.cards[+el.dataset.i];
-    const show = state.filter === "all" || (state.filter === "uns" ? c.state === "unstable" : isStable(c));
-    el.hidden = !show; if (show) shown++;
-  });
+  const open = Array.from(document.querySelectorAll("#cards details[open][data-k]")).map((d) => d.dataset.k);
+  const all = matching(), part = all.slice(0, state.shown);
+  let h = part.map((i) => cardHTML(D.cards[i], i)).join("");
+  if (!all.length) h += '<p class="muted" id="empty">' + esc(D.cards.length ? t("noneView") : t("none")) + "</p>";
+  if (all.length > part.length) {
+    h += '<div class="row more"><span class="small muted" id="shown-of">' + esc(t("shownOf", { a: part.length, b: all.length })) + '</span><button type="button" id="more">' +
+      esc(t("showMore", { n: Math.min(PAGE, all.length - part.length) })) + '</button><button type="button" id="show-all">' + esc(t("showAll", { n: all.length })) + "</button></div>";
+  }
+  $("cards").innerHTML = h;
+  open.forEach((k) => { const d = Array.from(document.querySelectorAll("#cards details[data-k]")).find((x) => x.dataset.k === k); if (d) d.open = true; });
   document.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.filter === state.filter));
-  const empty = $("empty"); empty.hidden = shown > 0; empty.textContent = D.cards.length ? t("noneView") : t("none");
+}
+/* Above STRIP_MAX cases one cell per case is too many to draw or to read: one bar shows each state's share. */
+function stripHTML() {
+  if (D.strip.length > STRIP_MAX) {
+    const counts = D.summary.states, n = D.strip.length;
+    return '<div class="bar" role="img" aria-label="' + esc(t("stripBar", { max: STRIP_MAX, n })) + '">' + Object.keys(counts).filter((s) => counts[s]).map((s) =>
+      '<span class="seg ' + CLS[s] + '" style="flex-grow:' + counts[s] + '" title="' + esc(L().state[s] + ": " + counts[s]) + '"></span>').join("") +
+      '</div><p class="small muted">' + esc(t("stripBar", { max: STRIP_MAX, n })) + "</p>";
+  }
+  return '<div class="strip" role="list">' + D.strip.map((x) => {
+    const id = x[0], s = x[1], card = x[2];
+    const label = esc(t("caseN", { id }) + ": " + (card >= 0 ? pillText(D.cards[card]) : L().state[s]));
+    return card >= 0
+      ? '<button type="button" class="cell ' + CLS[s] + '" role="listitem" data-go="' + card + '" title="' + label + '" aria-label="' + label + '"></button>'
+      : '<span class="cell open ' + CLS[s] + '" role="listitem" title="' + label + '"></span>';
+  }).join("") + '</div><p class="small muted">' + esc(t("stripNote")) + "</p>";
 }
 function render() {
   const open = Array.from(document.querySelectorAll("details[open][data-k]")).map((d) => d.dataset.k);
@@ -241,13 +270,7 @@ function render() {
   /* ledger */
   h += "<section><h2>" + esc(t("ledger")) + '</h2><div class="ledger">';
   h += D.tiles.map((s) => tile(s, L().sub[s] || t("unconfSub"))).join("");
-  h += '</div><div class="strip" role="list">' + D.strip.map((x) => {
-    const id = x[0], s = x[1], card = x[2];
-    const label = esc(t("caseN", { id }) + ": " + (card >= 0 ? pillText(D.cards[card]) : L().state[s]));
-    return card >= 0
-      ? '<button type="button" class="cell ' + CLS[s] + '" role="listitem" data-go="' + card + '" title="' + label + '" aria-label="' + label + '"></button>'
-      : '<span class="cell open ' + CLS[s] + '" role="listitem" title="' + label + '"></span>';
-  }).join("") + '</div><p class="small muted">' + esc(t("stripNote")) + "</p>";
+  h += "</div>" + stripHTML();
   h += '<p class="small muted">' + esc(t("stableNote", { b: S.runs_per_version.current, u: S.runs_per_version.proposed })) + "</p>";
   if (!KEY && D.stable_change_ids.length) h += '<p class="small" id="judged">' + esc(judgedText()) + "</p>";
   h += "</section>";
@@ -280,11 +303,11 @@ function render() {
   /* review */
   h += "<section><h2>" + esc(t("review")) + ' <span class="num muted">' + D.cards.length + '</span></h2><div class="filters">' +
     [["all", "fAll"], ["stable", "fStable"], ["uns", "fUns"]].map((f) => '<button type="button" data-filter="' + f[0] + '">' + esc(t(f[1])) + "</button>").join("") +
-    '</div><div class="cards" id="cards">' + D.cards.map(cardHTML).join("") + '<p class="muted" id="empty" hidden></p></div>';
+    '</div><div class="cards" id="cards"></div>';
   if (KEY && D.wrong.length) {
     const flagged = D.wrong.filter((w) => w[2]).length;
     h += '<details class="wrongs panel" data-k="wrongs"><summary>' + esc(t("wrongList", { n: D.wrong.length })) + '</summary><p class="small muted" style="padding-top:8px">' + esc(t("wrongNote")) +
-      (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + "</p><ul>" + D.wrong.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
+      (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + (D.wrong.length > LIST_MAX ? " " + esc(t("wrongMore", { a: LIST_MAX, n: D.wrong.length })) : "") + "</p><ul>" + D.wrong.slice(0, LIST_MAX).map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
       (w[2] ? ' <span class="tag">' + esc(L().pill[w[2] === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
   }
   if (!KEY && D.stable_change_ids.length) {
@@ -304,7 +327,9 @@ function judgmentsCSV() {
 $("lang").addEventListener("click", () => { state.lang = state.lang === "ar" ? "en" : "ar"; store.set("ridi-lang", state.lang); render(); });
 $("report").addEventListener("click", (ev) => {
   const b = ev.target.closest("button"); if (!b) return;
-  if (b.dataset.filter) { state.filter = b.dataset.filter; applyFilter(); }
+  if (b.dataset.filter) { state.filter = b.dataset.filter; state.shown = PAGE; applyFilter(); }
+  else if (b.id === "more") { state.shown += PAGE; applyFilter(); }
+  else if (b.id === "show-all") { state.shown = Infinity; applyFilter(); }
   else if (b.dataset.judge) {
     /* Updated in place, so open passage lists and the scroll position stay as they are. */
     const id = D.cards[+b.dataset.i].id;
@@ -313,7 +338,10 @@ $("report").addEventListener("click", (ev) => {
     b.parentElement.querySelectorAll("[data-judge]").forEach((x) => x.setAttribute("aria-pressed", state.judge[id] === x.dataset.judge));
     const line = $("judged"); if (line) line.textContent = judgedText();
   }
-  else if (b.dataset.go) { if (state.filter !== "all") { state.filter = "all"; applyFilter(); } const el = $("c-" + b.dataset.go); if (el) el.scrollIntoView({ block: "start" }); }
+  else if (b.dataset.go) {   /* the card may be on a page that is not drawn yet */
+    if (state.filter !== "all" || +b.dataset.go >= state.shown) { state.filter = "all"; state.shown = Math.max(state.shown, +b.dataset.go + 1); applyFilter(); }
+    const el = $("c-" + b.dataset.go); if (el) el.scrollIntoView({ block: "start" });
+  }
   else if (b.id === "export") {
     const txt = judgmentsCSV(), msg = $("export-msg"), out = $("csv-out");
     try {

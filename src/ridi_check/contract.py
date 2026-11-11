@@ -9,8 +9,10 @@ mode is rejected instead of being counted as a disagreement.
 from __future__ import annotations
 
 import csv
-import io
 import re
+import sys
+from itertools import chain
+from typing import Iterator
 from dataclasses import dataclass, field
 
 from .util import read_text
@@ -20,6 +22,9 @@ NOKEY = "nokey"
 
 CONTEXT_SEPARATOR = " | "
 RUN_COLUMN = re.compile(r"^(baseline|updated)(?:_repeat([0-9]*))?_(answer|correct)$")
+
+LINE = re.compile(r"[^\r\n]*(?:\r\n?|\n)|[^\r\n]+")
+FIRST_LINE_END = re.compile("[\n\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]")
 
 csv.field_size_limit(64 * 1024 * 1024)
 
@@ -36,13 +41,13 @@ class ContractError(ValueError):
     """The file does not follow the results.csv contract."""
 
 
-@dataclass
+@dataclass(slots=True)     # a large file makes hundreds of thousands of these
 class Run:
     answer: str = ""
     correct: int | None = None
 
 
-@dataclass
+@dataclass(slots=True)
 class Case:
     case_id: str
     row: int
@@ -58,7 +63,9 @@ class Case:
 
 def sniff_delimiter(text: str) -> str:
     """Comma, unless the header line has none and uses tabs (cells pasted from a spreadsheet) or semicolons."""
-    header = text.lstrip("\ufeff").splitlines()[0] if text.strip() else ""
+    text = text.lstrip("\ufeff")
+    end = FIRST_LINE_END.search(text)       # the first line as str.splitlines gives it, without splitting the whole text
+    header = "" if not text or text.isspace() else (text[:end.start()] if end else text)
     if "," not in header:
         if "\t" in header:
             return "\t"
@@ -67,12 +74,19 @@ def sniff_delimiter(text: str) -> str:
     return ","
 
 
-def read_records(text: str) -> list[tuple[int, list[str]]]:
-    """(row number, cells) for every non-blank record. The header is row 1, as a spreadsheet shows it."""
+def iter_records(text: str) -> Iterator[tuple[int, list[str]]]:
+    """(row number, cells) for every non-blank record, one at a time. The header is row 1, as a spreadsheet shows it.
+
+    The lines go to the csv reader exactly as io.StringIO(text, newline="") would give them (ends kept, split
+    at \\n, \\r and \\r\\n only) without the second copy of the whole text that it makes.
+    """
     text = text.lstrip("\ufeff")
-    reader = csv.reader(io.StringIO(text, newline=""), delimiter=sniff_delimiter(text), skipinitialspace=True)
+    lines = (m.group() for m in LINE.finditer(text))
+    reader = csv.reader(lines, delimiter=sniff_delimiter(text), skipinitialspace=True)
     try:
-        return [(i + 1, [_unguard(cell) for cell in r]) for i, r in enumerate(reader) if any(cell.strip() for cell in r)]
+        for i, r in enumerate(reader):
+            if any(cell.strip() for cell in r):
+                yield i + 1, [_unguard(cell) for cell in r]
     except csv.Error as exc:
         if "field limit" in str(exc):
             raise ContractError(
@@ -80,6 +94,11 @@ def read_records(text: str) -> list[tuple[int, list[str]]]:
                 "this tool reads in a cell. A quotation mark that is never closed has the same effect."
             ) from exc
         raise ContractError(f"Near line {reader.line_num}: the file could not be read as CSV ({exc}).") from exc
+
+
+def read_records(text: str) -> list[tuple[int, list[str]]]:
+    """Every record of `iter_records`, for the small files (questions, judgments) that are read whole."""
+    return list(iter_records(text))
 
 
 def run_column(side: str, run: int, kind: str) -> str:
@@ -92,7 +111,8 @@ def run_column(side: str, run: int, kind: str) -> str:
 
 
 def split_context(cell: str) -> list[str]:
-    return [part.strip() for part in cell.split("|") if part.strip()]
+    # The same passage names come back case after case: one copy of each is kept.
+    return [sys.intern(part.strip()) for part in cell.split("|") if part.strip()]
 
 
 def _run_columns(header: list[str]) -> dict[tuple[str, str], dict[int, int]]:
@@ -122,11 +142,13 @@ def parse_results(text: str, mode: str = "auto") -> tuple[list[Case], str]:
     """Parse results.csv text. Returns (cases, mode) with mode 'key' or 'nokey'."""
     if mode not in ("auto", KEY, NOKEY):
         raise ValueError(f"unknown mode {mode!r}")
-    records = read_records(text)
-    if len(records) < 2:
+    # One record at a time: the rows of a large file are not all held while its cases are built.
+    records = iter_records(text)
+    first, second = next(records, None), next(records, None)
+    if first is None or second is None:
         raise ContractError("No rows found in the file.")
 
-    header = [h.strip().lower() for h in records[0][1]]
+    header = [h.strip().lower() for h in first[1]]
     seen_columns: set[str] = set()
     for name in header:
         if name and name in seen_columns:
@@ -153,7 +175,7 @@ def parse_results(text: str, mode: str = "auto") -> tuple[list[Case], str]:
 
     cases: list[Case] = []
     first_row_of: dict[str, int] = {}
-    for row, record in records[1:]:
+    for row, record in chain([second], records):
 
         def get(name: str | None = None, position: int | None = None) -> str:
             i = col.get(name, -1) if position is None else position
@@ -186,6 +208,7 @@ def parse_results(text: str, mode: str = "auto") -> tuple[list[Case], str]:
             updated_context=split_context(get("updated_context")),
             run_errors=get("run_errors"),
         )
+        same_text: dict[str, str] = {}
         for side in ("baseline", "updated"):
             answers = runs.get((side, "answer"), {})
             corrects = runs.get((side, "correct"), {})
@@ -193,6 +216,7 @@ def parse_results(text: str, mode: str = "auto") -> tuple[list[Case], str]:
             out: list[Run] = []
             for index in sorted(set(answers) | (set(corrects) if key else set())):
                 answer = get(position=answers[index]) if index in answers else ""
+                answer = same_text.setdefault(answer, answer)     # runs that repeat an answer share one copy of it
                 correct = scored.get(index) if key else None
                 missing = correct is None if key else answer == ""
                 if index == 0:

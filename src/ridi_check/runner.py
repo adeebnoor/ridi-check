@@ -170,10 +170,16 @@ def load_raw(path: str) -> tuple[dict[tuple, dict], dict[tuple, dict], int]:
                 unreadable += 1  # e.g. a line cut short by a kill; left in place, not counted
                 continue
             if status == "ok":
-                ok[key] = record
+                ok[key] = _kept(record)
             else:
                 failed[key] = record
     return ok, failed, unreadable
+
+
+def _kept(record: dict) -> dict:
+    """What a successful call is remembered by. The whole record is in raw_outputs.jsonl; a long run
+    would otherwise hold every timestamp and field of every call in memory."""
+    return {"answer": record.get("answer"), "context": record.get("context")}
 
 
 class RawWriter:
@@ -476,7 +482,7 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
                     continue
                 key = (q.case_id, v, kk)
                 if record["status"] == "ok":
-                    ok[key] = record
+                    ok[key] = _kept(record)
                     failed.pop(key, None)
                     outcome.calls_ok += 1
                     streak = 0
@@ -506,7 +512,9 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
         writer.close()
 
     outcome.interrupted = interrupted
-    recorded, _, _ = load_raw(raw_path)
+    # Every successful call is in `ok`, except those that finished while an interrupt was being handled:
+    # only then is the file read again.
+    recorded = load_raw(raw_path)[0] if interrupted else ok
     outcome.recorded_ok = sum(1 for q, v, k in planned if (q.case_id, v, k) in recorded)
     invocation.update({
         "ended_at": now_iso(),

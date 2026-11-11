@@ -252,22 +252,24 @@ always holds the answer as it was given. A null character in an answer is droppe
 
 ## Measured limits
 
-Measured on one machine: a 4-core cloud Linux container (Intel Xeon, 2.1 GHz), Python 3.13, ridi-check
-at the commit that added this section. Read the numbers as an order of magnitude, not as a promise.
-Nothing was measured above 100,000 cases.
+Measured on one machine: a 4-core cloud Linux container (Intel Xeon, 2.1 GHz), Python 3.13 and Chromium,
+at the commit that last changed this section. Read the numbers as an order of magnitude, not as a promise.
+Nothing was measured above 100,000 cases, and nothing on Windows or macOS.
 
 **`report` and `gate`**, on a synthetic `results.csv` with three runs of each version, answers, correctness
 and passages (about 670 bytes a case):
 
 | Cases | File | Command | Time | Peak memory |
 |---|---|---|---|---|
-| 10,000 | 6.6 MB | `report` | 0.5 s | 75 MB |
-| 100,000 | 66.7 MB | `report` | 5.9 s | 552 MB |
-| 100,000 | 66.7 MB | `gate` | 3.8 s | 552 MB |
-| 100,000 | 66.7 MB | `report --mode nokey` | 6.5 s | 552 MB |
-| 100,000 | 66.7 MB | `report --mode nokey --similarity 0.9` | 7.4 s | 552 MB |
+| 10,000 | 6.6 MB | `report` | 0.6 s | 54 MB |
+| 100,000 | 66.7 MB | `report` | 6.4 s | 318 MB |
+| 100,000 | 66.7 MB | `gate` | 4.2 s | 207 MB |
+| 100,000 | 66.7 MB | `report --mode nokey` | 6.2 s | 281 MB |
+| 100,000 | 66.7 MB | `report --mode nokey --similarity 0.9` | 6.5 s | 275 MB |
 
-The whole file is held in memory: allow about eight times its size.
+The cases are held in memory: allow about five times the size of the file for `report` and three times for
+`gate`. Answers that repeat from run to run, and passage names that repeat from case to case, are kept once,
+so a file with little repetition needs more.
 
 **The files `report` writes** at 100,000 cases, of which 14,769 were not "correct in both":
 `report.html` 17.9 MB, `review_cases.csv` 20.7 MB, `summary.json` 0.6 MB. At 10,000 cases: 1.8 MB, 2.0 MB
@@ -275,18 +277,21 @@ and 0.06 MB.
 
 **Opening `report.html`** in Chromium on the same machine:
 
-| Cases | Cards on the page | Opens in | A filter click | Switching language |
+| Cases | Cards to review | Opens in | A filter click | Switching language |
 |---|---|---|---|---|
-| 10,000 | 1,447 | 0.9 s | 0.2 s | 0.7 s |
-| 100,000 | 14,769 | 7.0 s | 1.8 s | 8.0 s |
+| 10,000 | 1,447 | 0.2 s | 0.06 s | 0.13 s |
+| 100,000 | 14,769 | 0.6 s | 0.04 s | 0.12 s |
 
-The page draws one card for every case that is not "same" or "correct in both", all at once. It stays
-usable at 100,000 cases and is slow to respond; with tens of thousands of cases to review, `summary.json`
-and `review_cases.csv` are the better files to work from. The browser version was not measured at this
-size.
+The page draws the cards fifty at a time, with "Show 50 more" and "Show all", and a filter starts again at
+the first fifty. Above 2,000 cases the one-cell-per-case strip is drawn as one bar that shows each state's
+share, and the list of cases wrong in both versions shows its first 500. "Show all" draws every card at
+once and is slow when there are thousands. Printing the page prints the cards that are drawn.
+
+**The browser version** in Chromium on the same machine: a 10,000-case file is read and shown in 0.8 s; the
+100,000-case file in 6 s, with about 1.4 GB of memory in use by the page. A file above two million
+characters is checked without being copied into the text box and is not kept across a refresh.
 
 **`run`**: 20,000 questions, two versions, three runs each, calling a Python function that answers at
-once, so the time is the tool's own: 120,000 calls recorded and reported in 11.4 s with a peak of 469 MB.
-`raw_outputs.jsonl` was 34.9 MB. Running the same command again, with nothing left to call, took 2.5 s.
-With a real assistant the calls themselves take nearly all of the time.
-
+once, so the time is the tool's own: 120,000 calls recorded and reported in 9.4 s with a peak of 260 MB.
+`raw_outputs.jsonl` was 34.9 MB. Running the same command again, with nothing left to call, took 1.3 s
+and 138 MB. With a real assistant the calls themselves take nearly all of the time.

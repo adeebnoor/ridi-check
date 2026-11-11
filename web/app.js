@@ -9,6 +9,7 @@
       own: "Check your own results", choose: "Choose a CSV file", paste: "Or paste here: CSV text, or cells copied from a spreadsheet",
       run: "Check", privacy: "Your file is read in this browser tab only. Nothing is uploaded or stored on a server. What you paste stays until you close the tab, and your judgments are kept in this browser so that a refresh does not lose them.",
       forget: "Clear my judgments",
+      tooBig: "This file is too large to show here ({n} characters). It was read and checked all the same.",
       format: "Columns", colsNote: "One row per question. The first row holds the column names.",
       cols: [
         "<code>case_id</code> required, unique.",
@@ -60,6 +61,7 @@
       own: "افحص نتائجك", choose: "اختر ملف CSV", paste: "أو الصق هنا: نص CSV، أو خلايا منسوخة من جدول",
       run: "افحص", privacy: "ملفك يُقرأ داخل هذا التبويب فقط. لا يُرفع شيء ولا يُحفظ على خادم. ما تلصقه يبقى حتى تغلق التبويب، وأحكامك تُحفظ في هذا المتصفح حتى لا تضيع عند تحديث الصفحة.",
       forget: "امسح أحكامي",
+      tooBig: "هذا الملف أكبر من أن يُعرض هنا ({n} حرفاً). قُرئ وفُحص على أي حال.",
       format: "الأعمدة", colsNote: "صف واحد لكل سؤال، والصف الأول فيه أسماء الأعمدة.",
       cols: [
         "<code>case_id</code> مطلوب وفريد.",
@@ -110,8 +112,9 @@
     medicines: JSON.parse(document.getElementById("ridi-sample-medicines").textContent) };
   const SAMPLE = SAMPLES.library;
   const JUDGMENTS = ["worse", "better", "same_meaning", "unsure"];
+  const PAGE = 50, STRIP_MAX = 2000, LIST_MAX = 500;
 
-  const state = { lang: "en", source: "sample-key", set: "library", text: SAMPLE, modePref: "auto", sim: 1, filter: "all", judge: {}, error: null, D: null, A: null, mode: "key" };
+  const state = { lang: "en", source: "sample-key", set: "library", text: SAMPLE, modePref: "auto", sim: 1, filter: "all", shown: 50, judge: {}, error: null, D: null, A: null, mode: "key" };
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -139,7 +142,9 @@
   const pct = (k, n) => (n ? (100 * k / n) : 0);
   const fmt = (x) => (Math.round(x * 10) / 10).toFixed(1).replace(/\.0$/, "");
   const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
-  const judgeKey = () => "ridi-judge-" + hash(state.text);
+  /* The key is worked out once for each text: hashing a large file again on every click would be slow. */
+  let keyFor = null, keyIs = "";
+  const judgeKey = () => { if (keyFor !== state.text) { keyFor = state.text; keyIs = "ridi-judge-" + hash(state.text); } return keyIs; };
 
   function compute() {
     state.error = null;
@@ -157,7 +162,7 @@
   }
   function load(source, text) {
     const before = { source: state.source, text: state.text };
-    state.source = source; state.text = text; state.filter = "all";
+    state.source = source; state.text = text; state.filter = "all"; state.shown = PAGE;
     compute();
     if (state.error && state.D) { /* keep showing the last good report under the message */
       state.source = before.source; state.text = before.text; const err = state.error, code = state.errorCode;
@@ -220,27 +225,47 @@
     const w = cnt("worse"), b = cnt("better"), s = cnt("same_meaning");
     return t("judged", { w, b, s, u: ids.length - w - b - s });
   }
+  /* Cards are drawn a page at a time, so a report with thousands of cases to review opens at once. */
+  function matching() {
+    const out = [];
+    state.D.cards.forEach((c, i) => { if (state.filter === "all" || (state.filter === "uns" ? c.state === "unstable" : isStable(c))) out.push(i); });
+    return out;
+  }
   function applyFilter() {
-    let shown = 0;
-    document.querySelectorAll("#cards .card").forEach((el) => {
-      const c = state.D.cards[+el.dataset.i];
-      const show = state.filter === "all" || (state.filter === "uns" ? c.state === "unstable" : isStable(c));
-      el.hidden = !show; if (show) shown++;
-    });
+    const open = Array.from(document.querySelectorAll("#cards details[open][data-k]")).map((d) => d.dataset.k);
+    const all = matching(), part = all.slice(0, state.shown);
+    let h = part.map((i) => cardHTML(state.D.cards[i], i)).join("");
+    if (!all.length) h += '<p class="muted" id="empty">' + esc(state.D.cards.length ? t("noneView") : t("none")) + "</p>";
+    if (all.length > part.length) {
+      h += '<div class="row more"><span class="small muted" id="shown-of">' + esc(t("shownOf", { a: part.length, b: all.length })) + '</span><button type="button" id="more">' +
+        esc(t("showMore", { n: Math.min(PAGE, all.length - part.length) })) + '</button><button type="button" id="show-all">' + esc(t("showAll", { n: all.length })) + "</button></div>";
+    }
+    $("cards").innerHTML = h;
+    open.forEach((k) => { const d = Array.from(document.querySelectorAll("#cards details[data-k]")).find((x) => x.dataset.k === k); if (d) d.open = true; });
     document.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.filter === state.filter));
-    const empty = $("empty"); empty.hidden = shown > 0; empty.textContent = state.D.cards.length ? t("noneView") : t("none");
+  }
+  /* Above STRIP_MAX cases one cell per case is too many to draw or to read: one bar shows each state's share. */
+  function stripHTML() {
+    const D = state.D;
+    if (D.strip.length > STRIP_MAX) {
+      const counts = D.summary.states, n = D.strip.length;
+      return '<div class="bar" role="img" aria-label="' + esc(t("stripBar", { max: STRIP_MAX, n })) + '">' + Object.keys(counts).filter((s) => counts[s]).map((s) =>
+        '<span class="seg ' + state.D.classes[s] + '" style="flex-grow:' + counts[s] + '" title="' + esc(L().state[s] + ": " + counts[s]) + '"></span>').join("") +
+        '</div><p class="small muted">' + esc(t("stripBar", { max: STRIP_MAX, n })) + "</p>";
+    }
+    return '<div class="strip" role="list">' + D.strip.map((x) => {
+      const id = x[0], s = x[1], card = x[2];
+      const label = esc(t("caseN", { id }) + ": " + (card >= 0 ? pillText(D.cards[card]) : L().state[s]));
+      return card >= 0
+        ? '<button type="button" class="cell ' + state.D.classes[s] + '" role="listitem" data-go="' + card + '" title="' + label + '" aria-label="' + label + '"></button>'
+        : '<span class="cell open ' + state.D.classes[s] + '" role="listitem" title="' + label + '"></span>';
+    }).join("") + '</div><p class="small muted">' + esc(t("stripNote")) + "</p>";
   }
   function reportHTML() {
     const D = state.D, S = D.summary, KEYM = state.mode === "key";
     let h = "";
     h += "<section><h2>" + esc(t("ledger")) + '</h2><div class="ledger">' + D.tiles.map((s) => tile(s, L().sub[s] || t("unconfSub"))).join("");
-    h += '</div><div class="strip" role="list">' + D.strip.map((x) => {
-      const id = x[0], s = x[1], card = x[2];
-      const label = esc(t("caseN", { id }) + ": " + (card >= 0 ? pillText(D.cards[card]) : L().state[s]));
-      return card >= 0
-        ? '<button type="button" class="cell ' + D.classes[s] + '" role="listitem" data-go="' + card + '" title="' + label + '" aria-label="' + label + '"></button>'
-        : '<span class="cell open ' + D.classes[s] + '" role="listitem" title="' + label + '"></span>';
-    }).join("") + '</div><p class="small muted">' + esc(t("stripNote")) + "</p>";
+    h += "</div>" + stripHTML();
     h += '<p class="small muted">' + esc(t("stableNote", { b: S.runs_per_version.current, u: S.runs_per_version.proposed })) + "</p>";
     if (!KEYM && D.stable_change_ids.length) h += '<p class="small" id="judged">' + esc(judgedText()) + "</p>";
     h += "</section>";
@@ -274,11 +299,11 @@
 
     h += "<section><h2>" + esc(t("review")) + ' <span class="num muted">' + D.cards.length + '</span></h2><div class="filters">' +
       [["all", "fAll"], ["stable", "fStable"], ["uns", "fUns"]].map((f) => '<button type="button" data-filter="' + f[0] + '">' + esc(t(f[1])) + "</button>").join("") +
-      '</div><div class="cards" id="cards">' + D.cards.map(cardHTML).join("") + '<p class="muted" id="empty" hidden></p></div>';
+      '</div><div class="cards" id="cards"></div>';
     if (KEYM && D.wrong.length) {
       const flagged = D.wrong.filter((w) => w[2]).length;
       h += '<details class="wrongs panel" data-k="wrongs"><summary>' + esc(t("wrongList", { n: D.wrong.length })) + '</summary><p class="small muted" style="padding-top:8px">' + esc(t("wrongNote")) +
-        (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + "</p><ul>" + D.wrong.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
+        (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + (D.wrong.length > LIST_MAX ? " " + esc(t("wrongMore", { a: LIST_MAX, n: D.wrong.length })) : "") + "</p><ul>" + D.wrong.slice(0, LIST_MAX).map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
         (w[2] ? ' <span class="tag">' + esc(L().pill[w[2] === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
     }
     h += '<div class="out"><div class="row">' + (!KEYM && D.stable_change_ids.length ? '<button type="button" id="copy-j">' + esc(u("copyJ")) + '</button><button type="button" id="forget">' + esc(u("forget")) + "</button>" : "") +
@@ -346,7 +371,10 @@
       const enc = bytes[0] === 0xFF && bytes[1] === 0xFE ? "utf-16le" : bytes[0] === 0xFE && bytes[1] === 0xFF ? "utf-16be" : "utf-8";
       try { text = new TextDecoder(enc, { fatal: true }).decode(bytes); } catch (e) { text = null; }
       if (text === null || text.indexOf("\0") >= 0) { state.errorCode = { code: "encoding", info: {} }; render(); return; }
-      $("paste").value = text; state.errorCode = null; load("file", text);
+      /* A large file is checked without being copied into the text box, which would double what the page holds. */
+      $("paste").value = text.length <= INPUT_LIMIT ? text : "";
+      $("paste").placeholder = text.length <= INPUT_LIMIT ? "" : u("tooBig", { n: text.length.toLocaleString("en") });
+      state.errorCode = null; load("file", text);
     };
     rd.onerror = () => { state.errorCode = { code: "read", info: {} }; render(); };
     rd.readAsArrayBuffer(f);
@@ -355,7 +383,9 @@
   $("sim").addEventListener("change", (ev) => { state.sim = parseFloat(ev.target.value); state.errorCode = null; load(state.source, state.text); });
   $("report").addEventListener("click", (ev) => {
     const b = ev.target.closest("button"); if (!b) return;
-    if (b.dataset.filter) { state.filter = b.dataset.filter; applyFilter(); }
+    if (b.dataset.filter) { state.filter = b.dataset.filter; state.shown = PAGE; applyFilter(); }
+    else if (b.id === "more") { state.shown += PAGE; applyFilter(); }
+    else if (b.id === "show-all") { state.shown = Infinity; applyFilter(); }
     else if (b.dataset.judge) {
       const id = state.D.cards[+b.dataset.i].id;
       if (state.judge[id] === b.dataset.judge) delete state.judge[id]; else state.judge[id] = b.dataset.judge;
@@ -363,7 +393,10 @@
       b.parentElement.querySelectorAll("[data-judge]").forEach((x) => x.setAttribute("aria-pressed", state.judge[id] === x.dataset.judge));
       const line = $("judged"); if (line) line.textContent = judgedText();
     }
-    else if (b.dataset.go) { if (state.filter !== "all") { state.filter = "all"; applyFilter(); } const el = $("c-" + b.dataset.go); if (el) el.scrollIntoView({ block: "start" }); }
+    else if (b.dataset.go) {   /* the card may be on a page that is not drawn yet */
+      if (state.filter !== "all" || +b.dataset.go >= state.shown) { state.filter = "all"; state.shown = Math.max(state.shown, +b.dataset.go + 1); applyFilter(); }
+      const el = $("c-" + b.dataset.go); if (el) el.scrollIntoView({ block: "start" });
+    }
     else if (b.id === "copy-j") {
       const ids = state.D.stable_change_ids.filter((id) => state.judge[id]);
       copyOut(RidiCore.toCsv(["case_id", "judgment"], ids.map((id) => [id, state.judge[id]])), b);

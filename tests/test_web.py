@@ -142,7 +142,7 @@ def random_job(rng):
     text = to_csv(header, rows)
     style = rng.random()
     if style < 0.15:
-        text = "﻿" + text.replace("\n", "\r\n")
+        text = "\ufeff" + text.replace("\n", "\r\n")
     elif style < 0.25:
         text = text.replace("\n", "\n\n", 3)                                # blank lines move the row numbers
     elif style < 0.35 and not any(ch in cell for r in [header, *rows] for cell in r for ch in ',\t"\n'):
@@ -300,7 +300,7 @@ def test_the_second_example_has_one_name_wherever_it_is_shown():
         assert part not in data, part
 
 
-PAGE_RUNNER = r"""
+PAGE_STUB = r"""
 // Runs a page's own script against a stand-in for the browser: enough to show a name that is not defined
 // or a string that is missing, in English and in Arabic. It does not lay anything out.
 const fs = require('fs'), vm = require('vm');
@@ -324,7 +324,9 @@ const window = { addEventListener() {}, matchMedia: () => ({ matches: false, add
 const sandbox = { document, window, localStorage: storage, sessionStorage: storage, navigator: { language: 'en', clipboard: null }, console,
   setTimeout() {}, FileReader: function () {}, TextDecoder, URL, Uint8Array };
 vm.createContext(sandbox);
-for (const s of scripts) vm.runInContext(s, sandbox);                      // first drawing, in English
+"""
+
+PAGE_RUNNER = PAGE_STUB + r"""for (const s of scripts) vm.runInContext(s, sandbox);                      // first drawing, in English
 const first = elements.lang.textContent;
 listeners['lang:click']({});                                              // switch to Arabic and draw again
 const second = elements.lang.textContent;
@@ -344,4 +346,50 @@ def test_both_pages_run_their_own_script_in_english_and_in_arabic(tmp_path):
         assert done.returncode == 0, f"{page}:\n{done.stderr[-1500:]}"
         seen = json.loads(done.stdout)
         assert seen["first"] == "العربية" and seen["second"] == "English" and seen["drawn"], (page, seen)
+
+
+PAGING_RUNNER = PAGE_STUB + r"""
+for (const s of scripts) vm.runInContext(s, sandbox);
+const cards = () => (elements.cards.innerHTML.match(/<article class="card /g) || []).length;
+const click = (button) => listeners['report:click']({ target: { closest: () => button } });
+const out = { first: cards(), more: /id="more"/.test(elements.cards.innerHTML), shownOf: (elements.cards.innerHTML.match(/id="shown-of">([^<]*)</) || [])[1],
+  bar: /class="bar"/.test(elements.report.innerHTML), cells: (elements.report.innerHTML.match(/class="cell /g) || []).length };
+click({ id: 'more', dataset: {} }); out.afterMore = cards();
+click({ id: '', dataset: { filter: 'uns' } }); out.unstableOnly = cards();
+click({ id: 'show-all', dataset: {} }); out.unstableAll = cards();
+click({ id: '', dataset: { filter: 'all' } }); out.backToAll = cards();
+click({ id: '', dataset: { go: '170' } }); out.afterGoingToCard171 = cards();
+click({ id: 'show-all', dataset: {} }); out.all = cards();
+console.log(JSON.stringify(out));
+"""
+
+
+def _many_cases(path, n):
+    """n cases, two runs each: every tenth a stable regression, every tenth unstable, the rest correct in both."""
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write("case_id,baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n")
+        for i in range(n):
+            f.write(f"c{i},1,1,{'0,0' if i % 10 == 0 else '1,0' if i % 10 == 1 else '1,1'}\n")
+
+
+@needs_node
+@pytest.mark.parametrize("n, bar", [(1500, False), (2500, True)], ids=["1,500 cases", "2,500 cases"])
+def test_cards_are_drawn_a_page_at_a_time_and_a_long_strip_becomes_one_bar(tmp_path, n, bar):
+    from ridi_check.cli import main
+    results = tmp_path / "results.csv"
+    _many_cases(results, n)
+    assert main(["report", str(results)]) == 0
+    (tmp_path / "paging.js").write_text(PAGING_RUNNER, encoding="utf-8")
+    done = subprocess.run([NODE, str(tmp_path / "paging.js"), str(tmp_path / "report.html")], capture_output=True, text=True, encoding="utf-8")
+    assert done.returncode == 0, done.stderr[-1500:]
+    seen = json.loads(done.stdout)
+    to_review = n // 5                                    # a tenth regressed, a tenth unstable
+    assert seen["first"] == 50 and seen["more"] and seen["shownOf"] == f"Showing 50 of {to_review}."
+    assert seen["afterMore"] == 100
+    assert seen["unstableOnly"] == 50 and seen["unstableAll"] == n // 10      # a filter starts again at one page
+    assert seen["backToAll"] == 50
+    assert seen["afterGoingToCard171"] == 171            # a strip cell opens a card that was not drawn yet
+    assert seen["all"] == to_review
+    # up to 2,000 cases every case has its cell; above that the strip is one bar
+    assert seen["bar"] is bar and seen["cells"] == (0 if bar else n)
 

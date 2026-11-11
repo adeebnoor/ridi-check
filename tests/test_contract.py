@@ -116,3 +116,51 @@ def test_written_csv_reads_back_whatever_the_cells_hold():
 def test_correctness_only_file_is_answer_key_mode():
     cases, mode = parse_results("case_id,baseline_correct,updated_correct\n1,1,0\n")
     assert mode == "key" and cases[0].baseline[0].correct == 1 and cases[0].updated[0].correct == 0
+
+
+def test_the_reader_splits_lines_and_finds_the_header_as_the_standard_library_does():
+    """The reader no longer copies the whole text into io.StringIO or splits all of it to find the header.
+    Both shortcuts must give exactly what the plain way gives, on text that tries to tell them apart."""
+    import csv
+    import io
+    import random
+
+    from ridi_check.contract import _unguard, iter_records, read_records, sniff_delimiter
+
+    def plain_header(text):
+        text = text.lstrip("\ufeff")
+        return text.splitlines()[0] if text.strip() else ""
+
+    def plain_delimiter(text):
+        header = plain_header(text)
+        return "\t" if "," not in header and "\t" in header else ";" if "," not in header and ";" in header else ","
+
+    def plain(text):
+        text = text.lstrip("\ufeff")
+        reader = csv.reader(io.StringIO(text, newline=""), delimiter=plain_delimiter(text), skipinitialspace=True)
+        return [(i + 1, [_unguard(c) for c in r]) for i, r in enumerate(reader) if any(c.strip() for c in r)]
+
+    rng = random.Random(20261111)
+    alphabet = ["a", "b", ",", ",", '"', '"', "\n", "\n", "\r", "\r\n", "\t", ";", " ", " ", "\x0c", "\x85", "\x1c", "\x0b",
+                "ع", "😀", "\ufeff", '""', "'=", "-"]
+    for _ in range(4000):
+        text = "".join(rng.choice(alphabet) for _ in range(rng.randint(0, 40)))
+        assert sniff_delimiter(text) == plain_delimiter(text), repr(text)
+        assert read_records(text) == plain(text) == list(iter_records(text)), repr(text)
+
+
+def test_cases_are_read_one_record_at_a_time_and_kept_small():
+    from ridi_check.contract import Case, Run, iter_records
+
+    records = iter_records("case_id,baseline_correct,updated_correct\na,1,0\nb,1,x\n")
+    assert next(records) == (1, ["case_id", "baseline_correct", "updated_correct"])     # nothing read ahead
+    assert next(records) == (2, ["a", "1", "0"])
+    # no per-object dictionary: a large file makes hundreds of thousands of these
+    assert not hasattr(Run(), "__dict__") and not hasattr(Case("a", 2), "__dict__")
+    # runs that repeat an answer, and cases that name the same passage, share one copy of the text
+    text = ("case_id,baseline_answer,baseline_repeat_answer,updated_answer,baseline_context\n"
+            "a,the same long answer,the same long answer,another,doc 1 | doc 2\nb,x,x,y,doc 2\n")
+    (a, b), _ = parse_results(text)
+    assert a.baseline[0].answer is a.baseline[1].answer and a.baseline_context[1] is b.baseline_context[0]
+    # a problem in a later row is still reported with its row
+    rejects("case_id,baseline_correct,updated_correct\na,1,0\nb,1,x\n", "Row 3 (case b)", "must be 0 or 1")

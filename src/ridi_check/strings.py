@@ -42,6 +42,8 @@ COMMON = {
                       "Runs per version in this file: current {b}, proposed {u}. "
                       "Two runs is a thin estimate of re-run variation; more runs make the stable label firmer.",
         "stripNote": "Each cell is one case, in file order. Select a coloured cell to open it.",
+        "stripBar": "With more than {max} cases the strip is one bar: each colour's share of the {n} cases.",
+        "shownOf": "Showing {a} of {b}.", "showMore": "Show {n} more", "showAll": "Show all {n}",
         "rates": "Change between versions against re-run variation",
         "barMain": "Current vs proposed", "barB": "Current, run twice", "barU": "Proposed, run twice",
         "of": "{k} of {n}",
@@ -103,6 +105,8 @@ COMMON = {
                       "عدد التشغيلات لكل نسخة في هذا الملف: الحالية {b}، المقترحة {u}. "
                       "تشغيلان تقدير ضعيف لتقلب إعادة التشغيل، وتشغيلات أكثر تجعل وصف «ثابت» أوثق.",
         "stripNote": "كل خانة حالة واحدة، بترتيب الملف. اختر خانة ملوّنة لفتحها.",
+        "stripBar": "مع أكثر من {max} حالة يُرسم الشريط خطاً واحداً: نصيب كل لون من الحالات وعددها {n}.",
+        "shownOf": "المعروض {a} من {b}.", "showMore": "اعرض {n} أخرى", "showAll": "اعرض الكل ({n})",
         "rates": "التغيّر بين النسختين مقابل تقلب إعادة التشغيل",
         "barMain": "الحالية مقابل المقترحة", "barB": "الحالية، تشغيلان", "barU": "المقترحة، تشغيلان",
         "of": "{k} من {n}",
@@ -173,6 +177,7 @@ KEY_MODE = {
         "scored1": "scored correct", "scored0": "scored wrong",
         "wrongList": "Wrong in both versions ({n})",
         "wrongNote": "This check looks for change. These answers did not change and are still wrong.",
+        "wrongMore": "The first {a} are listed here; all {n} are in review_cases.csv.",
     },
     "ar": {
         "modeNote": "وضع مفتاح الإجابات: تُعدّ النتيجتان متطابقتين إذا كانتا صحيحتين معًا أو خاطئتين معًا.",
@@ -209,6 +214,7 @@ KEY_MODE = {
         "scored1": "قُيّمت صحيحة", "scored0": "قُيّمت خاطئة",
         "wrongList": "خاطئة في النسختين ({n})",
         "wrongNote": "هذا الفحص يبحث عن التغيّر. هذه الإجابات لم تتغيّر وما زالت خاطئة.",
+        "wrongMore": "تُعرض هنا أول {a} حالة؛ وكلها ({n}) في review_cases.csv.",
     },
 }
 
