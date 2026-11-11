@@ -156,6 +156,10 @@ ridi-check gate ridi-out/results.csv
 | `Nothing to call: every call is already recorded` | هذا المجلد فيه تشغيل مكتمل | استخدم مجلد `--out` جديداً إن تغيّر المساعد |
 | `This output directory holds an earlier run with different inputs` | تغيّرت الأسئلة أو النسختان | استخدم مجلد `--out` جديداً |
 | `Row 7: case_id ... appears more than once` | مشكلة في ملف CSV مع رقم الصف | أصلح ذلك الصف |
+| `The file is not UTF-8 text` | برنامج الجداول حفظ الملف بترميز قديم | احفظه من جديد بصيغة «CSV UTF-8» (في Excel: ملف > حفظ باسم) |
+
+كل رسائل رفض الملفات، وأكبر حجم جُرّب فعلاً، في
+[المرجع](REFERENCE.md#input-files-what-is-read-and-what-is-refused).
 
 ## ما لا يخبرك به هذا الفحص
 

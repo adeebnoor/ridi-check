@@ -157,6 +157,10 @@ allow some with `--max-stable-regressions N`. The gate prints counts; the decisi
 | `Nothing to call: every call is already recorded` | This folder already holds a finished run | Use a new `--out` folder if the assistant changed |
 | `This output directory holds an earlier run with different inputs` | The questions or the versions changed | Use a new `--out` folder |
 | `Row 7: case_id ... appears more than once` | A problem in your CSV, with the row | Fix that row |
+| `The file is not UTF-8 text` | The spreadsheet saved the file in an older encoding | Save it again as "CSV UTF-8" (in Excel: File > Save As) |
+
+Every message for a file that is refused, and how large a file was tried, is in the
+[reference](REFERENCE.md#input-files-what-is-read-and-what-is-refused).
 
 ## What this check does not tell you
 

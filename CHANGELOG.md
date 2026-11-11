@@ -12,11 +12,27 @@ library API may change between minor versions.
 - `CODE_OF_CONDUCT.md`, a short adaptation of the Contributor Covenant 2.1. Reports go through GitHub's
   private reporting; no mailbox is published.
 
+- Files saved by a spreadsheet as UTF-16 ("Unicode Text" in Excel) are read.
+- `docs/REFERENCE.md`: what is read and what is refused, with each message, and the limits measured at
+  100,000 cases.
+- Tests for edge-case inputs, for 20,000 cases with three runs, and for behaviour that had none: an
+  unreachable or slow HTTP assistant, a reply that is not JSON, the exit status of `run` when calls fail
+  or the run is interrupted, `gate --max-incomplete`, a scorer that raises, and a missing or damaged manifest.
 - CI measures statement and branch coverage and fails when it falls below the measured floor.
 - CI scans the source with Bandit and the dependencies with pip-audit; `SECURITY.md` lists the two
   findings that are accepted on purpose and why.
 
+### Fixed
+- A file that is not UTF-8 is refused with the way to save it, instead of a decoder message.
+- A cell above the size limit ended in a traceback; it is now refused in one line with exit status 2.
+- A file with null characters is refused with the same message on every Python version; on 3.10 it used to
+  end in a decoder message and on later versions it was read as it was.
+- "1 cases" is "1 case".
+- The printed summary lists at most twenty of the cases that are wrong in both versions with a changed answer.
+
 ### Changed
+- Reports without an answer key are about five times faster on large files (33 s to 6.5 s at 100,000
+  cases): normalised answers are remembered instead of recomputed. The results are unchanged.
 - The README, the guides and the CI example install from PyPI (`pip install ridi-check`) and link to the
   hosted browser version. Installing from the repository remains the way to get the development version.
 

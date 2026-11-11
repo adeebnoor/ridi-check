@@ -15,7 +15,7 @@ from .contract import (
     CONTEXT_SEPARATOR, KEY, Case, ContractError, read_records, read_results, run_column, to_csv,
 )
 from .strings import strings_for
-from .util import atomic_write_text, now_iso, sha256_file
+from .util import atomic_write_text, now_iso, read_text, sha256_file
 
 SUMMARY = "summary.json"
 REVIEW_CASES = "review_cases.csv"
@@ -31,10 +31,9 @@ NOTHING_CORRECT = (
 def read_judgments(path: str, case_ids: set[str]) -> dict[str, str]:
     """judgments.csv: case_id, judgment in worse|better|same_meaning|unsure. Says which row is wrong."""
     try:
-        with open(path, encoding="utf-8-sig", newline="") as f:
-            records = read_records(f.read())
-    except (OSError, UnicodeDecodeError) as exc:
-        raise ContractError(f"The judgments file could not be read: {exc}") from exc
+        records = read_records(read_text(path, "The judgments file"))
+    except ValueError as exc:
+        raise ContractError(str(exc)) from exc
     if not records:
         raise ContractError("The judgments file is empty.")
     header = [h.strip().lower() for h in records[0][1]]
@@ -364,7 +363,8 @@ def write_report(
 def text_summary(summary: dict) -> str:
     """What `report` prints. Counts and the reading rules; no verdict."""
     key = summary["mode"] == KEY
-    lines = [f"{summary['cases']} cases, {'answer-key mode' if key else 'no answer key'} ({summary['equality']})"]
+    lines = [f"{summary['cases']} case{'' if summary['cases'] == 1 else 's'}, "
+             f"{'answer-key mode' if key else 'no answer key'} ({summary['equality']})"]
     for state, count in summary["states"].items():
         if not count and (state.endswith("_unconfirmed") or state == INCOMPLETE):
             continue
@@ -397,9 +397,10 @@ def text_summary(summary: dict) -> str:
                 )
         changed = summary["wrong_both_answer_changed"]
         if changed["stable"] or changed["unconfirmed"]:
+            ids = changed["stable"] + [f"{i} (not re-run)" for i in changed["unconfirmed"]]
             lines.append(
                 "Wrong in both versions but with a changed answer: "
-                + ", ".join(changed["stable"] + [f"{i} (not re-run)" for i in changed["unconfirmed"]])
+                + ", ".join(ids[:20]) + (f", and {len(ids) - 20} more" if len(ids) > 20 else "")
                 + ". Correctness counting does not see these."
             )
     else:

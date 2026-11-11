@@ -313,7 +313,7 @@ def _cmd_gate(args: argparse.Namespace) -> int:
         analysis, judgments, max_stable_regressions=args.max_stable_regressions,
         max_unjudged_changes=args.max_unjudged_changes, max_incomplete=args.max_incomplete,
     )
-    print(f"ridi-check gate: {args.results}, {len(cases)} cases, "
+    print(f"ridi-check gate: {args.results}, {len(cases)} case{'' if len(cases) == 1 else 's'}, "
           f"{'answer-key mode' if mode == 'key' else 'no answer key'}")
     print("\n".join(result.lines))
     for note in result.notes:

@@ -13,6 +13,8 @@ import io
 import re
 from dataclasses import dataclass, field
 
+from .util import read_text
+
 KEY = "key"
 NOKEY = "nokey"
 
@@ -61,7 +63,15 @@ def read_records(text: str) -> list[tuple[int, list[str]]]:
     """(row number, cells) for every non-blank record. The header is row 1, as a spreadsheet shows it."""
     text = text.lstrip("\ufeff")
     reader = csv.reader(io.StringIO(text, newline=""), delimiter=sniff_delimiter(text), skipinitialspace=True)
-    return [(i + 1, r) for i, r in enumerate(reader) if any(cell.strip() for cell in r)]
+    try:
+        return [(i + 1, r) for i, r in enumerate(reader) if any(cell.strip() for cell in r)]
+    except csv.Error as exc:
+        if "field limit" in str(exc):
+            raise ContractError(
+                f"Near line {reader.line_num}: one cell holds more than {csv.field_size_limit():,} characters, the most "
+                "this tool reads in a cell. A quotation mark that is never closed has the same effect."
+            ) from exc
+        raise ContractError(f"Near line {reader.line_num}: the file could not be read as CSV ({exc}).") from exc
 
 
 def run_column(side: str, run: int, kind: str) -> str:
@@ -202,19 +212,16 @@ def parse_results(text: str, mode: str = "auto") -> tuple[list[Case], str]:
 
 def read_results(path: str, mode: str = "auto") -> tuple[list[Case], str]:
     try:
-        with open(path, encoding="utf-8-sig", newline="") as f:
-            text = f.read()
-    except OSError as exc:
-        raise ContractError(f"The file could not be read: {exc}") from exc
-    except UnicodeDecodeError as exc:
-        raise ContractError(f"The file is not UTF-8 text: {exc}") from exc
+        text = read_text(path)
+    except ValueError as exc:
+        raise ContractError(str(exc)) from exc
     return parse_results(text, mode)
 
 
 def to_csv(header: list[str], rows: list[list[str]]) -> str:
     """Comma-separated, \\n line ends; a cell is quoted when it holds a comma, a quote or a line break."""
     def cell(value: object) -> str:
-        text = "" if value is None else str(value)
+        text = "" if value is None else str(value).replace("\x00", "")   # a null character is never read back
         if any(ch in text for ch in ',"\r\n'):
             return '"' + text.replace('"', '""') + '"'
         return text

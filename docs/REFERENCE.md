@@ -10,6 +10,8 @@ Every command, file and rule in one place. New here? Start with the
 - [How cases are labelled](#how-cases-are-labelled)
 - [Files written](#files-written)
 - [Exit status](#exit-status)
+- [Input files: what is read and what is refused](#input-files-what-is-read-and-what-is-refused)
+- [Measured limits](#measured-limits)
 
 ## Commands
 
@@ -163,3 +165,83 @@ Field-by-field descriptions are in the [developer guide](DEVELOPER_GUIDE.md#file
 | 1 | finished, some calls failed | – | a limit was exceeded |
 | 2 | bad input, or the first calls all failed | bad input | bad input |
 | 130 | interrupted; resume by running again | – | – |
+
+## Input files: what is read and what is refused
+
+The questions file, `results.csv` and the judgments file are read the same way.
+
+- **Encoding.** UTF-8, with or without a byte-order mark, and UTF-16 with a byte-order mark (what Excel
+  writes as "Unicode Text"). A file in a local code page, such as Windows-1256 or Latin-1, cannot be told
+  apart from damaged text and is refused with the way to fix it: save it as "CSV UTF-8".
+- **Shape.** Comma, tab or semicolon separated, chosen from the header line. Any line ending. Blank lines
+  are skipped and still counted, so a row number is the one a spreadsheet shows.
+- **Cells.** Quotes, commas, line breaks, Arabic and other scripts, emoji and markup inside a quoted cell
+  are kept as they are and shown as text in the report; markup in an answer is never run. One cell can hold
+  up to 67,108,864 characters.
+
+Each of these is refused with exit status 2 and one line that says what is wrong. Nothing is written.
+
+| File | Message |
+|---|---|
+| Empty, a header and no rows, or blank lines only | `No rows found in the file.` |
+| The same `case_id` twice | `Row 5: case_id 'a' appears more than once (first in row 2).` |
+| No `case_id` column | `The file needs a case_id column.` |
+| No column for one of the versions | `The file needs baseline_correct and updated_correct (0 or 1), or baseline_answer and updated_answer.` |
+| A `_correct` value that is not 0 or 1 | `Row 3 (case 2): baseline_correct must be 0 or 1, got 'true'.` |
+| A row cut short, or an empty first run | `Row 3 (case 2): updated_correct is empty. It must be 0 or 1.` |
+| An empty `case_id` | `Row 2: case_id is missing.` |
+| The same column twice | `Column 'updated_correct' appears more than once.` |
+| Not UTF-8 | `The file is not UTF-8 text (first unreadable byte at position 52). Save it as UTF-8 and try again: in Excel, File > Save As > "CSV UTF-8 (Comma delimited)".` |
+| Null characters, for example UTF-16 saved without its byte-order mark | `The file holds null characters, so it is not plain UTF-8 text. Save it as UTF-8 and try again: …` |
+| A cell above the size limit, or a quotation mark that is never closed in a very large file | `Near line 3: one cell holds more than 67,108,864 characters, the most this tool reads in a cell. …` |
+| A folder, or a file that is not there | `The file could not be read: …` |
+
+A file with **one run of each version** is accepted. Every difference is then labelled `*_unconfirmed`,
+never stable; the re-run variation is shown as "no second run"; and `gate` exits 0, because it only counts
+confirmed regressions, and says on standard error that nothing could be confirmed.
+
+Answers are written to `results.csv` and `review_cases.csv` exactly as the assistant gave them. A
+spreadsheet program may read a cell that starts with `=`, `+`, `-` or `@` as a formula. If your assistant
+can be made to answer with text of someone else's choosing, open these files as text, or use `report.html`,
+where every answer is shown as plain text.
+
+## Measured limits
+
+Measured on one machine: a 4-core cloud Linux container (Intel Xeon, 2.1 GHz), Python 3.13, ridi-check
+at the commit that added this section. Read the numbers as an order of magnitude, not as a promise.
+Nothing was measured above 100,000 cases.
+
+**`report` and `gate`**, on a synthetic `results.csv` with three runs of each version, answers, correctness
+and passages (about 670 bytes a case):
+
+| Cases | File | Command | Time | Peak memory |
+|---|---|---|---|---|
+| 10,000 | 6.6 MB | `report` | 0.5 s | 75 MB |
+| 100,000 | 66.7 MB | `report` | 5.9 s | 552 MB |
+| 100,000 | 66.7 MB | `gate` | 3.8 s | 552 MB |
+| 100,000 | 66.7 MB | `report --mode nokey` | 6.5 s | 552 MB |
+| 100,000 | 66.7 MB | `report --mode nokey --similarity 0.9` | 7.4 s | 552 MB |
+
+The whole file is held in memory: allow about eight times its size.
+
+**The files `report` writes** at 100,000 cases, of which 14,769 were not "correct in both":
+`report.html` 17.9 MB, `review_cases.csv` 20.7 MB, `summary.json` 0.6 MB. At 10,000 cases: 1.8 MB, 2.0 MB
+and 0.06 MB.
+
+**Opening `report.html`** in Chromium on the same machine:
+
+| Cases | Cards on the page | Opens in | A filter click | Switching language |
+|---|---|---|---|---|
+| 10,000 | 1,447 | 0.9 s | 0.2 s | 0.7 s |
+| 100,000 | 14,769 | 7.0 s | 1.8 s | 8.0 s |
+
+The page draws one card for every case that is not "same" or "correct in both", all at once. It stays
+usable at 100,000 cases and is slow to respond; with tens of thousands of cases to review, `summary.json`
+and `review_cases.csv` are the better files to work from. The browser version was not measured at this
+size.
+
+**`run`**: 20,000 questions, two versions, three runs each, calling a Python function that answers at
+once, so the time is the tool's own: 120,000 calls recorded and reported in 11.4 s with a peak of 469 MB.
+`raw_outputs.jsonl` was 34.9 MB. Running the same command again, with nothing left to call, took 2.5 s.
+With a real assistant the calls themselves take nearly all of the time.
+

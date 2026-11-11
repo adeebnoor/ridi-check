@@ -204,3 +204,13 @@ def test_bad_input_exits_with_status_2_and_names_the_row(write, capsys):
     assert main(["gate", results]) == 2
     assert "Row 3" in capsys.readouterr().err
     assert not os.path.exists(os.path.join(os.path.dirname(results), "report.html"))
+
+
+def test_a_long_list_of_cases_is_cut_short_in_the_printed_summary(write, capsys):
+    rows = "".join(f"c{i},wrong answer,another wrong answer,wrong answer,another wrong answer,0,0,0,0\n" for i in range(30))
+    results = write("results.csv", "case_id,baseline_answer,updated_answer,baseline_repeat_answer,updated_repeat_answer,"
+                    "baseline_correct,updated_correct,baseline_repeat_correct,updated_repeat_correct\n" + rows)
+    assert main(["report", results]) == 0
+    line = [text for text in capsys.readouterr().out.splitlines() if text.startswith("Wrong in both versions")][0]
+    assert "c19, and 10 more." in line and "c20" not in line
+

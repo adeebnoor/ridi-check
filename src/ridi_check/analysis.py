@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Callable
 
 from .contract import KEY, Case, Run
@@ -49,6 +50,7 @@ NEGATIONS = frozenset(
 )
 
 
+@lru_cache(maxsize=8192)   # the same answer is compared several times within a case
 def normalise(text: str) -> str:
     """Lower-case, punctuation to spaces, whitespace collapsed (the prototype's `norm`)."""
     kept = []

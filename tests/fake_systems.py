@@ -44,6 +44,21 @@ def proposed(question):
     return {"answer": f"{'new' if changed else 'old'} answer to {question}", "context": ["doc 2", "doc 3"]}
 
 
+def long_passages(question):
+    """Two passages that share their first 200 characters, and one that holds the column separator."""
+    shared = "The handbook says in its section on returns that " * 4
+    return {"answer": "an answer", "context": [shared + "books come back in two weeks.",
+                                               shared + "films come back in one week.", "part a | part b"]}
+
+
+def with_null(question):
+    return {"answer": "an answer\x00 with a null character", "context": ["doc\x00 1"]}
+
+
+def scorer_raises(answer, expected):
+    raise ZeroDivisionError("no judge here")
+
+
 def plain_string(question):
     return "just text"
 

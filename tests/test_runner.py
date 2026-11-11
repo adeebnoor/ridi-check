@@ -264,3 +264,40 @@ def test_a_repeated_question_is_reported_not_removed(write, tmp_path):
     outcome = run(cfg, log=log)
     assert outcome.calls_ok == 8 and len(results_rows(cfg.out_dir)) == 4
     assert "1 question(s) appear under more than one case_id (1 = 4)" in log.getvalue()
+
+
+def test_long_passages_are_cut_but_stay_distinguishable(write, tmp_path):
+    cfg = config(write, tmp_path, current="python:fake_systems:long_passages",
+                 proposed="python:fake_systems:long_passages", runs=1)
+    run(cfg)
+    first, second, third = results_rows(cfg.out_dir)[0]["baseline_context"].split(" | ")
+    assert len(first) <= 120 and len(second) <= 120
+    # the two passages are the same for their first 200 characters; the short hash keeps them apart
+    assert first != second and first[:100] == second[:100] and "… #" in first
+    assert third == "part a ¦ part b"      # a "|" inside a passage would otherwise split it in two
+
+
+def test_a_scorer_that_raises_stops_the_run_and_names_the_case(write, tmp_path):
+    cfg = config(write, tmp_path, questions="case_id,question,expected\n1,question one,one\n",
+                 scorer="fake_systems:scorer_raises")
+    with pytest.raises(RunError, match=r"The scorer failed on case 1 \(current, run 1\): ZeroDivisionError: no judge here"):
+        run(cfg)
+    # the answers were recorded before scoring, so the calls are not paid for twice
+    assert len(raw_records(cfg.out_dir)) == 4
+
+
+def test_answers_without_their_manifest_are_not_built_on(write, tmp_path):
+    cfg = config(write, tmp_path)
+    run(cfg)
+    os.remove(os.path.join(cfg.out_dir, "run_manifest.json"))
+    with pytest.raises(RunError, match="exists without run_manifest.json, so its inputs cannot be checked"):
+        run(cfg)
+
+
+def test_a_null_character_in_an_answer_does_not_make_a_file_that_cannot_be_read_back(write, tmp_path):
+    cfg = config(write, tmp_path, current="python:fake_systems:with_null", proposed="python:fake_systems:with_null")
+    run(cfg)
+    assert "\\u0000" in open(os.path.join(cfg.out_dir, "raw_outputs.jsonl"), encoding="utf-8").read()   # kept as given
+    cases, _ = read_results(os.path.join(cfg.out_dir, "results.csv"))
+    assert cases[0].baseline[0].answer == "an answer with a null character" and cases[0].baseline_context == ["doc 1"]
+

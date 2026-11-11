@@ -1,8 +1,10 @@
 """The three adapters. The http tests talk to a server on 127.0.0.1 only."""
 
 import json
+import socket
 import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
@@ -66,6 +68,14 @@ class _Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         _Handler.seen.append((self.path, dict(self.headers), body))
+        if self.path == "/words":
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"<html>Sign in to continue</html>")
+            return
+        if self.path == "/slow":
+            time.sleep(0.6)      # longer than the caller waits; it has hung up by now
+            return
         if self.path == "/broken":
             self.send_response(500)
             self.end_headers()
@@ -136,6 +146,24 @@ def test_http_adapter_failures(server, tmp_path):
     missing, _ = build_adapter(str(definition))
     with pytest.raises(AdapterError, match="answer_path 'result.text'"):
         missing("q", META)
+
+
+def test_http_adapter_says_what_went_wrong_when_no_usable_reply_comes_back(server):
+    # a reply that is not JSON: the usual sign of a login page or a proxy error in front of the assistant
+    words, _ = build_adapter(server + "/words")
+    with pytest.raises(AdapterError, match="the reply is not JSON: '<html>Sign in"):
+        words("q", META)
+    # an assistant slower than the limit
+    slow, _ = build_adapter(server + "/slow", timeout=0.2)
+    with pytest.raises(AdapterError, match="timed out"):
+        slow("q", META)
+    # nothing listening at the address
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        free_port = probe.getsockname()[1]
+    nobody, _ = build_adapter(f"http://127.0.0.1:{free_port}/ask", timeout=5)
+    with pytest.raises(AdapterError, match="request failed"):
+        nobody("q", META)
 
 
 def test_http_address_can_come_from_the_environment(server, tmp_path, monkeypatch):

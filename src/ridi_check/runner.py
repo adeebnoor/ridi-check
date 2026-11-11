@@ -27,7 +27,7 @@ from .adapters import build_adapter, literal_secret_headers
 from .analysis import duplicate_note, duplicate_questions
 from .contract import read_records, run_column, to_csv
 from .scoring import load_scorer
-from .util import atomic_write_text, now_iso, sha256_file
+from .util import atomic_write_text, now_iso, read_text, sha256_file
 
 RAW_OUTPUTS = "raw_outputs.jsonl"
 MANIFEST = "run_manifest.json"
@@ -89,10 +89,9 @@ class RunOutcome:
 def read_questions(path: str) -> tuple[list[Question], bool]:
     """Returns (questions, has_expected). Rejects bad rows and says which."""
     try:
-        with open(path, encoding="utf-8-sig", newline="") as f:
-            text = f.read()
-    except (OSError, UnicodeDecodeError) as exc:
-        raise RunError(f"The questions file could not be read: {exc}") from exc
+        text = read_text(path, "The questions file")
+    except ValueError as exc:
+        raise RunError(str(exc)) from exc
     rows: list[tuple[str, dict]] = []
     if path.lower().endswith((".jsonl", ".ndjson")):
         for number, line in enumerate(text.splitlines(), start=1):

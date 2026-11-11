@@ -23,6 +23,30 @@ def sha256_file(path: str) -> str:
     return h.hexdigest()
 
 
+def read_text(path: str, what: str = "The file") -> str:
+    """Read a text file as UTF-8, or as UTF-16 when it starts with that byte-order mark.
+
+    Spreadsheet programs write three kinds of text file: UTF-8 (with or without a mark), UTF-16
+    ("Unicode Text" in Excel) and the local code page. The first two are read; the third cannot be
+    told apart from damaged UTF-8, so the message says how to save the file instead of guessing.
+    """
+    try:
+        with open(path, "rb") as f:
+            data = f.read()
+    except OSError as exc:
+        raise ValueError(f"{what} could not be read: {exc}") from exc
+    encoding = "utf-16" if data.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8-sig"
+    how = 'Save it as UTF-8 and try again: in Excel, File > Save As > "CSV UTF-8 (Comma delimited)".'
+    try:
+        text = data.decode(encoding)
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"{what} is not UTF-8 text (first unreadable byte at position {exc.start}). {how}") from exc
+    if "\x00" in text:
+        # Usually UTF-16 saved without its mark, or not a text file at all. Python 3.10 cannot parse it either.
+        raise ValueError(f"{what} holds null characters, so it is not plain UTF-8 text. {how}")
+    return text
+
+
 def atomic_write_text(path: str, text: str) -> None:
     """Write a whole file or leave the previous one untouched."""
     folder = os.path.dirname(os.path.abspath(path))
