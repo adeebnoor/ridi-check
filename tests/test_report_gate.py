@@ -318,3 +318,24 @@ def test_where_the_retrieved_passages_differ_is_counted_and_nothing_more(tmp_pat
     with open(tmp_path / "plain" / "summary.json", encoding="utf-8") as f:
         assert "passages" not in json.load(f)
 
+
+def test_a_passage_count_that_is_the_same_for_every_case_is_said_in_one_sentence(tmp_path, write, capsys):
+    """The built-in example: the proposed version splits the handbook differently, so every passage has a new name."""
+    library = os.path.join(os.path.dirname(FIXTURE), "..", "..", "web", "sample_results.csv")
+    assert main(["report", library, "--out", str(tmp_path / "library")]) == 0
+    out = capsys.readouterr().out
+    assert ("Retrieved passages differ between the versions in all 30 cases that list passages, so this count does "
+            "not set any group of cases apart.") in out
+    assert "correct_both 17/17" not in out                      # no list of counts that are all "every case"
+    with open(tmp_path / "library" / "summary.json", encoding="utf-8") as f:
+        assert json.load(f)["passages"]["differ"] == 30         # the numbers are still in the file
+
+    same = write("same.csv", "case_id,baseline_correct,updated_correct,baseline_context,updated_context\n"
+                 "a,1,0,doc 1 | doc 2,doc 2 | doc 1\nb,1,1,doc 3,doc 3\n")
+    assert main(["report", same, "--out", str(tmp_path / "same")]) == 0
+    assert "Retrieved passages are the same in both versions in all 2 cases that list passages." in capsys.readouterr().out
+
+    one = write("one.csv", "case_id,baseline_correct,updated_correct,baseline_context,updated_context\na,1,0,doc 1,doc 2\n")
+    assert main(["report", one, "--out", str(tmp_path / "one")]) == 0
+    assert "in 1/1 cases that list passages: regression_unconfirmed 1/1." in capsys.readouterr().out
+

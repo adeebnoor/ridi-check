@@ -3,6 +3,13 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Changed
+- When the retrieved passages differ in every case that lists them, or in none, the report and the printed
+  summary say so in one sentence instead of giving a count per state that is the same for every state. The
+  built-in demo is such a case. `summary.json` is unchanged.
+
 ## 0.5.1
 
 ### Changed

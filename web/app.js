@@ -266,7 +266,9 @@
       if (c) h += '<p class="small muted">' + esc(t("masked", { m: D.acc.r + D.acc.i, v: Math.abs(D.acc.i - D.acc.r), c })) + "</p>";
     }
     if (D.summary.passages) { const P = D.summary.passages, F = P.by_state[D.focus];
-      h += '<p class="small muted">' + esc(t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + "</p>"; }
+      h += '<p class="small muted">' + esc(P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
+        : !P.differ ? t("passagesNone", { n: P.cases_with_passages })
+        : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + "</p>"; }
     h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2
       ? " " + esc(t("anyRun", { b: S.any_run_disagreement.current, u: S.any_run_disagreement.proposed })) : "") + "</p></div></section>";
 

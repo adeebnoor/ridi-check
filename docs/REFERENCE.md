@@ -174,7 +174,10 @@ after the cases whose score changed.
 
 When the file lists passages (`baseline_context`, `updated_context`), the report also counts the cases
 whose passages differ between the versions, in total and per state (`passages` in `summary.json`). It is a
-count of where retrieval changed. It does not say that the passages caused a change in the answer.
+count of where retrieval changed. It does not say that the passages caused a change in the answer. When
+the passages differ in every case, or in none, the report says that in one sentence instead of a count per
+state. The built-in demo is such a case: its proposed version splits the handbook differently, so every
+passage has a new name.
 
 Under `--similarity`, two answers that differ in a negation word, or in their numbers, are never counted
 as the same. Numbers are the runs of digits in the answer, in order, so `5mg` and `50mg` differ, and so do

@@ -442,11 +442,20 @@ def text_summary(summary: dict) -> str:
         )
     passages = summary.get("passages")
     if passages:
-        lines.append(
-            f"Retrieved passages differ between the versions in {passages['differ']}/{passages['cases_with_passages']} "
-            "cases that list passages: "
-            + ", ".join(f"{state} {v['differ']}/{v['n']}" for state, v in passages["by_state"].items())
-            + ". This is a count, not a cause."
-        )
+        differ, listed = passages["differ"], passages["cases_with_passages"]
+        if differ == listed and listed > 1:     # a count per state would say the same thing for every state
+            lines.append(
+                f"Retrieved passages differ between the versions in all {listed} cases that list passages, so this "
+                "count does not set any group of cases apart. An update that changes how documents are split, or "
+                "how passages are named, gives this result."
+            )
+        elif not differ:
+            lines.append(f"Retrieved passages are the same in both versions in all {listed} cases that list passages.")
+        else:
+            lines.append(
+                f"Retrieved passages differ between the versions in {differ}/{listed} cases that list passages: "
+                + ", ".join(f"{state} {v['differ']}/{v['n']}" for state, v in passages["by_state"].items())
+                + ". This is a count, not a cause."
+            )
     lines += summary["notes"]
     return "\n".join(lines)

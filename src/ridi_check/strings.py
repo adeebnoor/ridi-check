@@ -14,6 +14,10 @@ COMMON = {
     "en": {
         "passages": "The retrieved passages differ between the versions in {k} of the {n} cases that list passages.",
         "passagesNote": " This is a count, not a cause.",
+        "passagesAll": "The retrieved passages differ between the versions in all {n} cases that list passages, so "
+                       "this count does not set any group of cases apart. An update that changes how documents are "
+                       "split, or how passages are named, gives this result.",
+        "passagesNone": "The retrieved passages are the same in both versions in all {n} cases that list passages.",
         "name": "RIDI Update Check",
         "langBtn": "العربية",
         "tagline": "The current and the proposed version of an assistant, run on the same questions. "
@@ -71,6 +75,10 @@ COMMON = {
     "ar": {
         "passages": "المقاطع المسترجعة تختلف بين النسختين في {k} من {n} حالة ذُكرت مقاطعها.",
         "passagesNote": " هذا عدّ وليس سبباً.",
+        "passagesAll": "المقاطع المسترجعة تختلف بين النسختين في كل الحالات التي ذُكرت مقاطعها وعددها {n}، فهذا العدّ "
+                       "لا يميّز أي مجموعة من الحالات. يحدث ذلك حين يغيّر التحديث طريقة تقسيم المستندات أو تسمية "
+                       "المقاطع.",
+        "passagesNone": "المقاطع المسترجعة متطابقة بين النسختين في كل الحالات التي ذُكرت مقاطعها وعددها {n}.",
         "name": "RIDI Update Check",
         "langBtn": "English",
         "tagline": "النسخة الحالية والنسخة المقترحة من المساعد على الأسئلة نفسها. "
