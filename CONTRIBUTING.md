@@ -15,7 +15,8 @@ pytest
 
 Python 3.10 or later. The tests need no network and no API key. Two groups run only when their tool is
 present: the browser-version parity tests need Node.js, and the Claude adapter example needs
-`pip install anthropic`. CI runs everything on Linux, macOS and Windows.
+`pip install anthropic`. CI runs everything on Linux, macOS and Windows, and one job also checks that
+statement and branch coverage has not fallen below its floor (`pytest --cov=ridi_check --cov-branch`).
 
 ## Ground rules
 

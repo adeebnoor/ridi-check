@@ -16,6 +16,11 @@ jobs:
       # anthropic is needed only by the test of examples/adapters/anthropic_adapter.py
       - run: pip install ".[test]" anthropic
       - run: pytest -q
+      - name: coverage must not fall below the measured floor
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        # Statements and branches of the installed package. Raise the floor when coverage rises; do not
+        # lower it to make a change pass.
+        run: pytest -q --cov=ridi_check --cov-branch --cov-report=term-missing --cov-fail-under=92.68
       - name: security scan of the source and the dependencies
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
         run: |

@@ -12,6 +12,7 @@ library API may change between minor versions.
 - `CODE_OF_CONDUCT.md`, a short adaptation of the Contributor Covenant 2.1. Reports go through GitHub's
   private reporting; no mailbox is published.
 
+- CI measures statement and branch coverage and fails when it falls below the measured floor.
 - CI scans the source with Bandit and the dependencies with pip-audit; `SECURITY.md` lists the two
   findings that are accepted on purpose and why.
 
