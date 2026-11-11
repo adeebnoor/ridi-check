@@ -9,8 +9,9 @@ from conftest import ROOT
 
 REPO = "https://github.com/adeebnoor/ridi-check"
 RAW = "https://raw.githubusercontent.com/adeebnoor/ridi-check/main/"
-PAGES = ["README.md"] + sorted(os.path.join("docs", name) for name in os.listdir(os.path.join(ROOT, "docs"))
-                               if name.endswith(".md"))
+PAGES = (["README.md", "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", os.path.join("examples", "README.md"),
+          os.path.join("examples", "adapters", "README.md"), os.path.join("tests", "fixtures", "README.md")]
+         + sorted(os.path.join("docs", name) for name in os.listdir(os.path.join(ROOT, "docs")) if name.endswith(".md")))
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 
 
@@ -55,7 +56,7 @@ def test_links_into_the_repository_resolve(page):
 def test_readme_is_a_front_page():
     text = read("README.md")
     order = ["## What you will see", "## Who it is for", "## Start in one minute", "## Use it in CI",
-             "## Connect your assistant", "## FAQ", "## Roadmap", "## Limitations", "## Licence"]
+             "## Connect your assistant", "## FAQ", "## Roadmap", "## Limitations", "## Contributing", "## Licence"]
     positions = [text.index(heading) for heading in order]
     assert positions == sorted(positions)
     assert "docs/img/report.png" in text and "actions/workflows/tests.yml/badge.svg" in text
@@ -63,3 +64,31 @@ def test_readme_is_a_front_page():
     assert not re.search(r"img\.shields\.io|badgen\.net", text)          # badges are served from this repository
     for name in ("report.png", "report-case.png", "badge-licence.svg", "badge-python.svg"):
         assert os.path.getsize(os.path.join(ROOT, "docs", "img", name)) > 200
+
+
+def test_no_file_holds_an_email_address():
+    """Contact goes through GitHub: issues, and private vulnerability reports. No mailbox is published."""
+    address = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}")
+    skip_dirs = {".git", ".venv", "__pycache__", ".pytest_cache", "build", "dist", "out", "node_modules"}
+    found = []
+    for folder, dirs, files in os.walk(ROOT):
+        dirs[:] = [d for d in dirs if d not in skip_dirs and not d.endswith(".egg-info") and not d.startswith("ridi-")]
+        for name in files:
+            path = os.path.join(folder, name)
+            try:
+                with open(path, encoding="utf-8") as f:
+                    text = f.read()
+            except (UnicodeDecodeError, OSError):
+                continue                                   # images and other binary files
+            found += [f"{os.path.relpath(path, ROOT)}: {m}" for m in address.findall(text)]
+    assert not found, found
+
+
+def test_community_files_are_in_place():
+    for name in ("CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", "LICENSE", os.path.join(".github", "pull_request_template.md"),
+                 os.path.join(".github", "ISSUE_TEMPLATE", "bug_report.yml"),
+                 os.path.join(".github", "ISSUE_TEMPLATE", "feature_request.yml"),
+                 os.path.join(".github", "ISSUE_TEMPLATE", "config.yml")):
+        assert os.path.getsize(os.path.join(ROOT, name)) > 100, name
+    security = read("SECURITY.md")
+    assert "Report a vulnerability" in security and "no email address" in security

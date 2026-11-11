@@ -182,6 +182,12 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 
 ridi-check follows the RIDI method.
 
+## Contributing
+
+Bug reports, questions and pull requests are welcome: see [CONTRIBUTING.md](https://github.com/adeebnoor/ridi-check/blob/main/CONTRIBUTING.md) and the
+[changelog](https://github.com/adeebnoor/ridi-check/blob/main/CHANGELOG.md). Report a vulnerability privately, as [SECURITY.md](https://github.com/adeebnoor/ridi-check/blob/main/SECURITY.md)
+describes.
+
 ## Licence
 
 MIT. See [LICENSE](https://github.com/adeebnoor/ridi-check/blob/main/LICENSE).

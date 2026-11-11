@@ -1,0 +1,34 @@
+name: Feature request
+description: Something ridi-check should do, or do better
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do, and where does ridi-check fall short? A concrete situation helps more than a solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+      description: The behaviour you have in mind, if you have one.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Your assistant
+      description: This helps us see which setups matter most.
+      options:
+        - A single model call (question in, answer out)
+        - Retrieval-augmented (documents are retrieved)
+        - An agent that uses tools
+        - A multi-turn conversation
+        - Something else
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Before you send
+      options:
+        - label: I have read the Limitations and the Roadmap in the README
+          required: true

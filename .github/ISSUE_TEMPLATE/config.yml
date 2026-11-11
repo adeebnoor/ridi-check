@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/adeebnoor/ridi-check/security/advisories/new
+    about: Please report vulnerabilities privately, not in a public issue.
+  - name: User guide and reference
+    url: https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.md
+    about: How to set up a check and how to read the report.
