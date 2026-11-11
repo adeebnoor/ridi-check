@@ -37,7 +37,11 @@ def embed(value: object) -> str:
     return blob.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 
-def build() -> str:
+FONT_LINK = re.compile(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com/[^"]*">\n')
+
+
+def build(web_fonts: bool = False) -> str:
+    """The page. Without `web_fonts` it loads nothing from anywhere and uses the reader's own fonts."""
     report = read("src", "ridi_check", "report_template.html")
     style = re.search(r"<style>\n(.*?)</style>", report, re.S).group(1)
     page = read("web", "template.html")
@@ -52,7 +56,8 @@ def build() -> str:
     for name, value in parts.items():
         assert page.count(name) == 1, name
         page = page.replace(name, value)
-    return page
+    assert len(FONT_LINK.findall(page)) == 1
+    return page if web_fonts else FONT_LINK.sub("", page)
 
 
 def fragment(page: str) -> str:
@@ -62,7 +67,7 @@ def fragment(page: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--fragment", metavar="FILE")
+    parser.add_argument("--fragment", metavar="FILE", help="for a host that allows web fonts; this copy loads them")
     args = parser.parse_args()
     page = build()
     with open(OUTPUT, "w", encoding="utf-8", newline="\n") as f:
@@ -70,7 +75,7 @@ def main() -> None:
     print(f"wrote {OUTPUT} ({len(page.encode('utf-8')) // 1024} KB)")
     if args.fragment:
         with open(args.fragment, "w", encoding="utf-8", newline="\n") as f:
-            f.write(fragment(page))
+            f.write(fragment(build(web_fonts=True)))
         print(f"wrote {args.fragment}")
 
 

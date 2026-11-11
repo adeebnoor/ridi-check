@@ -190,8 +190,7 @@ def test_built_page_is_up_to_date_and_self_contained():
         on_disk = f.read()
     assert on_disk == build_web.build(), "run: python tools/build_web.py"
     assert "__" + "STRINGS__" not in on_disk and on_disk.startswith("<!doctype html>")
-    external = set(re.findall(r'(?:src|href)="(https?://[^"]+)"', on_disk))
-    assert all(url.startswith("https://fonts.googleapis.com/") for url in external), external   # fonts only; no data leaves
-    assert "fetch(" not in on_disk and "XMLHttpRequest" not in on_disk
+    assert not re.findall(r'(?:src|href)="(https?://[^"]+)"', on_disk)       # the page loads nothing from anywhere
+    assert "fetch(" not in on_disk and "XMLHttpRequest" not in on_disk and "sendBeacon" not in on_disk
     fragment = build_web.fragment(on_disk)
     assert fragment.startswith("<title>RIDI Update Check</title>") and "<html" not in fragment and "<body" not in fragment
