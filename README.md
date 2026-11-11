@@ -16,7 +16,8 @@ A complete workflow to copy: [examples/ci/ridi-check.yml](examples/ci/ridi-check
 **No install:** the browser version is one file, [web/ridi-update-check.html](web/ridi-update-check.html).
 Download it, open it, paste your results (CSV text or cells copied from a spreadsheet). Nothing leaves the page.
 
-It works with or without an answer key, in English and Arabic, and follows the RIDI method.
+It works with or without an answer key, in English and Arabic, and follows the RIDI method. It finds
+change, not correctness, and it is not a readiness certificate: see [Limitations](#limitations).
 
 ## Start in one minute
 
@@ -108,13 +109,15 @@ after lower-casing, removing punctuation and collapsing spaces (or share `--simi
 The rates use first runs: change between versions, and the re-run variation of each version (run 1 against
 run 2). Both variations are always shown and neither is subtracted from the change.
 
-## Limits
+## Limitations
 
-- It finds change, not correctness. Cases wrong in both versions are listed separately.
+- It finds change, not correctness. A version that is wrong the same way every time looks stable, and
+  cases wrong in both versions are listed separately.
 - Without an answer key or your judgment, a difference is a change, not a regression.
 - Passages are shown as they differ and are not graded; an ungraded passage can still carry the evidence.
 - Two runs is a thin estimate of re-run variation. More runs make the stable label firmer.
-- It is not a safety certificate. No output says a system is fit to deploy; the gate prints counts.
+- It is not a readiness or safety certificate. No output says a system is fit to deploy; the gate prints
+  counts and the decision stays yours.
 - Not in this version: agents that use tools or keep state, model-based judging, statistical tests.
 
 ## Licence
