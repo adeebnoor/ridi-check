@@ -23,6 +23,14 @@ RUN_COLUMN = re.compile(r"^(baseline|updated)(?:_repeat([0-9]*))?_(answer|correc
 
 csv.field_size_limit(64 * 1024 * 1024)
 
+# A spreadsheet reads a cell that starts with one of these as a formula. `to_csv` puts an apostrophe in
+# front of such a cell and `read_records` takes it off again, so the tool reads back what it wrote.
+FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _unguard(cell: str) -> str:
+    return cell[1:] if len(cell) > 1 and cell[0] == "'" and cell[1] in FORMULA_START else cell
+
 
 class ContractError(ValueError):
     """The file does not follow the results.csv contract."""
@@ -64,7 +72,7 @@ def read_records(text: str) -> list[tuple[int, list[str]]]:
     text = text.lstrip("\ufeff")
     reader = csv.reader(io.StringIO(text, newline=""), delimiter=sniff_delimiter(text), skipinitialspace=True)
     try:
-        return [(i + 1, r) for i, r in enumerate(reader) if any(cell.strip() for cell in r)]
+        return [(i + 1, [_unguard(cell) for cell in r]) for i, r in enumerate(reader) if any(cell.strip() for cell in r)]
     except csv.Error as exc:
         if "field limit" in str(exc):
             raise ContractError(
@@ -219,9 +227,14 @@ def read_results(path: str, mode: str = "auto") -> tuple[list[Case], str]:
 
 
 def to_csv(header: list[str], rows: list[list[str]]) -> str:
-    """Comma-separated, \\n line ends; a cell is quoted when it holds a comma, a quote or a line break."""
+    """Comma-separated, \\n line ends; a cell is quoted when it holds a comma, a quote or a line break.
+
+    A cell that a spreadsheet would read as a formula gets an apostrophe in front (see FORMULA_START).
+    """
     def cell(value: object) -> str:
         text = "" if value is None else str(value).replace("\x00", "")   # a null character is never read back
+        if text.startswith(FORMULA_START):
+            text = "'" + text
         if any(ch in text for ch in ',"\r\n'):
             return '"' + text.replace('"', '""') + '"'
         return text

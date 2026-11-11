@@ -17,3 +17,4 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .warn { color: var(--uns); }
 button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .get ul { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 6px; max-width: 70ch; }
+button.done { border-color: var(--accent); font-weight: 600; }

@@ -8,11 +8,12 @@ from importlib import resources
 
 from . import __version__
 from .analysis import (
-    INCOMPLETE, STABLE_CHANGE, UNCHANGED_STATES, WRONG_BOTH, Analysis, analyse, duplicate_note, duplicate_questions,
+    CORRECT_BOTH, INCOMPLETE, STABLE_CHANGE, UNCHANGED_STATES, WRONG_BOTH, Analysis, analyse, duplicate_note,
+    duplicate_questions,
     same_answer,
 )
 from .contract import (
-    CONTEXT_SEPARATOR, KEY, Case, ContractError, read_records, read_results, run_column, to_csv,
+    CONTEXT_SEPARATOR, KEY, NOKEY, Case, ContractError, read_records, read_results, run_column, to_csv,
 )
 from .strings import strings_for
 from .util import atomic_write_text, now_iso, read_text, sha256_file
@@ -110,10 +111,12 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
         "any_run_disagreement": {"current": a.any_run_b, "proposed": a.any_run_u},
     }
     if key:
-        summary["wrong_both_answer_changed"] = {
-            "stable": [i for i, f in a.answer_change.items() if f == "stable"],
-            "unconfirmed": [i for i, f in a.answer_change.items() if f == "unconfirmed"],
-        }
+        state_of = {case.case_id: state for case, state in a.items}
+        for name, state in (("wrong_both_answer_changed", WRONG_BOTH), ("correct_both_answer_changed", CORRECT_BOTH)):
+            summary[name] = {
+                flag: [i for i, f in a.answer_change.items() if f == flag and state_of[i] == state]
+                for flag in ("stable", "unconfirmed")
+            }
     else:
         judgments = judgments or {}
         stable = a.ids(STABLE_CHANGE)
@@ -171,7 +174,7 @@ def review_table(a: Analysis, judgments: dict[str, str] | None = None) -> tuple[
 
     rows = []
     for case, state in a.items:
-        if state in UNCHANGED_STATES:
+        if state in UNCHANGED_STATES and case.case_id not in a.answer_change:
             continue
         row = [case.case_id, state, a.answer_change.get(case.case_id, "") if key else judgments.get(case.case_id, "")]
         if "question" in header:
@@ -251,7 +254,7 @@ def page_data(
     labels: dict[str, str], lang: str | None, generated: str,
 ) -> dict:
     key = a.mode == KEY
-    cards, strip, wrong = [], [], []
+    cards, strip, wrong, changed_correct = [], [], [], []
     for case, state in a.items:
         flag = a.answer_change.get(case.case_id)
         card_index = -1
@@ -267,6 +270,8 @@ def page_data(
         strip.append([case.case_id, state, card_index])
         if state == WRONG_BOTH:
             wrong.append([case.case_id, case.question, flag])
+        elif state == CORRECT_BOTH and flag:
+            changed_correct.append([case.case_id, case.question, flag, case.baseline[0].answer, case.updated[0].answer])
     stable_changes = a.ids(STABLE_CHANGE)
     return {
         "meta": {
@@ -281,6 +286,7 @@ def page_data(
         "strip": strip,
         "cards": cards,
         "wrong": wrong,
+        "changed_correct": changed_correct,
         "stable_change_ids": stable_changes,
         "judgments": {i: j for i, j in judgments.items() if i in set(stable_changes)},
         "strings": strings_for(a.mode),
@@ -333,7 +339,12 @@ def write_report(
                 f"{len(ignored)} judgment(s) are for cases that are not stable changes and were not counted: "
                 + ", ".join(ignored)
             )
-        if any(c.expected for c in cases):
+        if mode == NOKEY:
+            warnings.append(
+                "Read without an answer key because --mode nokey was given. Correctness columns, if the file "
+                "has them, were left out on purpose."
+            )
+        elif any(c.expected for c in cases):
             warnings.append(
                 "The file has an expected column but no baseline_correct / updated_correct columns, "
                 "so it was read without an answer key."
@@ -402,6 +413,14 @@ def text_summary(summary: dict) -> str:
                 "Wrong in both versions but with a changed answer: "
                 + ", ".join(ids[:20]) + (f", and {len(ids) - 20} more" if len(ids) > 20 else "")
                 + ". Correctness counting does not see these."
+            )
+        changed = summary["correct_both_answer_changed"]
+        if changed["stable"] or changed["unconfirmed"]:
+            ids = changed["stable"] + [f"{i} (not re-run)" for i in changed["unconfirmed"]]
+            lines.append(
+                "Correct in both versions but with a changed answer: "
+                + ", ".join(ids[:20]) + (f", and {len(ids) - 20} more" if len(ids) > 20 else "")
+                + ". The answer key scores both answers as correct; read them if the wording matters."
             )
     else:
         j = summary["judgments"]["of_stable_changes"]

@@ -12,6 +12,13 @@ library API may change between minor versions.
 - `CODE_OF_CONDUCT.md`, a short adaptation of the Contributor Covenant 2.1. Reports go through GitHub's
   private reporting; no mailbox is published.
 
+- In answer-key mode, a case that is correct in both versions and whose answer changed is listed: in the
+  printed summary, in `summary.json` (`correct_both_answer_changed`), in `review_cases.csv` and in a
+  separate list in the report. Its state and every count stay as they were.
+- `gate --max-unstable N`: an optional limit on cases whose answers did not hold on re-run.
+- Browser version: what you paste is kept until the tab is closed, so a refresh does not lose it; the copy
+  buttons confirm on the button; "Clear my judgments"; UTF-16 files are read and other encodings are
+  refused in words.
 - Files saved by a spreadsheet as UTF-16 ("Unicode Text" in Excel) are read.
 - `docs/REFERENCE.md`: what is read and what is refused, with each message, and the limits measured at
   100,000 cases.
@@ -22,7 +29,16 @@ library API may change between minor versions.
 - CI scans the source with Bandit and the dependencies with pip-audit; `SECURITY.md` lists the two
   findings that are accepted on purpose and why.
 
+### Security
+- A cell that a spreadsheet would read as a formula (it starts with `=`, `+`, `-` or `@`) is written with
+  an apostrophe in front in `results.csv`, `review_cases.csv` and the browser version's copies, and read
+  back without it.
+
 ### Fixed
+- Under `--similarity`, answers that differ only in a number attached to a unit ("5mg" and "50mg"), or in
+  the order of their numbers, were counted as the same. Numbers are now compared as digit runs, in order.
+- `report --mode nokey` on a file with correctness columns said that the file had none; it now says that
+  they were left out on purpose.
 - A file that is not UTF-8 is refused with the way to save it, instead of a decoder message.
 - A cell above the size limit ended in a traceback; it is now refused in one line with exit status 2.
 - A file with null characters is refused with the same message on every Python version; on 3.10 it used to

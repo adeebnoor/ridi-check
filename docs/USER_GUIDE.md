@@ -94,6 +94,7 @@ How many calls will it make? questions × 2 versions × runs. 50 questions with 
 | Stable change (no reference answers) | A different answer in every run | Read both answers and give your call. |
 | Unstable on re-run | A version gave different results when asked again | Not evidence about the update. Many of these mean the assistant itself is inconsistent. |
 | Wrong in both versions | No change, still wrong | The update did not fix these. Listed separately. |
+| Correct in both, answer changed | The answer key accepts both answers, and the text differs | Listed separately and not counted as a change. Read them if the wording matters, for example a number or a condition. |
 | Correct in both / Same answer | No change | Nothing to do. |
 | Not re-run | You ran each version only once | Nothing can be confirmed. Run twice. |
 | Not compared | A call to your assistant failed | Run the same command again to retry. |

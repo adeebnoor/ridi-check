@@ -50,6 +50,8 @@ folder you choose, and makes no other network request. Reports are welcome on, f
 - a key or token that ends up in a file the tool writes, when it was given through an environment
   variable.
 
-Out of scope: the behaviour of the assistant under test, commands and Python functions that you configure
-yourself (the tool runs what you tell it to run), and spreadsheet programs that treat a CSV cell starting
-with `=` as a formula.
+- a cell in a CSV file the tool writes that a spreadsheet program runs as a formula. Such cells are
+  written with an apostrophe in front.
+
+Out of scope: the behaviour of the assistant under test, and commands and Python functions that you
+configure yourself (the tool runs what you tell it to run).

@@ -9,14 +9,15 @@ Per case, with the runs of each version as a list:
 Three things are added to the prototype's rules, none of which changes its states or counts:
 - `incomplete`, for a case whose first run of a version failed in `ridi-check run`. It is not
   compared and is left out of every rate.
-- Under a word-overlap threshold, two answers that differ in a negation word or in a number are
-  never counted as the same. With the default (exact match) this has no effect.
-- In answer-key mode, a case that is wrong in both versions is also checked for a changed answer
-  (`answer_change`). Its state stays `wrong_both`; correctness counting alone does not see it.
+- Under a word-overlap threshold, two answers that differ in a negation word or in their numbers
+  (the digit runs, in order, so "5mg" and "50mg" differ) are never counted as the same. With the default (exact match) this has no effect.
+- In answer-key mode, a case that is wrong in both versions, or correct in both, is also checked for
+  a changed answer (`answer_change`). Its state stays as it is; correctness counting alone does not see it.
 """
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -44,6 +45,8 @@ NOKEY_STATES = [STABLE_CHANGE, CHANGE_UNCONFIRMED, UNSTABLE, SAME, INCOMPLETE]
 UNCHANGED_STATES = {CORRECT_BOTH, SAME}
 
 # "t" is what n't leaves behind once punctuation is removed (isn't -> isn t).
+NUMBERS = re.compile(r"\d+")
+
 NEGATIONS = frozenset(
     "not no never neither nor without none cannot t "
     "لا غير لم لن بدون ليس ليست".split()
@@ -72,8 +75,8 @@ def same_answer(a: str, b: str, threshold: float = 1.0) -> bool:
     words_x, words_y = set(x.split(" ")), set(y.split(" "))
     if bool(words_x & NEGATIONS) != bool(words_y & NEGATIONS):
         return False  # "is effective" and "is not effective" share most of their words
-    if {w for w in words_x if w.isdigit()} != {w for w in words_y if w.isdigit()}:
-        return False  # "within 30 days" and "within 45 days" do too
+    if NUMBERS.findall(x) != NUMBERS.findall(y):
+        return False  # so do "within 30 days" and "within 45 days", and "5mg" and "50mg"
     shared = len(words_x & words_y)
     union = len(words_x) + len(words_y) - shared
     return union > 0 and shared / union >= threshold
@@ -113,7 +116,8 @@ class Analysis:
     threshold: float
     items: list[tuple[Case, str]] = field(default_factory=list)
     counts: dict[str, int] = field(default_factory=dict)
-    answer_change: dict[str, str] = field(default_factory=dict)  # wrong_both case id -> stable | unconfirmed
+    # wrong_both or correct_both case id -> stable | unconfirmed: the score is equal, the answer is not
+    answer_change: dict[str, str] = field(default_factory=dict)
     n: int = 0              # rows in the file
     n_compared: int = 0     # rows with a first run of both versions
     changed: int = 0        # first runs differ
@@ -160,7 +164,7 @@ def analyse(cases: list[Case], mode: str, threshold: float = 1.0) -> Analysis:
             a.rerun_u_n += 1
             a.rerun_u += 0 if eq(u[0], u[1]) else 1
             a.any_run_u += 0 if all(eq(r, u[0]) for r in u) else 1
-        if state == WRONG_BOTH and all(r.answer for r in b + u):
+        if state in (WRONG_BOTH, CORRECT_BOTH) and all(r.answer for r in b + u):
             by_answer = classify(case, "nokey", threshold)
             if by_answer == STABLE_CHANGE:
                 a.answer_change[case.case_id] = "stable"

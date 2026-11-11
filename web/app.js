@@ -7,7 +7,8 @@
       tagline: "Compare the current and the proposed version of an assistant on the same questions. See which answers changed, and which changes hold when each version is run again.",
       sampleKey: "Example with answer key", sampleNoKey: "Example without answer key",
       own: "Check your own results", choose: "Choose a CSV file", paste: "Or paste here: CSV text, or cells copied from a spreadsheet",
-      run: "Check", privacy: "Your file is read in this browser tab only. Nothing is uploaded or stored on a server.",
+      run: "Check", privacy: "Your file is read in this browser tab only. Nothing is uploaded or stored on a server. What you paste stays until you close the tab, and your judgments are kept in this browser so that a refresh does not lose them.",
+      forget: "Clear my judgments",
       format: "Columns", colsNote: "One row per question. The first row holds the column names.",
       cols: [
         "<code>case_id</code> required, unique.",
@@ -38,7 +39,8 @@
         rowBin: "Row {row} (case {id}): {col} must be 0 or 1, got “{value}”.",
         rowEmptyFirst: "Row {row} (case {id}): {col} is empty. Every row needs a first-run value.",
         rowNoCorrect: "Row {row} (case {id}): {a} has a value but {c} is empty or absent.",
-        read: "The file could not be read."
+        read: "The file could not be read.",
+        encoding: "The file is not UTF-8 text. Save it as UTF-8 and try again: in Excel, File > Save As > \"CSV UTF-8 (Comma delimited)\"."
       }
     },
     ar: {
@@ -46,7 +48,8 @@
       tagline: "قارن النسخة الحالية والنسخة المقترحة من مساعدك على الأسئلة نفسها. اعرف أي الإجابات تغيّرت، وأي تغيّر يثبت عند إعادة تشغيل كل نسخة.",
       sampleKey: "مثال مع مفتاح إجابات", sampleNoKey: "مثال بدون مفتاح إجابات",
       own: "افحص نتائجك", choose: "اختر ملف CSV", paste: "أو الصق هنا: نص CSV، أو خلايا منسوخة من جدول",
-      run: "افحص", privacy: "ملفك يُقرأ داخل هذا التبويب فقط. لا يُرفع شيء ولا يُحفظ على خادم.",
+      run: "افحص", privacy: "ملفك يُقرأ داخل هذا التبويب فقط. لا يُرفع شيء ولا يُحفظ على خادم. ما تلصقه يبقى حتى تغلق التبويب، وأحكامك تُحفظ في هذا المتصفح حتى لا تضيع عند تحديث الصفحة.",
+      forget: "امسح أحكامي",
       format: "الأعمدة", colsNote: "صف واحد لكل سؤال، والصف الأول فيه أسماء الأعمدة.",
       cols: [
         "<code>case_id</code> مطلوب وفريد.",
@@ -77,7 +80,8 @@
         rowBin: "الصف {row} (الحالة {id}): العمود {col} يجب أن يكون 0 أو 1، والموجود «{value}».",
         rowEmptyFirst: "الصف {row} (الحالة {id}): العمود {col} فارغ. كل صف يحتاج قيمة للتشغيل الأول.",
         rowNoCorrect: "الصف {row} (الحالة {id}): في {a} قيمة لكن {c} فارغ أو غير موجود.",
-        read: "تعذّرت قراءة الملف."
+        read: "تعذّرت قراءة الملف.",
+        encoding: "الملف ليس نصاً بترميز UTF-8. احفظه بترميز UTF-8 ثم أعد المحاولة: في Excel، ملف > حفظ باسم > «CSV UTF-8»."
       }
     }
   };
@@ -88,7 +92,15 @@
   const state = { lang: "en", source: "sample-key", text: SAMPLE, modePref: "auto", sim: 1, filter: "all", judge: {}, error: null, D: null, A: null, mode: "key" };
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+  /* What was pasted or chosen is kept for this tab only, so an accidental refresh does not lose it. */
+  const INPUT_KEY = "ridi-input", INPUT_LIMIT = 2000000;
+  const tab = {
+    get() { try { return sessionStorage.getItem(INPUT_KEY); } catch (e) { return null; } },
+    set(text) { try { if (text.length <= INPUT_LIMIT) sessionStorage.setItem(INPUT_KEY, text); else sessionStorage.removeItem(INPUT_KEY); } catch (e) {} },
+    clear() { try { sessionStorage.removeItem(INPUT_KEY); } catch (e) {} }
   };
   (function () {
     const saved = store.get("ridi-lang");
@@ -129,6 +141,7 @@
       state.source = before.source; state.text = before.text; const err = state.error, code = state.errorCode;
       compute(); state.error = err; state.errorCode = code;
     } else if (!state.error) {
+      if (source === "file") tab.set(text); else tab.clear();
       state.judge = {};
       const saved = store.get(judgeKey()); if (saved) { try { state.judge = JSON.parse(saved) || {}; } catch (e) {} }
     }
@@ -241,8 +254,15 @@
         (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + "</p><ul>" + D.wrong.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
         (w[2] ? ' <span class="tag">' + esc(L().pill[w[2] === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
     }
-    h += '<div class="out"><div class="row">' + (!KEYM && D.stable_change_ids.length ? '<button type="button" id="copy-j">' + esc(u("copyJ")) + "</button>" : "") +
-      (D.cards.length || D.wrong.length ? '<button type="button" id="copy-r">' + esc(u("copyR")) + "</button>" : "") +
+    if (KEYM && D.changed_correct && D.changed_correct.length) {
+      h += '<details class="wrongs panel" data-k="changed-correct"><summary>' + esc(t("correctChangedList", { n: D.changed_correct.length })) + '</summary><p class="small muted" style="padding-top:8px">' +
+        esc(t("correctChangedNote")) + "</p><ul>" + D.changed_correct.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
+        (w[2] === "unconfirmed" ? ' <span class="tag">' + esc(t("notRerun")) + "</span>" : "") +
+        '<div class="small"><span class="muted">' + esc(t("current")) + ':</span> <span dir="auto">' + esc(w[3]) + '</span></div>' +
+        '<div class="small"><span class="muted">' + esc(t("proposed")) + ':</span> <span dir="auto">' + esc(w[4]) + "</span></div></li>").join("") + "</ul></details>";
+    }
+    h += '<div class="out"><div class="row">' + (!KEYM && D.stable_change_ids.length ? '<button type="button" id="copy-j">' + esc(u("copyJ")) + '</button><button type="button" id="forget">' + esc(u("forget")) + "</button>" : "") +
+      (D.cards.length || D.wrong.length || (D.changed_correct || []).length ? '<button type="button" id="copy-r">' + esc(u("copyR")) + "</button>" : "") +
       '<span class="small muted" id="copy-msg" role="status"></span></div><textarea id="csv-out" hidden readonly dir="ltr" aria-label="CSV"></textarea></div></section>';
     return h;
   }
@@ -275,10 +295,16 @@
     open.forEach((k) => { const d = Array.from(document.querySelectorAll("details[data-k]")).find((x) => x.dataset.k === k); if (d) d.open = true; });
     applyFilter();
   }
-  function copyOut(text) {
+  function copyOut(text, button) {
     const msg = $("copy-msg"), out = $("csv-out");
     const fail = () => { out.hidden = false; out.value = text; out.focus(); out.select(); msg.textContent = u("copyFail"); };
-    try { navigator.clipboard.writeText(text).then(() => { msg.textContent = u("copied"); out.hidden = false; out.value = text; }, fail); } catch (e) { fail(); }
+    const done = () => {
+      msg.textContent = u("copied"); out.hidden = false; out.value = text;
+      const label = button.textContent;                 /* the button itself says so for two seconds */
+      button.textContent = "\u2713 " + u("copied"); button.classList.add("done");
+      setTimeout(() => { if (button.isConnected) { button.textContent = label; button.classList.remove("done"); } }, 2000);
+    };
+    try { navigator.clipboard.writeText(text).then(done, fail); } catch (e) { fail(); }
   }
 
   $("lang").addEventListener("click", () => { state.lang = state.lang === "ar" ? "en" : "ar"; store.set("ridi-lang", state.lang); render(); });
@@ -288,9 +314,15 @@
   $("file").addEventListener("change", (ev) => {
     const f = ev.target.files && ev.target.files[0]; if (!f) return;
     const rd = new FileReader();
-    rd.onload = () => { $("paste").value = String(rd.result); state.errorCode = null; load("file", String(rd.result)); };
+    rd.onload = () => {
+      const bytes = new Uint8Array(rd.result); let text = null;
+      const enc = bytes[0] === 0xFF && bytes[1] === 0xFE ? "utf-16le" : bytes[0] === 0xFE && bytes[1] === 0xFF ? "utf-16be" : "utf-8";
+      try { text = new TextDecoder(enc, { fatal: true }).decode(bytes); } catch (e) { text = null; }
+      if (text === null || text.indexOf("\0") >= 0) { state.errorCode = { code: "encoding", info: {} }; render(); return; }
+      $("paste").value = text; state.errorCode = null; load("file", text);
+    };
     rd.onerror = () => { state.errorCode = { code: "read", info: {} }; render(); };
-    rd.readAsText(f);
+    rd.readAsArrayBuffer(f);
   });
   $("mode").addEventListener("change", (ev) => { state.modePref = ev.target.value; if (state.source === "file") { state.errorCode = null; load("file", state.text); } });
   $("sim").addEventListener("change", (ev) => { state.sim = parseFloat(ev.target.value); state.errorCode = null; load(state.source, state.text); });
@@ -307,10 +339,13 @@
     else if (b.dataset.go) { if (state.filter !== "all") { state.filter = "all"; applyFilter(); } const el = $("c-" + b.dataset.go); if (el) el.scrollIntoView({ block: "start" }); }
     else if (b.id === "copy-j") {
       const ids = state.D.stable_change_ids.filter((id) => state.judge[id]);
-      copyOut(RidiCore.toCsv(["case_id", "judgment"], ids.map((id) => [id, state.judge[id]])));
+      copyOut(RidiCore.toCsv(["case_id", "judgment"], ids.map((id) => [id, state.judge[id]])), b);
     }
-    else if (b.id === "copy-r") { const r = RidiCore.reviewTable(state.A, state.judge); copyOut(RidiCore.toCsv(r.header, r.rows)); }
+    else if (b.id === "copy-r") { const r = RidiCore.reviewTable(state.A, state.judge); copyOut(RidiCore.toCsv(r.header, r.rows), b); }
+    else if (b.id === "forget") { state.judge = {}; store.del(judgeKey()); render(); }
   });
 
-  load("sample-key", SAMPLE);
+  const kept = tab.get();
+  if (kept) { $("paste").value = kept; load("file", kept); }
+  if (!state.D) { state.errorCode = null; load("sample-key", SAMPLE); }
 })();

@@ -58,7 +58,8 @@ const RidiCore = (function () {
     }
     if (started) { endField(); all.push(row); }
     const out = [];
-    all.forEach((r, i) => { if (r.some((cell) => strip(cell) !== "")) out.push([i + 1, r]); });
+    const unguard = (cell) => (cell.length > 1 && cell[0] === "'" && "=+-@\t\r".indexOf(cell[1]) >= 0 ? cell.slice(1) : cell);
+    all.forEach((r, i) => { if (r.some((cell) => strip(cell) !== "")) out.push([i + 1, r.map(unguard)]); });
     return out;
   }
   function runColumn(side, run, kind) {
@@ -147,8 +148,8 @@ const RidiCore = (function () {
     const A = new Set(x.split(" ")), B = new Set(y.split(" "));
     const neg = (S) => { for (const w of S) if (NEGATIONS.has(w)) return true; return false; };
     if (neg(A) !== neg(B)) return false;
-    const nums = (S) => Array.from(S).filter((w) => /^\p{Nd}+$/u.test(w)).sort().join(" ");
-    if (nums(A) !== nums(B)) return false;
+    const nums = (s) => (s.match(/\p{Nd}+/gu) || []).join(" ");   /* the digit runs, in order: "5mg" and "50mg" differ */
+    if (nums(x) !== nums(y)) return false;
     let shared = 0; A.forEach((w) => { if (B.has(w)) shared++; });
     const union = A.size + B.size - shared;
     return union > 0 && shared / union >= threshold;
@@ -181,7 +182,7 @@ const RidiCore = (function () {
       if (!eq(b[0], u[0])) a.changed++;
       if (b.length > 1) { a.rerunBN++; if (!eq(b[0], b[1])) a.rerunB++; if (!b.every((r) => eq(r, b[0]))) a.anyB++; }
       if (u.length > 1) { a.rerunUN++; if (!eq(u[0], u[1])) a.rerunU++; if (!u.every((r) => eq(r, u[0]))) a.anyU++; }
-      if (s === "wrong_both" && b.concat(u).every((r) => r.ans)) {
+      if ((s === "wrong_both" || s === "correct_both") && b.concat(u).every((r) => r.ans)) {
         const byAnswer = classify(c, NOKEY, threshold);
         if (byAnswer === "stable_change") a.answerChange[c.id] = "stable";
         else if (byAnswer === "change_unconfirmed") a.answerChange[c.id] = "unconfirmed";
@@ -212,9 +213,11 @@ const RidiCore = (function () {
       confirmable_cases: a.confirmable, runs_per_version: { current: a.maxRunsB, proposed: a.maxRunsU },
       states: Object.assign({}, a.counts), case_ids: caseIds, first_run: first,
       any_run_disagreement: { current: a.anyB, proposed: a.anyU } };
-    if (key) summary.wrong_both_answer_changed = {
-      stable: Object.keys(a.answerChange).filter((i) => a.answerChange[i] === "stable"),
-      unconfirmed: Object.keys(a.answerChange).filter((i) => a.answerChange[i] === "unconfirmed") };
+    if (key) {
+      const flagged = (state, flag) => a.items.filter((it) => it.s === state && a.answerChange[it.c.id] === flag).map((it) => it.c.id);
+      summary.wrong_both_answer_changed = { stable: flagged("wrong_both", "stable"), unconfirmed: flagged("wrong_both", "unconfirmed") };
+      summary.correct_both_answer_changed = { stable: flagged("correct_both", "stable"), unconfirmed: flagged("correct_both", "unconfirmed") };
+    }
     return summary;
   }
   function passageDifference(c) {
@@ -240,7 +243,7 @@ const RidiCore = (function () {
     if (hasErr) header.push("run_errors");
     const rows = [];
     for (const { c, s } of a.items) {
-      if (UNCHANGED.has(s)) continue;
+      if (UNCHANGED.has(s) && !a.answerChange[c.id]) continue;
       const row = [c.id, s, key ? (a.answerChange[c.id] || "") : (judgments[c.id] || "")];
       if (hasQ) row.push(c.q); if (hasE) row.push(c.expected);
       if (answerCols) for (const [, n, f] of sides) for (let k = 0; k < n; k++) row.push(k < c[f].length ? c[f][k].ans : "");
@@ -252,7 +255,10 @@ const RidiCore = (function () {
     return { header, rows };
   }
   function toCsv(header, rows) {
-    const cell = (v) => { const s = v === null || v === undefined ? "" : String(v); return /[,"\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    /* A spreadsheet reads a cell that starts with = + - @ tab or return as a formula: an apostrophe goes in front,
+       and readRecords takes it off again. A null character is never read back. */
+    const cell = (v) => { let s = v === null || v === undefined ? "" : String(v).replace(/\0/g, ""); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return /[,"\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     return [header].concat(rows).map((r) => r.map(cell).join(",") + "\n").join("");
   }
   function ledgerTiles(a) {
@@ -271,7 +277,7 @@ const RidiCore = (function () {
     });
   }
   function pageData(a) {
-    const key = a.mode === KEY, cards = [], stripCells = [], wrong = [];
+    const key = a.mode === KEY, cards = [], stripCells = [], wrong = [], changedCorrect = [];
     for (const { c, s } of a.items) {
       const flag = a.answerChange[c.id] || null;
       let card = -1;
@@ -283,11 +289,12 @@ const RidiCore = (function () {
       }
       stripCells.push([c.id, s, card]);
       if (s === "wrong_both") wrong.push([c.id, c.q, flag]);
+      else if (s === "correct_both" && flag) changedCorrect.push([c.id, c.q, flag, c.b[0].ans, c.u[0].ans]);
     }
     const classes = {}; Object.keys(a.counts).forEach((s) => { classes[s] = CSS_CLASS[s]; });
     return { summary: buildSummary(a), tiles: ledgerTiles(a), classes,
       acc: key && a.nCompared ? { a: a.correctB, b: a.correctU, n: a.nCompared, r: a.regressions, i: a.improvements } : null,
-      strip: stripCells, cards, wrong, stable_change_ids: a.ids("stable_change") };
+      strip: stripCells, cards, wrong, changed_correct: changedCorrect, stable_change_ids: a.ids("stable_change") };
   }
 
   return { parseResults, readRecords, analyse, classify, buildSummary, reviewTable, toCsv, pageData, normalise, sameAnswer, runColumn };

@@ -145,6 +145,11 @@ KEY_MODE = {
         },
         "wrongChanged": "{n} of them gave a different wrong answer after the update; they also appear "
                         "in the cases to review.",
+        "correctChangedList": "Correct in both versions, answer changed ({n})",
+        "correctChangedNote": "The answer key scores both answers as correct, so these are not counted as changes "
+                              "above. The answers differ; read them if the wording matters, for example a number "
+                              "or a condition.",
+        "notRerun": "not re-run",
         "acc": "On the first run, accuracy went from {a}% to {b}% ({d} points). Regressions: {r}. Improvements: {i}.",
         "noneCorrect": "No answer was scored correct in either version, so the scoring probably does not fit "
                        "the answers. Exact match rarely fits free text: check the expected answers, use a "
@@ -176,6 +181,10 @@ KEY_MODE = {
             "wrong_both_changed_unconfirmed": "خاطئة في النسختين وتغيّرت الإجابة، بلا إعادة تشغيل",
         },
         "wrongChanged": "{n} منها أعطت إجابة خاطئة مختلفة بعد التحديث، وتظهر أيضًا ضمن حالات المراجعة.",
+        "correctChangedList": "صحيحة في النسختين وتغيّرت الإجابة ({n})",
+        "correctChangedNote": "مفتاح الإجابات يعدّ الإجابتين صحيحتين، فلا تُحسب هذه ضمن التغيّرات أعلاه. "
+                              "نص الإجابة اختلف؛ اقرأها إن كانت الصياغة مهمة، كرقم أو شرط.",
+        "notRerun": "بلا إعادة تشغيل",
         "acc": "في التشغيل الأول انتقلت الدقة من {a}% إلى {b}% ({d} نقطة). التراجعات: {r}. التحسّنات: {i}.",
         "noneCorrect": "لم تُقيَّم أي إجابة صحيحةً في النسختين، فالأرجح أن طريقة التقييم لا تناسب الإجابات. "
                        "التطابق التام قلّما يناسب النص الحر: راجع الإجابات المتوقعة، أو استخدم دالة تقييم، "

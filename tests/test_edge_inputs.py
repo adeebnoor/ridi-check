@@ -80,7 +80,11 @@ def test_arabic_symbols_markup_and_line_breaks_inside_cells_come_back_unchanged(
         rows = {row["case_id"]: row for row in csv.DictReader(f)}
     assert set(rows) == {"١", "tab\there"}
     assert rows["١"]["baseline_answer"] == ARABIC_BEFORE and rows["١"]["updated_repeat_answer"] == ARABIC_AFTER
-    assert rows["tab\there"]["baseline_answer"] == FORMULA      # written as given: see docs/REFERENCE.md
+    # a spreadsheet would run this cell as a formula, so it is written with an apostrophe in front ...
+    assert rows["tab\there"]["baseline_answer"] == "'" + FORMULA
+    # ... and read back without it
+    again, _ = read_results(str(tmp_path / "review_cases.csv"))
+    assert {c.case_id: c.baseline[0].answer for c in again}["tab\there"] == FORMULA
 
     with open(tmp_path / "report.html", encoding="utf-8") as f:
         html = f.read()

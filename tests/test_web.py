@@ -29,7 +29,7 @@ for (const job of JSON.parse(fs.readFileSync(process.argv[3], 'utf8'))) {
     const s = core.buildSummary(a), review = core.reviewTable(a, {});
     out.push({ mode: r.mode, states: a.items.map((it) => [it.c.id, it.s]), counts: a.counts, first: s.first_run,
       any: s.any_run_disagreement, runs: s.runs_per_version, confirmable: s.confirmable_cases, compared: s.cases_compared,
-      changed: s.wrong_both_answer_changed || null, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
+      changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
   } catch (e) { if (!e.code) throw e; out.push({ error: e.code, row: e.info.row || null }); }
 }
 fs.writeFileSync(process.argv[4], JSON.stringify(out));
@@ -65,14 +65,23 @@ def python_side(text, mode, sim):
     return {"mode": resolved, "states": [[c.case_id, st] for c, st in a.items], "counts": a.counts, "first": first,
             "any": s["any_run_disagreement"], "runs": s["runs_per_version"], "confirmable": s["confirmable_cases"],
             "compared": s["cases_compared"], "changed": s.get("wrong_both_answer_changed"),
+            "correct_changed": s.get("correct_both_answer_changed"),
             "review": to_csv(header, rows), "tiles": ledger_tiles(a)}
 
 
 WORDS = ["yes", "Yes.", "no", "NOT_ENOUGH_INFO", "not enough info", "نعم", "نعم.", "كلا", "Paris, France", "paris france",
-         'say "hi"', "a;b", "tab\there", "two\nlines", " padded ", "x-ray", "=1+1", "'quoted'", "100%", "٣ أيام"]
+         'say "hi"', "a;b", "tab\there", "two\nlines", " padded ", "x-ray", "=1+1", "'quoted'", "100%", "٣ أيام",
+         "-5", "+2 units", "@home", "'=kept", "- a bullet"]
 SENTENCES = ["the loan period is 21 days for every book in the library", "the loan period is 14 days for every book in the library",
              "the loan period is not 21 days for every book in the library", "the loan period is 21 days for each book in the library",
-             "لا يُسمح بالطعام في غرف الدراسة أبداً", "يُسمح بالطعام في غرف الدراسة أبداً", "the fee is ten pounds", "the fee is ten pounds today"]
+             "لا يُسمح بالطعام في غرف الدراسة أبداً", "يُسمح بالطعام في غرف الدراسة أبداً", "the fee is ten pounds", "the fee is ten pounds today",
+             "give the made-up medicine 5mg once every day with food and check the level each week",
+             "give the made-up medicine 50mg once every day with food and check the level each week",
+             "give the made-up medicine 5 mg once every day with food and check the level each week",
+             "give 2 tablets of 5 mg in the morning and at night with a full glass of water",
+             "give 5 tablets of 2 mg in the morning and at night with a full glass of water",
+             "الجرعة ٥ ملغ مرة واحدة كل يوم مع الطعام ويُراجع المريض كل أسبوع",
+             "الجرعة ٥٠ ملغ مرة واحدة كل يوم مع الطعام ويُراجع المريض كل أسبوع"]
 
 
 def random_job(rng):
@@ -194,3 +203,44 @@ def test_built_page_is_up_to_date_and_self_contained():
     assert "fetch(" not in on_disk and "XMLHttpRequest" not in on_disk and "sendBeacon" not in on_disk
     fragment = build_web.fragment(on_disk)
     assert fragment.startswith("<title>RIDI Update Check</title>") and "<html" not in fragment and "<body" not in fragment
+
+
+TAIL = (" twice daily and review renal function, body weight and age before the next visit in clinic, then repeat the "
+        "blood count after one month of treatment.")
+ARABIC_TAIL = " مرة واحدة كل يوم مع الطعام ويُراجع المريض كل أسبوع في العيادة قبل أي تعديل آخر على العلاج أو إضافة دواء جديد إلى القائمة"
+DOSES = [
+    # Long shared sentences, so that word overlap alone is above 0.9. The first, third and fourth pair
+    # were counted as the same answer before numbers were compared as digit runs.
+    ("Start the made-up medicine 5mg" + TAIL, "Start the made-up medicine 50mg" + TAIL, False),
+    ("Start the made-up medicine 2.5 mg" + TAIL, "Start the made-up medicine 25 mg" + TAIL, False),
+    ("Give 2 tablets of 5 mg" + TAIL, "Give 5 tablets of 2 mg" + TAIL, False),
+    ("الجرعة ٥ملغ" + ARABIC_TAIL, "الجرعة ٥٠ملغ" + ARABIC_TAIL, False),
+    ("Start the made-up medicine 5 mg" + TAIL, "Start the made-up medicine 5 mg" + TAIL + " Thanks.", True),
+]
+
+
+def test_numbers_are_never_blurred_by_word_overlap():
+    from ridi_check.analysis import same_answer
+    for a, b, expected in DOSES:
+        assert same_answer(a, b, 0.9) is expected, (a, b)
+        assert same_answer(a, b) is False                    # exact match, the default, never called them equal
+
+
+@needs_node
+def test_browser_treats_numbers_and_spreadsheet_formulas_as_python_does(tmp_path):
+    cells = ["=1+1", "+1", "-1", "@x", "\tindent", "plain", "'=kept", "a,b", 'say "=x"', "", "nul\x00l", "- bullet\nsecond line"]
+    script = ("const core=require(process.argv[1]),j=JSON.parse(process.argv[2]);"
+              "const csv=core.toCsv(['a'],j.cells.map((c)=>[c]));"
+              "console.log(JSON.stringify({csv,back:core.readRecords(csv).map((r)=>r[1][0]),"
+              "same:j.doses.map((d)=>core.sameAnswer(d[0],d[1],0.9))}));")
+    done = subprocess.run([NODE, "-e", script, os.path.join(ROOT, "web", "core.js"), json.dumps({"cells": cells, "doses": DOSES})],
+                          capture_output=True, text=True, encoding="utf-8", check=True)
+    js = json.loads(done.stdout)
+    from ridi_check.contract import read_records
+    csv_text = to_csv(["a"], [[c] for c in cells])
+    assert js["csv"] == csv_text and js["same"] == [d[2] for d in DOSES]
+    assert "\n=1+1\n" not in csv_text and "\n'=1+1\n'+1\n'-1\n'@x\n" in csv_text
+    back = [r[1][0] for r in read_records(csv_text)]
+    assert js["back"] == back
+    assert back[:4] == ["a", "=1+1", "+1", "-1"] and "- bullet\nsecond line" in back and "null" in back
+

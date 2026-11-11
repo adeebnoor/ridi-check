@@ -214,3 +214,60 @@ def test_a_long_list_of_cases_is_cut_short_in_the_printed_summary(write, capsys)
     line = [text for text in capsys.readouterr().out.splitlines() if text.startswith("Wrong in both versions")][0]
     assert "c19, and 10 more." in line and "c20" not in line
 
+
+
+CHANGED_WHILE_CORRECT = (
+    "case_id,question,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+    "baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n"
+    "kept,q1,Avoid the combination.,Avoid the combination.,Avoid the combination.,avoid the combination,1,1,1,1\n"
+    "reworded,q2,Avoid the combination.,Avoid the combination.,Use with monitoring.,Use with monitoring.,1,1,1,1\n"
+    "wavering,q3,Avoid the combination.,Avoid the combination.,Use with monitoring.,Avoid the combination.,1,1,1,1\n"
+    "worse,q4,Avoid the combination.,Avoid the combination.,Use freely.,Use freely.,1,1,0,0\n"
+)
+
+
+def test_an_answer_that_changed_while_scored_correct_is_listed_and_keeps_its_state(tmp_path, write, capsys):
+    results = write("results.csv", CHANGED_WHILE_CORRECT)
+    assert main(["report", results]) == 0
+    out = capsys.readouterr().out
+    assert "correct_both                  3" in out and "stable_regression             1   cases: worse" in out
+    assert ("Correct in both versions but with a changed answer: reworded. The answer key scores both answers as "
+            "correct; read them if the wording matters.") in out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        summary = json.load(f)
+    # counted as correct in both, as before; an answer that only wavers between runs is not listed
+    assert summary["states"]["correct_both"] == 3 and summary["first_run"]["change_between_versions"]["count"] == 1
+    assert summary["correct_both_answer_changed"] == {"stable": ["reworded"], "unconfirmed": []}
+    assert summary["wrong_both_answer_changed"] == {"stable": [], "unconfirmed": []}
+    rows = {row["case_id"]: row for row in read_csv(tmp_path / "review_cases.csv")}
+    assert set(rows) == {"reworded", "worse"}
+    assert (rows["reworded"]["state"], rows["reworded"]["answer_change"]) == ("correct_both", "stable")
+    html, data = page_data(tmp_path / "report.html")
+    assert data["changed_correct"] == [["reworded", "q2", "stable", "Avoid the combination.", "Use with monitoring."]]
+    assert [card["id"] for card in data["cards"]] == ["worse"]          # not mixed in with the cases that changed score
+    assert "correctChangedList" in html
+    assert main(["gate", results, "--max-stable-regressions", "1"]) == 0   # listing it changes no count the gate uses
+
+
+def test_with_one_run_a_changed_correct_answer_is_marked_as_not_rerun(write, capsys):
+    results = write("results.csv", "case_id,baseline_answer,updated_answer,baseline_correct,updated_correct\n"
+                    "a,Avoid it.,Use with monitoring.,1,1\n")
+    assert main(["report", results]) == 0
+    assert "Correct in both versions but with a changed answer: a (not re-run)." in capsys.readouterr().out
+
+
+def test_the_gate_can_limit_unstable_cases_when_asked(capsys):
+    assert main(["gate", FIXTURE, "--max-stable-regressions", "3"]) == 0       # unstable cases are not checked by default
+    assert "unstable cases" not in capsys.readouterr().out
+    assert main(["gate", FIXTURE, "--max-stable-regressions", "3", "--max-unstable", "4"]) == 1
+    out = capsys.readouterr().out
+    assert out.count("unstable\tcase ") == 5 and "unstable cases: 5 (limit 4) - over the limit" in out
+    assert main(["gate", FIXTURE, "--max-stable-regressions", "3", "--max-unstable", "5"]) == 0
+    assert "unstable cases: 5 (limit 5)\n" in capsys.readouterr().out
+
+
+def test_forcing_no_key_mode_says_the_scores_were_left_out_not_that_they_are_missing(tmp_path, capsys):
+    assert main(["report", FIXTURE, "--mode", "nokey", "--out", str(tmp_path)]) == 0
+    err = capsys.readouterr().err
+    assert "because --mode nokey was given" in err and "left out on purpose" in err
+    assert "no baseline_correct" not in err

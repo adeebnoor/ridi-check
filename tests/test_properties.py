@@ -68,9 +68,11 @@ def test_invariants(seed):
         assert abs(a.correct_u - a.correct_b) <= a.changed <= min(a.correct_b + a.correct_u,
                                                                  2 * a.n - a.correct_b - a.correct_u)
 
-    # reading review_cases.csv back gives the same state for every case in it
+    # reading review_cases.csv back gives the same state for every case in it: the cases that changed,
+    # and those correct in both versions whose answer changed all the same
     header, rows = review_table(a)
     if rows:
         again = analyse(*parse_results(to_csv(header, rows), mode))
-        assert [(c.case_id, s) for c, s in again.items] == [(c.case_id, s) for c, s in a.items
-                                                           if s not in ("correct_both", "same")]
+        assert [(c.case_id, s) for c, s in again.items] == [
+            (c.case_id, s) for c, s in a.items if s not in ("correct_both", "same") or c.case_id in a.answer_change]
+        assert again.answer_change == a.answer_change

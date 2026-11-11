@@ -74,6 +74,7 @@ Prints the counts and one line per offending case. It prints no verdict about th
 |---|---|---|
 | `--max-stable-regressions N` | 0 | with an answer key: stable regressions allowed. Without one: stable changes you judged worse |
 | `--max-unjudged-changes N` | 0 | without an answer key: stable changes with no judgment, or judged unsure |
+| `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them |
 | `--max-incomplete N` | 0 | cases that could not be compared because a call failed |
 | `--mode`, `--similarity`, `--judgments` | as for `report` | |
 
@@ -126,6 +127,11 @@ One row per question. `run` writes it; you can also make it by hand and use `rep
 Missing or duplicate `case_id`, non-binary `_correct` values and files with neither answers nor correctness
 are rejected, with the row number as a spreadsheet shows it.
 
+`report` and `gate` never score an answer. With `_correct` columns they use the 0 and 1 values as they are
+in the file, whoever put them there, and `expected` is only shown. Scoring against `expected` happens in
+`run`, which writes the `_correct` columns. `--mode nokey` leaves the `_correct` columns out on purpose
+and compares the answers.
+
 ## How cases are labelled
 
 With an answer key two runs are equal when their correctness is equal; without one, when the answers match
@@ -138,6 +144,12 @@ after lower-casing, removing punctuation and collapsing spaces (or under `--simi
 
 A case whose first-run call failed is `incomplete` and is left out of every rate. A `wrong_both` case whose
 wrong answer changed keeps its state and is flagged, because correctness counting alone does not see it.
+A `correct_both` case whose answer changed is listed the same way, without changing any count: the answer
+key accepts both answers, and the wording may still matter to you.
+
+Under `--similarity`, two answers that differ in a negation word, or in their numbers, are never counted
+as the same. Numbers are the runs of digits in the answer, in order, so `5mg` and `50mg` differ, and so do
+"2 tablets of 5 mg" and "5 tablets of 2 mg". The default is exact match after normalisation.
 
 The rates use first runs: the change between versions, and the re-run variation of each version (run 1
 against run 2). Both variations are always shown and neither is subtracted from the change. With an answer
@@ -152,7 +164,7 @@ key the change equals regressions plus improvements, mean accuracy moves by thei
 | `run_manifest.json` | `run` | hash of the questions file, both definitions, settings, one entry per invocation |
 | `results.csv` | `run` | the table above |
 | `summary.json` | `report` | counts per state, case ids, first-run rates |
-| `review_cases.csv` | `report` | every case that is not same / correct in both, with all its runs; can be read back by `report` |
+| `review_cases.csv` | `report` | every case that is not same / correct in both, and every case correct in both whose answer changed, with all its runs; can be read back by `report` |
 | `report.html` | `report` | one self-contained page, English and Arabic, light and dark |
 
 Field-by-field descriptions are in the [developer guide](DEVELOPER_GUIDE.md#files).
@@ -200,10 +212,11 @@ A file with **one run of each version** is accepted. Every difference is then la
 never stable; the re-run variation is shown as "no second run"; and `gate` exits 0, because it only counts
 confirmed regressions, and says on standard error that nothing could be confirmed.
 
-Answers are written to `results.csv` and `review_cases.csv` exactly as the assistant gave them. A
-spreadsheet program may read a cell that starts with `=`, `+`, `-` or `@` as a formula. If your assistant
-can be made to answer with text of someone else's choosing, open these files as text, or use `report.html`,
-where every answer is shown as plain text.
+A spreadsheet program reads a cell that starts with `=`, `+`, `-` or `@` as a formula. In `results.csv` and
+`review_cases.csv`, and in what the browser version copies, such a cell is written with an apostrophe in
+front (`'=1+1`), so that opening the file never runs text that came from an assistant. The apostrophe is
+taken off again when a file is read, so the tool reads back exactly what it wrote; `raw_outputs.jsonl`
+always holds the answer as it was given. A null character in an answer is dropped when a CSV is written.
 
 ## Measured limits
 

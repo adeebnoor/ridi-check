@@ -279,6 +279,13 @@ function render() {
       (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + "</p><ul>" + D.wrong.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
       (w[2] ? ' <span class="tag">' + esc(L().pill[w[2] === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
   }
+  if (KEY && D.changed_correct && D.changed_correct.length) {
+    h += '<details class="wrongs panel" data-k="changed-correct"><summary>' + esc(t("correctChangedList", { n: D.changed_correct.length })) + '</summary><p class="small muted" style="padding-top:8px">' +
+      esc(t("correctChangedNote")) + "</p><ul>" + D.changed_correct.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
+      (w[2] === "unconfirmed" ? ' <span class="tag">' + esc(t("notRerun")) + "</span>" : "") +
+      '<div class="small"><span class="muted">' + esc(t("current")) + ':</span> <span dir="auto">' + esc(w[3]) + '</span></div>' +
+      '<div class="small"><span class="muted">' + esc(t("proposed")) + ':</span> <span dir="auto">' + esc(w[4]) + "</span></div></li>").join("") + "</ul></details>";
+  }
   if (!KEY && D.stable_change_ids.length) {
     h += '<div class="out"><div class="row"><button type="button" id="export">' + esc(t("export")) + '</button><span class="small muted" id="export-msg" role="status"></span></div>' +
       '<p class="small muted">' + esc(t("exportHow")) + '</p><textarea id="csv-out" hidden readonly dir="ltr"></textarea></div>';

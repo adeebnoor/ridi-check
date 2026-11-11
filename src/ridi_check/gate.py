@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .analysis import (
-    INCOMPLETE, REGRESSION_UNCONFIRMED, STABLE_CHANGE, STABLE_REGRESSION, CHANGE_UNCONFIRMED, Analysis,
+    INCOMPLETE, REGRESSION_UNCONFIRMED, STABLE_CHANGE, STABLE_REGRESSION, CHANGE_UNCONFIRMED, UNSTABLE, Analysis,
 )
 from .contract import KEY
 
@@ -23,7 +23,7 @@ class GateResult:
 
 def evaluate(
     a: Analysis, judgments: dict[str, str] | None = None, *, max_stable_regressions: int = 0,
-    max_unjudged_changes: int = 0, max_incomplete: int = 0,
+    max_unjudged_changes: int = 0, max_incomplete: int = 0, max_unstable: int | None = None,
 ) -> GateResult:
     key = a.mode == KEY
     judgments = judgments or {}
@@ -45,6 +45,10 @@ def evaluate(
         ]
         checks.append(("stable changes judged worse by the owner", len(worse), max_stable_regressions))
         checks.append(("stable changes not yet judged", len(unjudged), max_unjudged_changes))
+    if max_unstable is not None:      # off unless asked for: re-run variation is not a regression
+        unstable = a.ids(UNSTABLE)
+        lines += [f"unstable\tcase {i}" for i in unstable]
+        checks.append(("unstable cases", len(unstable), max_unstable))
     incomplete = a.ids(INCOMPLETE)
     if incomplete:
         lines += [f"incomplete (a first-run call failed)\tcase {i}" for i in incomplete]

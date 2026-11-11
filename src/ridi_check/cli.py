@@ -138,6 +138,8 @@ def build_parser() -> argparse.ArgumentParser:
                         "judged worse. Default 0.")
     p.add_argument("--max-unjudged-changes", type=_non_negative, default=0, metavar="N",
                    help="no-key mode: stable changes allowed with no judgment, or judged unsure. Default 0.")
+    p.add_argument("--max-unstable", type=_non_negative, default=None, metavar="N",
+                   help="cases allowed whose answers did not hold on re-run. Not checked unless given.")
     p.add_argument("--max-incomplete", type=_non_negative, default=0, metavar="N",
                    help="cases allowed that could not be compared because a call failed. Default 0.")
     _add_analysis_options(p)
@@ -312,6 +314,7 @@ def _cmd_gate(args: argparse.Namespace) -> int:
     result = evaluate(
         analysis, judgments, max_stable_regressions=args.max_stable_regressions,
         max_unjudged_changes=args.max_unjudged_changes, max_incomplete=args.max_incomplete,
+        max_unstable=args.max_unstable,
     )
     print(f"ridi-check gate: {args.results}, {len(cases)} case{'' if len(cases) == 1 else 's'}, "
           f"{'answer-key mode' if mode == 'key' else 'no answer key'}")
