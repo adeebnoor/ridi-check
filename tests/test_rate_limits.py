@@ -101,11 +101,16 @@ def test_the_http_adapter_says_whether_trying_again_can_help(service):
     expected = {429: (True, True), 402: (False, True), 401: (False, True), 403: (False, True),
                 400: (False, False), 404: (False, False), 500: (True, False), 503: (True, False)}
     for status, (retryable, service_failure) in expected.items():
-        service.reply = lambda n, question, status=status: (status, {"Retry-After": "2"}, {"error": "FREE_LIMIT"})
+        service.reply = lambda n, question, status=status: (status, {}, {"error": "FREE_LIMIT"})
         with pytest.raises(AdapterError, match=f"HTTP {status}") as caught:
             answer("q", META)
         assert (caught.value.retryable, caught.value.service_failure) == (retryable, service_failure), status
-        assert caught.value.retry_after == 2 and caught.value.status == status
+        assert caught.value.retry_after is None and caught.value.status == status
+        # a refusal that says when to come back is worth trying again, whatever its status
+        service.reply = lambda n, question, status=status: (status, {"Retry-After": "2"}, {"error": "FREE_LIMIT"})
+        with pytest.raises(AdapterError) as caught:
+            answer("q", META)
+        assert caught.value.retryable and caught.value.retry_after == 2
 
 
 def test_a_rate_limit_is_waited_out_and_no_other_call_starts_meanwhile(write, tmp_path, service):
@@ -207,4 +212,17 @@ def test_an_interrupt_does_not_wait_out_a_rate_limit(write, tmp_path):
     started = time.monotonic()
     outcome = run(cfg, log=io.StringIO())
     assert outcome.interrupted and time.monotonic() - started < 20      # the wait asked for was 60 seconds
+
+
+def test_a_free_limit_sent_as_402_with_retry_after_is_waited_out(write, tmp_path, service):
+    """What a real free service was seen to send: HTTP 402, code FREE_LIMIT, Retry-After in seconds."""
+    service.reply = lambda n, question: ((402, {"Retry-After": "0.4"}, {"error": {"code": "FREE_LIMIT"}}) if n in (2, 3)
+                                         else (200, {}, {"answer": "answer to " + question}))
+    log = io.StringIO()
+    cfg = config(write, tmp_path, service, 2, concurrency=1)
+    outcome = run(cfg, log=log)
+    assert (outcome.calls_ok, outcome.calls_failed, outcome.attempts) == (4, 0, 6)
+    assert "the service asked to wait 0.4s" in log.getvalue()
+    refused = [r for r in raw(cfg.out_dir) if r["status"] == "failed"]
+    assert len(refused) == 2 and all("HTTP 402" in r["error"] for r in refused)       # every attempt is on record
 

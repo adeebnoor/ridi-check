@@ -213,6 +213,14 @@ const RidiCore = (function () {
       confirmable_cases: a.confirmable, runs_per_version: { current: a.maxRunsB, proposed: a.maxRunsU },
       states: Object.assign({}, a.counts), case_ids: caseIds, first_run: first,
       any_run_disagreement: { current: a.anyB, proposed: a.anyU } };
+    const listed = a.items.filter((it) => it.s !== "incomplete" && (it.c.bc.length || it.c.uc.length));
+    if (listed.length) {   /* a count of where the retrieved passages differ; it says nothing about cause */
+      const differs = listed.map((it) => { const d = passageDifference(it.c); return [it.s, d[0].length || d[1].length ? 1 : 0]; });
+      const byState = {};
+      Object.keys(a.counts).forEach((s) => { const mine = differs.filter((d) => d[0] === s);
+        if (mine.length) byState[s] = { differ: mine.reduce((n, d) => n + d[1], 0), n: mine.length }; });
+      summary.passages = { cases_with_passages: listed.length, differ: differs.reduce((n, d) => n + d[1], 0), by_state: byState };
+    }
     if (key) {
       const flagged = (state, flag) => a.items.filter((it) => it.s === state && a.answerChange[it.c.id] === flag).map((it) => it.c.id);
       summary.wrong_both_answer_changed = { stable: flagged("wrong_both", "stable"), unconfirmed: flagged("wrong_both", "unconfirmed") };
@@ -277,24 +285,25 @@ const RidiCore = (function () {
     });
   }
   function pageData(a) {
-    const key = a.mode === KEY, cards = [], stripCells = [], wrong = [], changedCorrect = [];
+    const key = a.mode === KEY, cards = [], late = [], stripCells = [], wrong = [];
     for (const { c, s } of a.items) {
       const flag = a.answerChange[c.id] || null;
-      let card = -1;
-      if (!UNCHANGED.has(s) && (s !== "wrong_both" || flag)) {
+      if ((!UNCHANGED.has(s) && (s !== "wrong_both" || flag)) || (s === "correct_both" && flag)) {
         const [onlyB, onlyU, kept] = passageDifference(c);
-        card = cards.length;
-        cards.push({ id: c.id, state: s, flag, q: c.q, expected: c.expected, b: runsForPage(c.b, key, a.threshold), u: runsForPage(c.u, key, a.threshold),
+        (s === "correct_both" ? late : cards).push({ id: c.id, state: s, flag, q: c.q, expected: c.expected, b: runsForPage(c.b, key, a.threshold), u: runsForPage(c.u, key, a.threshold),
           rem: onlyB, add: onlyU, kept, err: c.err });
       }
-      stripCells.push([c.id, s, card]);
+      stripCells.push([c.id, s, -1]);
       if (s === "wrong_both") wrong.push([c.id, c.q, flag]);
-      else if (s === "correct_both" && flag) changedCorrect.push([c.id, c.q, flag, c.b[0].ans, c.u[0].ans]);
     }
+    /* cases correct in both versions whose answer changed come last, so they never bury a case whose score changed */
+    late.forEach((card) => cards.push(card));
+    const position = new Map(cards.map((card, i) => [card.id, i]));
+    stripCells.forEach((cell) => { if (position.has(cell[0])) cell[2] = position.get(cell[0]); });
     const classes = {}; Object.keys(a.counts).forEach((s) => { classes[s] = CSS_CLASS[s]; });
     return { summary: buildSummary(a), tiles: ledgerTiles(a), classes,
       acc: key && a.nCompared ? { a: a.correctB, b: a.correctU, n: a.nCompared, r: a.regressions, i: a.improvements } : null,
-      strip: stripCells, cards, wrong, changed_correct: changedCorrect, stable_change_ids: a.ids("stable_change") };
+      strip: stripCells, cards, wrong, focus: key ? "stable_regression" : "stable_change", stable_change_ids: a.ids("stable_change") };
   }
 
   return { parseResults, readRecords, analyse, classify, buildSummary, reviewTable, toCsv, pageData, normalise, sameAnswer, runColumn };

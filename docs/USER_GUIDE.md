@@ -94,7 +94,7 @@ How many calls will it make? questions × 2 versions × runs. 50 questions with 
 | Stable change (no reference answers) | A different answer in every run | Read both answers and give your call. |
 | Unstable on re-run | A version gave different results when asked again | Not evidence about the update. Many of these mean the assistant itself is inconsistent. |
 | Wrong in both versions | No change, still wrong | The update did not fix these. Listed separately. |
-| Correct in both, answer changed | The answer key accepts both answers, and the text differs | Listed separately and not counted as a change. Read them if the wording matters, for example a number or a condition. |
+| Correct in both, answer changed | The answer key accepts both answers, and the text differs | Not counted as a change. Its card comes after the others; read it if the wording matters, for example a number or a condition. |
 | Correct in both / Same answer | No change | Nothing to do. |
 | Not re-run | You ran each version only once | Nothing can be confirmed. Run twice. |
 | Not compared | A call to your assistant failed | Run the same command again to retry. |
@@ -135,6 +135,11 @@ ridi-check gate ridi-out/results.csv
 It prints the counts and one line per offending case, and fails (exit code 1) when there is a stable
 regression, or a stable change you have not judged yet. Your deploy script can stop on that. You can
 allow some with `--max-stable-regressions N`. The gate prints counts; the decision stays yours.
+
+Answers that did not hold on re-run are not counted by default, because re-run variation is not a
+regression. Where a wrong answer is costly, count them too: `ridi-check gate ridi-out/results.csv
+--max-unstable 0` also fails when any case is unstable, since such a case is neither confirmed right nor
+confirmed wrong.
 
 ## Practical advice
 

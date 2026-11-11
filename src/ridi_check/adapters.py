@@ -44,7 +44,10 @@ class AdapterError(Exception):
         self.status = status
         self.retry_after = retry_after
         # 408 timeout, 409 conflict, 425 too early, 429 rate limit and every 5xx may pass on a later attempt.
-        self.retryable = status is None or status in (408, 409, 425, 429) or status >= 500
+        # So may any refusal that says when to come back: some services limit their free use with a 402
+        # and a Retry-After header.
+        self.retryable = (retry_after is not None or status is None or status in (408, 409, 425, 429)
+                          or status >= 500)
         # A missing or refused key, a used-up quota, a rate limit: the next question would fail the same
         # way. A 400, a 404, a 500 or a timeout can be about one question only, so they do not count.
         self.service_failure = status in (401, 402, 403, 429)

@@ -44,7 +44,7 @@ statement and branch coverage has not fallen below its floor (`pytest --cov=ridi
 
 1. Set the version in `src/ridi_check/__init__.py`, give it a section in `CHANGELOG.md`, run
    `python tools/build_web.py`, and merge with CI green.
-2. Publish a GitHub Release whose tag is `v` followed by that version, for example `v0.4.0`.
+2. Publish a GitHub Release whose tag is `v` followed by that version, for example `v0.5.0`.
 3. The `release` workflow builds the sdist and the wheel, checks them, tests the wheel and publishes to
    PyPI through Trusted Publishing. It stops without publishing if the tag and the version differ.
 

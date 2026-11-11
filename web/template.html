@@ -25,9 +25,15 @@ __STYLE__
 
   <div class="inputs">
     <div class="row">
+      <label for="sample-set" class="small"><span id="t-set-label"></span>
+        <select id="sample-set"><option value="library" id="opt-set-library"></option><option value="medicines" id="opt-set-medicines"></option></select></label>
       <button type="button" id="btn-sample-key" aria-pressed="true"></button>
       <button type="button" id="btn-sample-nokey" aria-pressed="false"></button>
     </div>
+    <details class="own" id="why" data-k="why">
+      <summary id="t-why"></summary>
+      <div class="body"><ol class="small" id="t-why-list"></ol></div>
+    </details>
     <details class="own" id="own" data-k="own">
       <summary id="t-own"></summary>
       <div class="body">
@@ -72,6 +78,7 @@ __STYLE__
 </div>
 <script id="ridi-strings" type="application/json">__STRINGS__</script>
 <script id="ridi-sample" type="application/json">__SAMPLE__</script>
+<script id="ridi-sample-medicines" type="application/json">__SAMPLE_MEDICINES__</script>
 <script>
 __CORE__
 </script>

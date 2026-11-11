@@ -3,6 +3,26 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## 0.5.0
+
+### Added
+- When the file lists passages, the report counts the cases whose retrieved passages differ between the
+  versions, in total and per state (`passages` in `summary.json`, one line in the printed summary and in
+  the report). It is a count, not a cause.
+- Browser version: a second synthetic example, about made-up medicines, in which mean accuracy rises by one
+  answer while three answers break in every run; and a short explanation of why each version is run more
+  than once, with the rule that is applied.
+- The user guide and the CI example say when to add `gate --max-unstable 0`.
+
+### Fixed
+- A refusal that carries a `Retry-After` header is tried again after that wait, whatever its status. A
+  live run against a free model service showed its limit arriving as HTTP 402 with `Retry-After`, which
+  0.4.0 did not try again.
+
+### Changed
+- A case that is correct in both versions and whose answer changed now has a card of its own in the report
+  and in the browser version, after the cases whose score changed, instead of a separate list.
+
 ## 0.4.0
 
 ### Added

@@ -12,6 +12,8 @@ from __future__ import annotations
 
 COMMON = {
     "en": {
+        "passages": "The retrieved passages differ between the versions in {k} of the {n} cases that list passages.",
+        "passagesNote": " This is a count, not a cause.",
         "name": "RIDI Update Check",
         "langBtn": "العربية",
         "tagline": "The current and the proposed version of an assistant, run on the same questions. "
@@ -67,6 +69,8 @@ COMMON = {
         ],
     },
     "ar": {
+        "passages": "المقاطع المسترجعة تختلف بين النسختين في {k} من {n} حالة ذُكرت مقاطعها.",
+        "passagesNote": " هذا عدّ وليس سبباً.",
         "name": "RIDI Update Check",
         "langBtn": "English",
         "tagline": "النسخة الحالية والنسخة المقترحة من المساعد على الأسئلة نفسها. "
@@ -142,14 +146,15 @@ KEY_MODE = {
             "wrong_both": "Wrong in both versions",
             "wrong_both_changed": "Wrong in both, answer changed",
             "wrong_both_changed_unconfirmed": "Wrong in both, answer changed, not re-run",
+            "correct_both_changed": "Correct in both, answer changed",
+            "correct_both_changed_unconfirmed": "Correct in both, answer changed, not re-run",
         },
         "wrongChanged": "{n} of them gave a different wrong answer after the update; they also appear "
                         "in the cases to review.",
-        "correctChangedList": "Correct in both versions, answer changed ({n})",
-        "correctChangedNote": "The answer key scores both answers as correct, so these are not counted as changes "
-                              "above. The answers differ; read them if the wording matters, for example a number "
-                              "or a condition.",
-        "notRerun": "not re-run",
+        "correctChangedNote": "The answer key scores both answers as correct, so this case is not counted as a change. "
+                              "The answers differ; read them if the wording matters, for example a number or a "
+                              "condition.",
+        "passagesFocus": " Among the stable regressions: {k} of {n}.",
         "acc": "On the first run, accuracy went from {a}% to {b}% ({d} points). Regressions: {r}. Improvements: {i}.",
         "noneCorrect": "No answer was scored correct in either version, so the scoring probably does not fit "
                        "the answers. Exact match rarely fits free text: check the expected answers, use a "
@@ -179,12 +184,13 @@ KEY_MODE = {
             "wrong_both": "خاطئة في النسختين",
             "wrong_both_changed": "خاطئة في النسختين وتغيّرت الإجابة",
             "wrong_both_changed_unconfirmed": "خاطئة في النسختين وتغيّرت الإجابة، بلا إعادة تشغيل",
+            "correct_both_changed": "صحيحة في النسختين وتغيّرت الإجابة",
+            "correct_both_changed_unconfirmed": "صحيحة في النسختين وتغيّرت الإجابة، بلا إعادة تشغيل",
         },
         "wrongChanged": "{n} منها أعطت إجابة خاطئة مختلفة بعد التحديث، وتظهر أيضًا ضمن حالات المراجعة.",
-        "correctChangedList": "صحيحة في النسختين وتغيّرت الإجابة ({n})",
-        "correctChangedNote": "مفتاح الإجابات يعدّ الإجابتين صحيحتين، فلا تُحسب هذه ضمن التغيّرات أعلاه. "
+        "correctChangedNote": "مفتاح الإجابات يعدّ الإجابتين صحيحتين، فلا تُحسب هذه الحالة تغيّراً. "
                               "نص الإجابة اختلف؛ اقرأها إن كانت الصياغة مهمة، كرقم أو شرط.",
-        "notRerun": "بلا إعادة تشغيل",
+        "passagesFocus": " ومن التراجعات الثابتة: {k} من {n}.",
         "acc": "في التشغيل الأول انتقلت الدقة من {a}% إلى {b}% ({d} نقطة). التراجعات: {r}. التحسّنات: {i}.",
         "noneCorrect": "لم تُقيَّم أي إجابة صحيحةً في النسختين، فالأرجح أن طريقة التقييم لا تناسب الإجابات. "
                        "التطابق التام قلّما يناسب النص الحر: راجع الإجابات المتوقعة، أو استخدم دالة تقييم، "
@@ -200,6 +206,7 @@ KEY_MODE = {
 
 NOKEY_MODE = {
     "en": {
+        "passagesFocus": " Among the stable changes: {k} of {n}.",
         "modeNote": "No answer key: two answers count as the same when {rule}. "
                     "A different answer is a change. Whether it is better or worse is your call.",
         "simExact": "they match after lower-casing and removing punctuation",
@@ -217,6 +224,7 @@ NOKEY_MODE = {
         "exportFail": "Copy the text below into a file named judgments.csv.",
     },
     "ar": {
+        "passagesFocus": " ومن التغيّرات الثابتة: {k} من {n}.",
         "modeNote": "بلا مفتاح إجابات: تُعدّ الإجابتان متطابقتين عندما {rule}. "
                     "الإجابة المختلفة تغيّر، والحكم بأنها أفضل أو أسوأ لك.",
         "simExact": "تتطابقان بعد توحيد حالة الأحرف وحذف علامات الترقيم",

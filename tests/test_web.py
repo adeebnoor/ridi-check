@@ -29,7 +29,8 @@ for (const job of JSON.parse(fs.readFileSync(process.argv[3], 'utf8'))) {
     const s = core.buildSummary(a), review = core.reviewTable(a, {});
     out.push({ mode: r.mode, states: a.items.map((it) => [it.c.id, it.s]), counts: a.counts, first: s.first_run,
       any: s.any_run_disagreement, runs: s.runs_per_version, confirmable: s.confirmable_cases, compared: s.cases_compared,
-      changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
+      changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, passages: s.passages || null,
+      cards: core.pageData(a).cards.map((c) => [c.id, c.state, c.flag]), strip: core.pageData(a).strip, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
   } catch (e) { if (!e.code) throw e; out.push({ error: e.code, row: e.info.row || null }); }
 }
 fs.writeFileSync(process.argv[4], JSON.stringify(out));
@@ -61,11 +62,13 @@ def python_side(text, mode, sim):
 
     first = {k: (bare(v) if isinstance(v, dict) or v is None else v) for k, v in s["first_run"].items()
              if k != "change_exceeds_both_rerun_variations"}
-    from ridi_check.report import ledger_tiles
+    from ridi_check.report import ledger_tiles, page_data
+    page = page_data(a, s, {}, file_name="", report_id="", labels={}, lang=None, generated="")
     return {"mode": resolved, "states": [[c.case_id, st] for c, st in a.items], "counts": a.counts, "first": first,
             "any": s["any_run_disagreement"], "runs": s["runs_per_version"], "confirmable": s["confirmable_cases"],
             "compared": s["cases_compared"], "changed": s.get("wrong_both_answer_changed"),
-            "correct_changed": s.get("correct_both_answer_changed"),
+            "correct_changed": s.get("correct_both_answer_changed"), "passages": s.get("passages"),
+            "cards": [[c["id"], c["state"], c["flag"]] for c in page["cards"]], "strip": page["strip"],
             "review": to_csv(header, rows), "tiles": ledger_tiles(a)}
 
 
@@ -154,6 +157,10 @@ def test_browser_analysis_matches_python_on_random_files(tmp_path):
     jobs = [random_job(rng) for _ in range(400)]
     with open(FIXTURE, encoding="utf-8") as f:
         fixture = f.read()
+    with open(os.path.join(ROOT, "web", "sample_medicines.csv"), encoding="utf-8") as f:
+        medicines = f.read()
+    jobs += [{"text": medicines, "mode": "auto", "sim": 1}, {"text": medicines, "mode": "nokey", "sim": 1},
+             {"text": medicines, "mode": "nokey", "sim": 0.9}]
     jobs += [{"text": fixture, "mode": "auto", "sim": 1}, {"text": fixture, "mode": "nokey", "sim": 1},
              {"text": "", "mode": "auto", "sim": 1}, {"text": "case_id,question\n1,x\n", "mode": "auto", "sim": 1},
              {"text": "case_id;baseline_correct;updated_correct\n1;1;0\n", "mode": "auto", "sim": 1},

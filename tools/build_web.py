@@ -5,7 +5,7 @@
 
 The page is assembled from web/template.html, web/core.js (the analysis), web/app.js (the page),
 the report stylesheet in src/ridi_check/report_template.html, web/extra.css, the report strings in
-src/ridi_check/strings.py and web/sample_results.csv. tests/test_web.py fails when the built file
+src/ridi_check/strings.py, web/sample_results.csv and web/sample_medicines.csv. tests/test_web.py fails when the built file
 is out of date.
 """
 
@@ -49,6 +49,7 @@ def build(web_fonts: bool = False) -> str:
         "__STYLE__": style.rstrip("\n") + "\n" + read("web", "extra.css").rstrip("\n"),
         "__STRINGS__": embed({"key": strings_for("key"), "nokey": strings_for("nokey")}),
         "__SAMPLE__": embed(read("web", "sample_results.csv")),
+        "__SAMPLE_MEDICINES__": embed(read("web", "sample_medicines.csv")),
         "__CORE__": read("web", "core.js").rstrip("\n"),
         "__APP__": read("web", "app.js").rstrip("\n"),
         "__VERSION__": __version__,

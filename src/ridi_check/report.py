@@ -8,7 +8,7 @@ from importlib import resources
 
 from . import __version__
 from .analysis import (
-    CORRECT_BOTH, INCOMPLETE, STABLE_CHANGE, UNCHANGED_STATES, WRONG_BOTH, Analysis, analyse, duplicate_note,
+    CORRECT_BOTH, INCOMPLETE, STABLE_CHANGE, STABLE_REGRESSION, UNCHANGED_STATES, WRONG_BOTH, Analysis, analyse, duplicate_note,
     duplicate_questions,
     same_answer,
 )
@@ -110,6 +110,16 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
         "first_run": first_run,
         "any_run_disagreement": {"current": a.any_run_b, "proposed": a.any_run_u},
     }
+    listed = [(c, s) for c, s in a.items if s != INCOMPLETE and (c.baseline_context or c.updated_context)]
+    if listed:      # a count of where the retrieved passages differ; it says nothing about cause
+        differs = [(s, any(passage_difference(c)[:2])) for c, s in listed]
+        summary["passages"] = {
+            "cases_with_passages": len(listed),
+            "differ": sum(d for _, d in differs),
+            "by_state": {state: {"differ": sum(d for s, d in differs if s == state),
+                                 "n": sum(1 for s, _ in differs if s == state)}
+                         for state in a.counts if any(s == state for s, _ in differs)},
+        }
     if key:
         state_of = {case.case_id: state for case, state in a.items}
         for name, state in (("wrong_both_answer_changed", WRONG_BOTH), ("correct_both_answer_changed", CORRECT_BOTH)):
@@ -254,24 +264,26 @@ def page_data(
     labels: dict[str, str], lang: str | None, generated: str,
 ) -> dict:
     key = a.mode == KEY
-    cards, strip, wrong, changed_correct = [], [], [], []
+    # Cases that are correct in both versions and whose answer changed get a card as well. Their cards come
+    # after all the others, so that they never bury a case whose score changed.
+    cards, late, strip, wrong = [], [], [], []
     for case, state in a.items:
         flag = a.answer_change.get(case.case_id)
-        card_index = -1
-        if state not in UNCHANGED_STATES and (state != WRONG_BOTH or flag):
+        if (state not in UNCHANGED_STATES and (state != WRONG_BOTH or flag)) or (state == CORRECT_BOTH and flag):
             only_b, only_u, kept = passage_difference(case)
-            card_index = len(cards)
-            cards.append({
+            (late if state == CORRECT_BOTH else cards).append({
                 "id": case.case_id, "state": state, "flag": flag, "q": case.question, "expected": case.expected,
                 "b": _runs_for_page(case.baseline, key, a.threshold),
                 "u": _runs_for_page(case.updated, key, a.threshold),
                 "rem": only_b, "add": only_u, "kept": kept, "err": case.run_errors,
             })
-        strip.append([case.case_id, state, card_index])
+        strip.append([case.case_id, state, -1])
         if state == WRONG_BOTH:
             wrong.append([case.case_id, case.question, flag])
-        elif state == CORRECT_BOTH and flag:
-            changed_correct.append([case.case_id, case.question, flag, case.baseline[0].answer, case.updated[0].answer])
+    cards += late
+    position = {card["id"]: i for i, card in enumerate(cards)}
+    for cell in strip:
+        cell[2] = position.get(cell[0], -1)
     stable_changes = a.ids(STABLE_CHANGE)
     return {
         "meta": {
@@ -286,7 +298,7 @@ def page_data(
         "strip": strip,
         "cards": cards,
         "wrong": wrong,
-        "changed_correct": changed_correct,
+        "focus": STABLE_REGRESSION if key else STABLE_CHANGE,    # the state the passage count is also given for
         "stable_change_ids": stable_changes,
         "judgments": {i: j for i, j in judgments.items() if i in set(stable_changes)},
         "strings": strings_for(a.mode),
@@ -427,6 +439,14 @@ def text_summary(summary: dict) -> str:
         lines.append(
             f"Stable changes judged: {j['worse']} worse, {j['better']} better, {j['same_meaning']} same meaning, "
             f"{summary['judgments']['still_to_decide']} still to decide."
+        )
+    passages = summary.get("passages")
+    if passages:
+        lines.append(
+            f"Retrieved passages differ between the versions in {passages['differ']}/{passages['cases_with_passages']} "
+            "cases that list passages: "
+            + ", ".join(f"{state} {v['differ']}/{v['n']}" for state, v in passages["by_state"].items())
+            + ". This is a count, not a cause."
         )
     lines += summary["notes"]
     return "\n".join(lines)

@@ -243,9 +243,13 @@ def test_an_answer_that_changed_while_scored_correct_is_listed_and_keeps_its_sta
     assert set(rows) == {"reworded", "worse"}
     assert (rows["reworded"]["state"], rows["reworded"]["answer_change"]) == ("correct_both", "stable")
     html, data = page_data(tmp_path / "report.html")
-    assert data["changed_correct"] == [["reworded", "q2", "stable", "Avoid the combination.", "Use with monitoring."]]
-    assert [card["id"] for card in data["cards"]] == ["worse"]          # not mixed in with the cases that changed score
-    assert "correctChangedList" in html
+    # it has a card of its own, after the cases whose score changed, and the strip cell leads to it
+    assert [(card["id"], card["state"], card["flag"]) for card in data["cards"]] == [
+        ("worse", "stable_regression", None), ("reworded", "correct_both", "stable")]
+    assert data["cards"][1]["u"][0]["ans"] == "Use with monitoring."
+    assert [cell for cell in data["strip"] if cell[0] in ("reworded", "kept")] == [["kept", "correct_both", -1],
+                                                                                 ["reworded", "correct_both", 1]]
+    assert data["strings"]["en"]["pill"]["correct_both_changed"] == "Correct in both, answer changed"
     assert main(["gate", results, "--max-stable-regressions", "1"]) == 0   # listing it changes no count the gate uses
 
 
@@ -271,3 +275,46 @@ def test_forcing_no_key_mode_says_the_scores_were_left_out_not_that_they_are_mis
     err = capsys.readouterr().err
     assert "because --mode nokey was given" in err and "left out on purpose" in err
     assert "no baseline_correct" not in err
+
+
+MEDICINES = os.path.join(os.path.dirname(FIXTURE), "..", "..", "web", "sample_medicines.csv")
+
+
+def test_the_second_example_is_made_up_and_shows_what_it_is_meant_to_show(tmp_path, capsys):
+    """Made-up medicines: mean accuracy rises by one answer while three answers break in every run."""
+    assert main(["report", MEDICINES, "--out", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "First run accuracy: 7/12 to 8/12; regressions 3, improvements 4." in out
+    assert "stable_regression             3   cases: m01, m02, m03" in out
+    assert "Wrong in both versions but with a changed answer: m10." in out
+    assert "Correct in both versions but with a changed answer: m11." in out
+    with open(MEDICINES, encoding="utf-8") as f:
+        text = f.read().lower()
+    # no real medicine, enzyme or gene name: the page says the data is invented, and it has to be
+    for real in ("statin", "warfarin", "cyp", "hla-", "mycin", "azole ", "pril ", "sartan", "fda", "cpic"):
+        assert real not in text, real
+
+
+def test_where_the_retrieved_passages_differ_is_counted_and_nothing_more(tmp_path, capsys):
+    assert main(["report", MEDICINES, "--out", str(tmp_path)]) == 0
+    assert ("Retrieved passages differ between the versions in 10/12 cases that list passages: stable_regression 3/3, "
+            "stable_improvement 4/4, unstable 2/2, wrong_both 0/1, correct_both 1/2. This is a count, not a cause.") in capsys.readouterr().out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        passages = json.load(f)["passages"]
+    assert passages["cases_with_passages"] == 12 and passages["differ"] == 10
+    assert passages["by_state"]["stable_regression"] == {"differ": 3, "n": 3}
+    assert passages["by_state"]["wrong_both"] == {"differ": 0, "n": 1}
+
+    # without an answer key the same count is given, in the words of that mode
+    assert main(["report", MEDICINES, "--mode", "nokey", "--out", str(tmp_path / "nokey")]) == 0
+    capsys.readouterr()
+    html, data = page_data(tmp_path / "nokey" / "report.html")
+    assert data["summary"]["passages"]["by_state"]["stable_change"] == {"differ": 8, "n": 9} and data["focus"] == "stable_change"
+    assert "regress" not in html.lower()
+
+    # a file that lists no passages says nothing about them
+    assert main(["report", FIXTURE, "--out", str(tmp_path / "plain")]) == 0
+    assert "Retrieved passages" not in capsys.readouterr().out
+    with open(tmp_path / "plain" / "summary.json", encoding="utf-8") as f:
+        assert "passages" not in json.load(f)
+

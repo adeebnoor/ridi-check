@@ -17,6 +17,8 @@ jobs:
         env:
           MY_API_KEY: ${{ secrets.MY_API_KEY }}   # whatever your adapter reads
       # Exits 1 when an answer that was right is now wrong in every run.
+      # Where a wrong answer is costly, add --max-unstable 0: the job then also stops when an answer did not
+      # hold on re-run, because such a case is neither confirmed right nor confirmed wrong.
       - run: ridi-check gate ridi-out/results.csv --max-stable-regressions 0
       # Keep the report, also when the gate stopped the job.
       - uses: actions/upload-artifact@v4

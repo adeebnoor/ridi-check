@@ -163,7 +163,7 @@ const by = (s) => S.states[s] || 0;
 
 const CLS = D.classes;
 const JUDGMENTS = ["worse", "better", "same_meaning", "unsure"];
-const pillText = (c) => c.flag ? L().pill[c.flag === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"] : L().pill[c.state];
+const pillText = (c) => c.flag ? L().pill[c.state + (c.flag === "stable" ? "_changed" : "_changed_unconfirmed")] : L().pill[c.state];
 const isStable = (c) => c.state.indexOf("stable_") === 0 || c.flag === "stable";
 
 function tile(s, sub) {
@@ -195,6 +195,7 @@ function cardHTML(c, i) {
   let h = '<article class="card ' + CLS[c.state] + '" id="c-' + i + '" data-i="' + i + '"><div class="head"><span class="pill">' + esc(pillText(c)) +
     '</span><span class="small muted">' + esc(t("caseN", { id: "" })) + '<span class="num" dir="auto">' + esc(c.id) + "</span></span></div>";
   if (c.q) h += '<p class="q" dir="auto">' + esc(c.q) + "</p>";
+  if (c.state === "correct_both") h += '<p class="small muted">' + esc(t("correctChangedNote")) + "</p>";
   if (KEY && c.expected) h += '<p class="small muted">' + esc(t("expected")) + '<span class="num" dir="auto">' + esc(c.expected) + "</span></p>";
   h += '<div class="pair">' + sideHTML(t("current"), M.labels.current, c.b) + sideHTML(t("proposed"), M.labels.proposed, c.u) + "</div>";
   if (c.err) h += '<p class="errs">' + esc(t("runErrors")) + '<span class="num" dir="ltr">' + esc(c.err) + "</span></p>";
@@ -266,6 +267,8 @@ function render() {
     if (D.acc.n >= 3 && !D.acc.a && !D.acc.b) h += '<p class="small" style="color:var(--uns)">' + esc(t("noneCorrect")) + "</p>";
     const c = 2 * Math.min(D.acc.r, D.acc.i);
     if (c) h += '<p class="small muted">' + esc(t("masked", { m: D.acc.r + D.acc.i, v: Math.abs(D.acc.i - D.acc.r), c })) + "</p>"; }
+  if (D.summary.passages) { const P = D.summary.passages, F = P.by_state[D.focus];
+    h += '<p class="small muted">' + esc(t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + "</p>"; }
   h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2
     ? " " + esc(t("anyRun", { b: S.any_run_disagreement.current, u: S.any_run_disagreement.proposed })) : "") + "</p>";
   h += "</div></section>";
@@ -278,13 +281,6 @@ function render() {
     h += '<details class="wrongs panel" data-k="wrongs"><summary>' + esc(t("wrongList", { n: D.wrong.length })) + '</summary><p class="small muted" style="padding-top:8px">' + esc(t("wrongNote")) +
       (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + "</p><ul>" + D.wrong.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
       (w[2] ? ' <span class="tag">' + esc(L().pill[w[2] === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
-  }
-  if (KEY && D.changed_correct && D.changed_correct.length) {
-    h += '<details class="wrongs panel" data-k="changed-correct"><summary>' + esc(t("correctChangedList", { n: D.changed_correct.length })) + '</summary><p class="small muted" style="padding-top:8px">' +
-      esc(t("correctChangedNote")) + "</p><ul>" + D.changed_correct.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
-      (w[2] === "unconfirmed" ? ' <span class="tag">' + esc(t("notRerun")) + "</span>" : "") +
-      '<div class="small"><span class="muted">' + esc(t("current")) + ':</span> <span dir="auto">' + esc(w[3]) + '</span></div>' +
-      '<div class="small"><span class="muted">' + esc(t("proposed")) + ':</span> <span dir="auto">' + esc(w[4]) + "</span></div></li>").join("") + "</ul></details>";
   }
   if (!KEY && D.stable_change_ids.length) {
     h += '<div class="out"><div class="row"><button type="button" id="export">' + esc(t("export")) + '</button><span class="small muted" id="export-msg" role="status"></span></div>' +

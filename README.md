@@ -12,6 +12,8 @@ the same questions, more than once, and shows which answers changed and which of
 re-run. You need no test set, no answer key and no model judge.
 
 **Try it in your browser, with nothing to install:** [adeebnoor.github.io/ridi-check](https://adeebnoor.github.io/ridi-check/).
+It opens on two synthetic examples: a library handbook, and made-up medicines where mean accuracy rises
+while three answers break in every run.
 
 ![The report: where each case landed, and the change between versions against re-run variation](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/report.png)
 
@@ -107,8 +109,9 @@ latest release.
 ```
 
 A complete GitHub Actions workflow to copy: [examples/ci/ridi-check.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check.yml).
-`gate` prints counts and the offending cases; it never prints a verdict about your system. Limits such as
-`--max-stable-regressions 2` are in the [reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#ridi-check-gate-resultscsv).
+`gate` prints counts and the offending cases; it never prints a verdict about your system. By default it
+does not count answers that did not hold on re-run; where a wrong answer is costly, add `--max-unstable 0`.
+Limits such as `--max-stable-regressions 2` are in the [reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#ridi-check-gate-resultscsv).
 
 ## Connect your assistant
 

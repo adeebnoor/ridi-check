@@ -140,7 +140,8 @@ an invocation finishes. You can also write it yourself and use `report` and `gat
 `regressions`, `improvements`, `changes_visible_in_mean_accuracy`,
 `changes_cancelled_in_mean_accuracy`), `any_run_disagreement`, `judgments` or
 `wrong_both_answer_changed` and `correct_both_answer_changed` (case ids whose score is equal and whose
-answer is not), and `notes`.
+answer is not), `passages` when the file lists passages (`cases_with_passages`, `differ`, and `by_state`
+with `{differ, n}` per state), and `notes`.
 
 **`review_cases.csv`**: every case that is not same / correct in both, with all its runs under their
 contract column names, so the file can be read back by `report`.

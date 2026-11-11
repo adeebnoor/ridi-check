@@ -22,6 +22,16 @@
       noteKey: "Synthetic example data, not yours: 30 questions about a made-up library handbook. The proposed version splits the handbook into smaller pieces, and each version was run twice.",
       noteNoKey: "Synthetic example data, not yours: the same 30 questions with the answer key hidden, so the changes are yours to judge.",
       noteFile: "{n} cases from your file.",
+      setLabel: "Example data: ", setLibrary: "Library handbook (30 questions)", setMedicines: "Medicines, made up (12 questions)",
+      noteKeyMed: "Synthetic example data, not yours: 12 questions about made-up medicines. The names, doses and effects are invented and are not medical guidance. The proposed version retrieves different passages, and each version was run twice.",
+      noteNoKeyMed: "Synthetic example data, not yours: the same 12 questions about made-up medicines with the answer key hidden, so the changes are yours to judge. Nothing here is medical guidance.",
+      whyTitle: "Why each version is run more than once",
+      whyList: [
+        "Mean accuracy hides opposite changes. An update can fix some answers and break others. The mean moves only by the difference, so the answers it broke stay out of sight unless every case is looked at.",
+        "One run cannot tell a change from re-run variation. The same version can answer the same question differently from one run to the next, so a difference seen once between two versions may have nothing to do with the update.",
+        "The rule used here: a case is a stable regression when every run of the current version is correct and every run of the proposed version is wrong, with at least two runs of each. A stable improvement is the reverse. When the runs of either version disagree with each other, the case is unstable on re-run and is not counted as a change of either kind. Without an answer key the same rule is applied to the answers themselves.",
+        "What this is not: no statistical test is applied, and two runs are a thin estimate of re-run variation. A stable answer is a repeated answer, not a correct one."
+      ],
       copyJ: "Copy judgments.csv", copyR: "Copy the cases to review as CSV", copied: "Copied", copyFail: "Select the text below and copy it.",
       getTitle: "Where the answers come from",
       getList: [
@@ -63,6 +73,16 @@
       noteKey: "بيانات مثال اصطناعية وليست بياناتك: 30 سؤالاً عن دليل مكتبة مختلَق. النسخة المقترحة تقطّع الدليل إلى قطع أصغر، وشُغّلت كل نسخة مرتين.",
       noteNoKey: "بيانات مثال اصطناعية وليست بياناتك: الأسئلة الثلاثون نفسها مع إخفاء مفتاح الإجابات، فالحكم على التغيّرات لك.",
       noteFile: "{n} حالة من ملفك.",
+      setLabel: "بيانات المثال: ", setLibrary: "دليل مكتبة (30 سؤالاً)", setMedicines: "أدوية وهمية (12 سؤالاً)",
+      noteKeyMed: "بيانات مثال اصطناعية وليست بياناتك: 12 سؤالاً عن أدوية وهمية. الأسماء والجرعات والتأثيرات مختلقة وليست إرشاداً طبياً. النسخة المقترحة تسترجع مقاطع مختلفة، وكل نسخة شُغّلت مرتين.",
+      noteNoKeyMed: "بيانات مثال اصطناعية وليست بياناتك: الأسئلة الاثنا عشر نفسها عن أدوية وهمية مع إخفاء مفتاح الإجابات، فالحكم على التغيّرات لك. لا شيء هنا إرشاد طبي.",
+      whyTitle: "لماذا تُشغَّل كل نسخة أكثر من مرة",
+      whyList: [
+        "متوسط الدقة يخفي التغيّرات المتعاكسة. قد يصلح التحديث إجابات ويكسر أخرى، والمتوسط يتحرك بمقدار الفرق فقط، فتبقى الإجابات التي كسرها غير ظاهرة ما لم تُفحص كل حالة.",
+        "تشغيل واحد لا يميّز التغيّر من تباين إعادة التشغيل. النسخة نفسها قد تجيب عن السؤال نفسه بإجابة مختلفة من تشغيل إلى آخر، فالفرق الذي يظهر مرة واحدة بين نسختين قد لا تكون له علاقة بالتحديث.",
+        "القاعدة المستخدمة هنا: الحالة تراجع ثابت عندما تكون كل تشغيلات النسخة الحالية صحيحة وكل تشغيلات النسخة المقترحة خاطئة، بتشغيلين على الأقل لكل نسخة. والتحسّن الثابت عكس ذلك. وإذا اختلفت تشغيلات إحدى النسختين فيما بينها فالحالة غير مستقرة عند إعادة التشغيل ولا تُحسب تغيّراً من أي النوعين. وبلا مفتاح إجابات تُطبَّق القاعدة نفسها على الإجابات ذاتها.",
+        "ما ليس هذا: لا يُطبَّق أي اختبار إحصائي، وتشغيلان تقدير ضعيف لتباين إعادة التشغيل. الإجابة الثابتة إجابة متكررة وليست بالضرورة صحيحة."
+      ],
       copyJ: "انسخ judgments.csv", copyR: "انسخ حالات المراجعة بصيغة CSV", copied: "تم النسخ", copyFail: "حدّد النص أدناه وانسخه.",
       getTitle: "من أين تأتي الإجابات",
       getList: [
@@ -86,10 +106,12 @@
     }
   };
   const STR = JSON.parse(document.getElementById("ridi-strings").textContent);
-  const SAMPLE = JSON.parse(document.getElementById("ridi-sample").textContent);
+  const SAMPLES = { library: JSON.parse(document.getElementById("ridi-sample").textContent),
+    medicines: JSON.parse(document.getElementById("ridi-sample-medicines").textContent) };
+  const SAMPLE = SAMPLES.library;
   const JUDGMENTS = ["worse", "better", "same_meaning", "unsure"];
 
-  const state = { lang: "en", source: "sample-key", text: SAMPLE, modePref: "auto", sim: 1, filter: "all", judge: {}, error: null, D: null, A: null, mode: "key" };
+  const state = { lang: "en", source: "sample-key", set: "library", text: SAMPLE, modePref: "auto", sim: 1, filter: "all", judge: {}, error: null, D: null, A: null, mode: "key" };
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -149,7 +171,7 @@
   }
 
   /* ---------- report ---------- */
-  const pillText = (c) => c.flag ? L().pill[c.flag === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"] : L().pill[c.state];
+  const pillText = (c) => c.flag ? L().pill[c.state + (c.flag === "stable" ? "_changed" : "_changed_unconfirmed")] : L().pill[c.state];
   const isStable = (c) => c.state.indexOf("stable_") === 0 || c.flag === "stable";
   function tile(s, sub) {
     const D = state.D;
@@ -182,6 +204,7 @@
     let h = '<article class="card ' + D.classes[c.state] + '" id="c-' + i + '" data-i="' + i + '"><div class="head"><span class="pill">' + esc(pillText(c)) +
       '</span><span class="small muted">' + esc(t("caseN", { id: "" })) + '<span class="num" dir="auto">' + esc(c.id) + "</span></span></div>";
     if (c.q) h += '<p class="q" dir="auto">' + esc(c.q) + "</p>";
+    if (c.state === "correct_both") h += '<p class="small muted">' + esc(t("correctChangedNote")) + "</p>";
     if (KEYM && c.expected) h += '<p class="small muted">' + esc(t("expected")) + '<span class="num" dir="auto">' + esc(c.expected) + "</span></p>";
     h += '<div class="pair">' + sideHTML(t("current"), c.b) + sideHTML(t("proposed"), c.u) + "</div>";
     if (c.err) h += '<p class="errs">' + esc(t("runErrors")) + '<span class="num" dir="ltr">' + esc(c.err) + "</span></p>";
@@ -242,6 +265,8 @@
       const c = 2 * Math.min(D.acc.r, D.acc.i);
       if (c) h += '<p class="small muted">' + esc(t("masked", { m: D.acc.r + D.acc.i, v: Math.abs(D.acc.i - D.acc.r), c })) + "</p>";
     }
+    if (D.summary.passages) { const P = D.summary.passages, F = P.by_state[D.focus];
+      h += '<p class="small muted">' + esc(t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + "</p>"; }
     h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2
       ? " " + esc(t("anyRun", { b: S.any_run_disagreement.current, u: S.any_run_disagreement.proposed })) : "") + "</p></div></section>";
 
@@ -254,15 +279,8 @@
         (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + "</p><ul>" + D.wrong.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
         (w[2] ? ' <span class="tag">' + esc(L().pill[w[2] === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
     }
-    if (KEYM && D.changed_correct && D.changed_correct.length) {
-      h += '<details class="wrongs panel" data-k="changed-correct"><summary>' + esc(t("correctChangedList", { n: D.changed_correct.length })) + '</summary><p class="small muted" style="padding-top:8px">' +
-        esc(t("correctChangedNote")) + "</p><ul>" + D.changed_correct.map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
-        (w[2] === "unconfirmed" ? ' <span class="tag">' + esc(t("notRerun")) + "</span>" : "") +
-        '<div class="small"><span class="muted">' + esc(t("current")) + ':</span> <span dir="auto">' + esc(w[3]) + '</span></div>' +
-        '<div class="small"><span class="muted">' + esc(t("proposed")) + ':</span> <span dir="auto">' + esc(w[4]) + "</span></div></li>").join("") + "</ul></details>";
-    }
     h += '<div class="out"><div class="row">' + (!KEYM && D.stable_change_ids.length ? '<button type="button" id="copy-j">' + esc(u("copyJ")) + '</button><button type="button" id="forget">' + esc(u("forget")) + "</button>" : "") +
-      (D.cards.length || D.wrong.length || (D.changed_correct || []).length ? '<button type="button" id="copy-r">' + esc(u("copyR")) + "</button>" : "") +
+      (D.cards.length || D.wrong.length ? '<button type="button" id="copy-r">' + esc(u("copyR")) + "</button>" : "") +
       '<span class="small muted" id="copy-msg" role="status"></span></div><textarea id="csv-out" hidden readonly dir="ltr" aria-label="CSV"></textarea></div></section>';
     return h;
   }
@@ -274,6 +292,9 @@
     document.documentElement.lang = state.lang; app.dir = state.lang === "ar" ? "rtl" : "ltr";
     $("t-name").textContent = u("name"); $("lang").textContent = u("langBtn"); $("t-tagline").textContent = u("tagline");
     $("btn-sample-key").textContent = u("sampleKey"); $("btn-sample-nokey").textContent = u("sampleNoKey");
+    $("t-set-label").textContent = u("setLabel"); $("opt-set-library").textContent = u("setLibrary"); $("opt-set-medicines").textContent = u("setMedicines");
+    $("sample-set").value = state.set;
+    $("t-why").textContent = u("whyTitle"); $("t-why-list").innerHTML = UI[state.lang].whyList.map((x) => "<li>" + esc(x) + "</li>").join("");
     $("btn-sample-key").setAttribute("aria-pressed", state.source === "sample-key");
     $("btn-sample-nokey").setAttribute("aria-pressed", state.source === "sample-nokey");
     $("t-own").textContent = u("own"); $("t-choose").textContent = u("choose"); $("t-paste").textContent = u("paste"); $("btn-run").textContent = u("run");
@@ -287,7 +308,7 @@
     if (state.errorCode) state.error = fill(UI[state.lang].err[state.errorCode.code] || UI[state.lang].err.read, state.errorCode.info);
     const err = $("err"); err.hidden = !state.error; err.textContent = state.error || "";
     if (!state.D) { $("report").innerHTML = ""; return; }
-    let note = "<span>" + esc(state.source === "sample-key" ? u("noteKey") : state.source === "sample-nokey" ? u("noteNoKey") : u("noteFile", { n: state.A.n })) + "</span>";
+    let note = "<span>" + esc(state.source === "sample-key" ? u(state.set === "medicines" ? "noteKeyMed" : "noteKey") : state.source === "sample-nokey" ? u(state.set === "medicines" ? "noteNoKeyMed" : "noteNoKey") : u("noteFile", { n: state.A.n })) + "</span>";
     note += "<span>" + esc(state.mode === "key" ? t("modeNote") : t("modeNote", { rule: state.sim >= 1 ? t("simExact") : t("simWords", { p: fmt(state.sim * 100) }) })) + "</span>";
     $("source-note").innerHTML = note;
     $("t-limits").textContent = t("limits"); $("t-limit-list").innerHTML = L().limitList.map((x) => "<li>" + esc(x) + "</li>").join("");
@@ -308,8 +329,12 @@
   }
 
   $("lang").addEventListener("click", () => { state.lang = state.lang === "ar" ? "en" : "ar"; store.set("ridi-lang", state.lang); render(); });
-  $("btn-sample-key").addEventListener("click", () => { state.errorCode = null; load("sample-key", SAMPLE); });
-  $("btn-sample-nokey").addEventListener("click", () => { state.errorCode = null; load("sample-nokey", SAMPLE); });
+  $("btn-sample-key").addEventListener("click", () => { state.errorCode = null; load("sample-key", SAMPLES[state.set]); });
+  $("btn-sample-nokey").addEventListener("click", () => { state.errorCode = null; load("sample-nokey", SAMPLES[state.set]); });
+  $("sample-set").addEventListener("change", (ev) => {
+    state.set = ev.target.value === "medicines" ? "medicines" : "library"; state.errorCode = null;
+    load(state.source === "sample-nokey" ? "sample-nokey" : "sample-key", SAMPLES[state.set]);
+  });
   $("btn-run").addEventListener("click", () => { state.errorCode = null; load("file", $("paste").value); });
   $("file").addEventListener("change", (ev) => {
     const f = ev.target.files && ev.target.files[0]; if (!f) return;

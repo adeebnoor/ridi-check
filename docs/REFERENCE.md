@@ -58,6 +58,8 @@ nothing is deleted.
 
 - HTTP 429, 408, 409, 425 and every 5xx are tried again, up to `--retries` times. HTTP 400, 401, 402, 403,
   404 and the other 4xx are not: a used-up quota or a wrong key does not get better in a few seconds.
+  The exception is a refusal that carries a `Retry-After` header, whatever its status: the service says
+  when to come back, so the call is tried again then. Some services limit free use this way with a 402.
 - A `Retry-After` header is obeyed when it asks for up to 120 seconds, and during that wait no other call
   is started either. A longer wait is not made: the call is recorded as failed, to be retried by running
   the same command again later.
@@ -89,7 +91,7 @@ Prints the counts and one line per offending case. It prints no verdict about th
 |---|---|---|
 | `--max-stable-regressions N` | 0 | with an answer key: stable regressions allowed. Without one: stable changes you judged worse |
 | `--max-unjudged-changes N` | 0 | without an answer key: stable changes with no judgment, or judged unsure |
-| `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them |
+| `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them; `--max-unstable 0` is the setting for a release check where a wrong answer is costly |
 | `--max-incomplete N` | 0 | cases that could not be compared because a call failed |
 | `--mode`, `--similarity`, `--judgments` | as for `report` | |
 
@@ -159,8 +161,13 @@ after lower-casing, removing punctuation and collapsing spaces (or under `--simi
 
 A case whose first-run call failed is `incomplete` and is left out of every rate. A `wrong_both` case whose
 wrong answer changed keeps its state and is flagged, because correctness counting alone does not see it.
-A `correct_both` case whose answer changed is listed the same way, without changing any count: the answer
-key accepts both answers, and the wording may still matter to you.
+A `correct_both` case whose answer changed is flagged the same way, without changing any count: the answer
+key accepts both answers, and the wording may still matter to you. In the report it has a card of its own,
+after the cases whose score changed.
+
+When the file lists passages (`baseline_context`, `updated_context`), the report also counts the cases
+whose passages differ between the versions, in total and per state (`passages` in `summary.json`). It is a
+count of where retrieval changed. It does not say that the passages caused a change in the answer.
 
 Under `--similarity`, two answers that differ in a negation word, or in their numbers, are never counted
 as the same. Numbers are the runs of digits in the answer, in order, so `5mg` and `50mg` differ, and so do
