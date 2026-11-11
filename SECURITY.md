@@ -20,6 +20,25 @@ maintainer will open a private channel.
 A maintainer will acknowledge the report, confirm whether it is a vulnerability, and tell you when a fix
 is released. Fixes are made on the latest release only.
 
+## Automated checks
+
+CI runs [Bandit](https://bandit.readthedocs.io/) on `src/` and [pip-audit](https://pypi.org/project/pip-audit/)
+on the package's dependencies. A finding of medium or high severity, or a known vulnerability in a
+dependency the package needs to run, fails the build. Low-severity findings are listed and do not fail it.
+
+Two findings are accepted on purpose and marked in the code:
+
+- **A shell command is run** (`adapters.py`, Bandit B602). A `command:` system is a shell command that the
+  owner of the assistant configures. Nothing read from the questions file is placed in it: the question is
+  passed on standard input and the case id in an environment variable.
+- **A URL is opened** (`adapters.py`, Bandit B310). The address of an `http` system must start with
+  `http://` or `https://`; anything else is rejected before a request is made.
+
+The low-severity notes are: the `subprocess` module is imported (it is needed for the above), a failure to
+open a browser is ignored (the path of the report has already been printed), and the demo assistant uses
+Python's ordinary random generator (for a repeatable example, not for anything secret). The package has no
+runtime dependencies.
+
 ## Scope
 
 ridi-check runs on your machine. It calls the systems you point it at, writes files into the output

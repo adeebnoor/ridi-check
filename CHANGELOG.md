@@ -12,6 +12,9 @@ library API may change between minor versions.
 - `CODE_OF_CONDUCT.md`, a short adaptation of the Contributor Covenant 2.1. Reports go through GitHub's
   private reporting; no mailbox is published.
 
+- CI scans the source with Bandit and the dependencies with pip-audit; `SECURITY.md` lists the two
+  findings that are accepted on purpose and why.
+
 ### Changed
 - The README, the guides and the CI example install from PyPI (`pip install ridi-check`) and link to the
   hosted browser version. Installing from the repository remains the way to get the development version.

@@ -16,6 +16,18 @@ jobs:
       # anthropic is needed only by the test of examples/adapters/anthropic_adapter.py
       - run: pip install ".[test]" anthropic
       - run: pytest -q
+      - name: security scan of the source and the dependencies
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        run: |
+          pip install bandit pip-audit
+          # Lists every finding, low severity included, without failing.
+          bandit -r src --exit-zero
+          # Fails on a finding of medium or high severity that is not explained in the code.
+          bandit -r src --severity-level medium --quiet
+          # Fails on a known vulnerability in what the package needs to run.
+          pip-audit .
+          # The test environment is reported, not enforced: a problem in a test tool is not one in the package.
+          pip-audit --skip-editable || echo "::warning::pip-audit found a known vulnerability in the test environment"
       - run: ridi-check demo
       - name: the gate allows what its limit allows and stops what it does not
         shell: bash

@@ -128,7 +128,10 @@ def command_adapter(command: str, timeout: float) -> Callable[[str, dict], dict]
         env["PYTHONUTF8"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
         try:
-            done = subprocess.run(
+            # The command is the one the owner configured and is run through the shell on purpose.
+            # Nothing from the questions file is put into it: the question goes in on stdin and the
+            # case id in an environment variable, so data cannot change what is executed.
+            done = subprocess.run(  # nosec B602
                 command, shell=True, input=question, capture_output=True, text=True,
                 encoding="utf-8", errors="replace", timeout=timeout, env=env,
             )
@@ -167,7 +170,8 @@ def http_adapter(config: dict, timeout: float) -> Callable[[str, dict], dict]:
         body = json.dumps(_fill(template, question), ensure_ascii=False).encode("utf-8")
         request = urllib.request.Request(url, data=body, headers=headers, method="POST")
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            # The address was checked above: only http:// and https:// reach this call.
+            with urllib.request.urlopen(request, timeout=timeout) as response:  # nosec B310
                 raw = response.read().decode("utf-8", errors="replace")
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace").strip()[:300]
