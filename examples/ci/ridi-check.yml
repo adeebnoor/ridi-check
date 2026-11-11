@@ -11,7 +11,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install git+https://github.com/adeebnoor/ridi-check
+      - run: pip install ridi-check
       # Calls the current and the proposed version on every question, twice each.
       - run: ridi-check run --config ridi-check.json --out ridi-out
         env:

@@ -165,7 +165,7 @@ Additions to the browser prototype: `incomplete` (a first-run call failed; left 
 A complete workflow to copy is in [examples/ci/ridi-check.yml](../examples/ci/ridi-check.yml). The steps:
 
 ```yaml
-- run: pip install git+https://github.com/adeebnoor/ridi-check
+- run: pip install ridi-check
 - run: ridi-check run --config check/ridi-check.json --out "ridi-out-${{ github.sha }}"
   env:
     MY_API_KEY: ${{ secrets.MY_API_KEY }}

@@ -21,7 +21,7 @@ ridi-check الأسئلة نفسها على النسخة الحالية وعلى
 ## جرّبها في دقيقة
 
 ```bash
-pip install git+https://github.com/adeebnoor/ridi-check
+pip install ridi-check
 ```
 
 ```bash
@@ -29,7 +29,8 @@ ridi-check demo --open
 ```
 
 ينشئ هذا مجلداً باسم `ridi-demo` فيه مساعد تجريبي بنسختين، ثم يشغّل الفحص ويفتح التقرير. المثال لا
-يحتاج شبكة ولا مفتاح API. يلزم Python 3.10 أو أحدث.
+يحتاج شبكة ولا مفتاح API. يلزم Python 3.10 أو أحدث. وللنسخة التطويرية ثبّت من المستودع:
+`pip install git+https://github.com/adeebnoor/ridi-check`.
 
 ## ثلاث طرق للاستخدام
 
@@ -37,7 +38,7 @@ ridi-check demo --open
 |---|---|
 | تستطيع أنت (أو مساعدك البرمجي الذكي) استدعاء المساعد من Python | `ridi-check init` ثم املأ دالة واحدة ثم `ridi-check run` |
 | المساعد خدمة ويب أو برنامج سطر أوامر | `ridi-check run` مع عنوان `http://` أو `command:` (انظر دليل المطورين) |
-| عندك الإجابات فقط، في جدول مثلاً | افتح نسخة المتصفح (`web/ridi-update-check.html`) والصق الخلايا. أو: `ridi-check init --by-hand` ثم املأ الجدول ثم `ridi-check report` |
+| عندك الإجابات فقط، في جدول مثلاً | افتح [نسخة المتصفح](https://adeebnoor.github.io/ridi-check/) والصق الخلايا؛ لا تثبيت، وبياناتك تبقى داخل الصفحة. أو: `ridi-check init --by-hand` ثم املأ الجدول ثم `ridi-check report` |
 
 ## افحص مساعدك خطوة بخطوة
 

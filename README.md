@@ -11,6 +11,8 @@ average accuracy barely moves while individual answers flip. ridi-check runs the
 the same questions, more than once, and shows which answers changed and which of those changes hold on
 re-run. You need no test set, no answer key and no model judge.
 
+**Try it in your browser, with nothing to install:** [adeebnoor.github.io/ridi-check](https://adeebnoor.github.io/ridi-check/).
+
 ![The report: where each case landed, and the change between versions against re-run variation](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/report.png)
 
 [What you will see](#what-you-will-see) · [Who it is for](#who-it-is-for) · [Start in one minute](#start-in-one-minute) ·
@@ -58,8 +60,8 @@ Arabic. The numbers above come from `ridi-check demo`, which uses synthetic data
 - **You have questions but no answer key.** The report shows what changed; you judge only the changes that
   held on re-run.
 - **You want a CI check** that fails when an answer that was right becomes wrong in every run.
-- **You only have answers in a spreadsheet.** The [browser version](https://github.com/adeebnoor/ridi-check/blob/main/web/ridi-update-check.html) reads
-  pasted cells and needs no install.
+- **You only have answers in a spreadsheet.** The [browser version](https://adeebnoor.github.io/ridi-check/) reads pasted cells and
+  needs no install.
 
 It is **not** for proving that answers are correct or that a system is ready to deploy, for agents that use
 tools or keep state between turns (not tested), or for explaining why an answer changed. See
@@ -70,7 +72,7 @@ tools or keep state between turns (not tested), or for explaining why an answer 
 Python 3.10 or later, no dependencies. The demo needs no network and no API key; its data is synthetic.
 
 ```bash
-pip install git+https://github.com/adeebnoor/ridi-check
+pip install ridi-check
 ```
 
 ```bash
@@ -88,13 +90,17 @@ It writes `questions.csv`, `my_assistant.py` (one function to fill in), `ridi-ch
 questions with `ridi-check run --limit 5`, then run everything with `ridi-check run`. The
 [user guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.md) walks through each step and how to read the report.
 
-**No install at all:** download [web/ridi-update-check.html](https://github.com/adeebnoor/ridi-check/blob/main/web/ridi-update-check.html), open it and
-paste your results (CSV text or cells copied from a spreadsheet). The page makes no network request.
+**No install at all:** open the [browser version](https://adeebnoor.github.io/ridi-check/) and paste your results (CSV
+text or cells copied from a spreadsheet). Your data stays in the page: it sends nothing anywhere. To use it
+offline, download the single file [web/ridi-update-check.html](https://github.com/adeebnoor/ridi-check/blob/main/web/ridi-update-check.html).
+
+**Development version:** `pip install git+https://github.com/adeebnoor/ridi-check` installs the latest commit instead of the
+latest release.
 
 ## Use it in CI
 
 ```yaml
-- run: pip install git+https://github.com/adeebnoor/ridi-check
+- run: pip install ridi-check
 - run: ridi-check run --config ridi-check.json     # calls both versions, writes ridi-out/results.csv
 - run: ridi-check gate ridi-out/results.csv        # exits 1 on a stable regression
 ```
@@ -153,7 +159,9 @@ state between turns have not been tested.
 
 No dates and no promises; this is what is planned and what is not.
 
-- **Next:** a release on PyPI and a hosted link for the browser version.
+- **Done:** a release on [PyPI](https://pypi.org/project/ridi-check/), a hosted browser version, adapter
+  examples for common APIs.
+- **Next:** fixes and examples that real use asks for. Nothing else is scheduled.
 - **Being considered:** intervals for the rates, multi-turn conversations, tool-using agents, more report
   languages.
 - **Not planned:** model-based judging, or any hosted service that receives your data.

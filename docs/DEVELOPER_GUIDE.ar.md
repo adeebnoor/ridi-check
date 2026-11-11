@@ -164,7 +164,7 @@ def scorer(answer: str, expected: str) -> bool:
 ملف workflow كامل جاهز للنسخ: [examples/ci/ridi-check.yml](../examples/ci/ridi-check.yml). الخطوات:
 
 ```yaml
-- run: pip install git+https://github.com/adeebnoor/ridi-check
+- run: pip install ridi-check
 - run: ridi-check run --config check/ridi-check.json --out "ridi-out-${{ github.sha }}"
   env:
     MY_API_KEY: ${{ secrets.MY_API_KEY }}

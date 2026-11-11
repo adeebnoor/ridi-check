@@ -3,6 +3,12 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Changed
+- The README, the guides and the CI example install from PyPI (`pip install ridi-check`) and link to the
+  hosted browser version. Installing from the repository remains the way to get the development version.
+
 ## 0.3.2
 
 ### Added

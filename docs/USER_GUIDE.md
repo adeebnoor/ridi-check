@@ -20,7 +20,7 @@ flip, because the answers that got worse and the ones that got better cancel out
 ## See it in one minute
 
 ```bash
-pip install git+https://github.com/adeebnoor/ridi-check
+pip install ridi-check
 ```
 
 ```bash
@@ -28,7 +28,8 @@ ridi-check demo --open
 ```
 
 This creates a folder `ridi-demo` with a toy assistant in two versions, runs the check and opens the
-report. The demo needs no network and no API key. Python 3.10 or later.
+report. The demo needs no network and no API key. Python 3.10 or later. For the development version,
+install from the repository instead: `pip install git+https://github.com/adeebnoor/ridi-check`.
 
 ## Three ways to use it
 
@@ -36,7 +37,7 @@ report. The demo needs no network and no API key. Python 3.10 or later.
 |---|---|
 | You (or your AI coding assistant) can call the assistant from Python | `ridi-check init`, fill in one function, `ridi-check run` |
 | The assistant is a web service or a command-line program | `ridi-check run` with an `http://` address or `command:` (see the developer guide) |
-| You only have the answers, for example in a spreadsheet | Open the browser version (`web/ridi-update-check.html`) and paste the cells. Or: `ridi-check init --by-hand`, fill the table, `ridi-check report` |
+| You only have the answers, for example in a spreadsheet | Open the [browser version](https://adeebnoor.github.io/ridi-check/) and paste the cells; nothing is installed and your data stays in the page. Or: `ridi-check init --by-hand`, fill the table, `ridi-check report` |
 
 ## Check your own assistant, step by step
 
