@@ -197,8 +197,9 @@ ridi-check follows the RIDI method.
 ## Contributing
 
 Bug reports, questions and pull requests are welcome: see [CONTRIBUTING.md](https://github.com/adeebnoor/ridi-check/blob/main/CONTRIBUTING.md) and the
-[changelog](https://github.com/adeebnoor/ridi-check/blob/main/CHANGELOG.md). Report a vulnerability privately, as [SECURITY.md](https://github.com/adeebnoor/ridi-check/blob/main/SECURITY.md)
-describes.
+[changelog](https://github.com/adeebnoor/ridi-check/blob/main/CHANGELOG.md). Everyone taking part follows the
+[code of conduct](https://github.com/adeebnoor/ridi-check/blob/main/CODE_OF_CONDUCT.md). Report a vulnerability privately, as
+[SECURITY.md](https://github.com/adeebnoor/ridi-check/blob/main/SECURITY.md) describes.
 
 ## Licence
 

@@ -1,6 +1,7 @@
 # Contributing to ridi-check
 
-Thank you for helping. Small, focused changes are the easiest to review and merge.
+Thank you for helping. Small, focused changes are the easiest to review and merge. Everyone taking part is
+expected to follow the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Set up
 

@@ -9,6 +9,8 @@ library API may change between minor versions.
 - `examples/adapters/agent_adapter.py`: the pattern for an agent that uses tools and keeps state between
   turns, shown on a stand-in agent. A conversation is one case, and tool calls are returned as `context`.
 - User guide: "Stable does not mean correct".
+- `CODE_OF_CONDUCT.md`, a short adaptation of the Contributor Covenant 2.1. Reports go through GitHub's
+  private reporting; no mailbox is published.
 
 ### Changed
 - The README, the guides and the CI example install from PyPI (`pip install ridi-check`) and link to the

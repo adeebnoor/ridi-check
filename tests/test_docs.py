@@ -9,7 +9,7 @@ from conftest import ROOT
 
 REPO = "https://github.com/adeebnoor/ridi-check"
 RAW = "https://raw.githubusercontent.com/adeebnoor/ridi-check/main/"
-PAGES = (["README.md", "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", os.path.join("examples", "README.md"),
+PAGES = (["README.md", "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", "CODE_OF_CONDUCT.md", os.path.join("examples", "README.md"),
           os.path.join("examples", "adapters", "README.md"), os.path.join("tests", "fixtures", "README.md")]
          + sorted(os.path.join("docs", name) for name in os.listdir(os.path.join(ROOT, "docs")) if name.endswith(".md")))
 LINK = re.compile(r"\]\(([^)\s]+)\)")
@@ -85,13 +85,17 @@ def test_no_file_holds_an_email_address():
 
 
 def test_community_files_are_in_place():
-    for name in ("CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", "LICENSE", os.path.join(".github", "pull_request_template.md"),
+    for name in ("CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", "CODE_OF_CONDUCT.md", "LICENSE", os.path.join(".github", "pull_request_template.md"),
                  os.path.join(".github", "ISSUE_TEMPLATE", "bug_report.yml"),
                  os.path.join(".github", "ISSUE_TEMPLATE", "feature_request.yml"),
                  os.path.join(".github", "ISSUE_TEMPLATE", "config.yml")):
         assert os.path.getsize(os.path.join(ROOT, name)) > 100, name
     security = read("SECURITY.md")
     assert "Report a vulnerability" in security and "no email address" in security
+    conduct = read("CODE_OF_CONDUCT.md")
+    assert "Contributor Covenant, version 2.1" in conduct and "Report a vulnerability" in conduct
+    assert "no email address" in conduct
+    assert "CODE_OF_CONDUCT.md" in read("CONTRIBUTING.md") and "CODE_OF_CONDUCT.md" in read("README.md")
 
 
 def test_root_page_leads_to_the_browser_version():
