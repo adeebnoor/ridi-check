@@ -3,6 +3,16 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Changed
+- Browser version: the second example is named "Invented drug names (illustration only)" in the list and
+  in its note, in English and in Arabic. The data is unchanged.
+
+### Fixed
+- The language button has its own font stack with the Arabic fonts that systems ship, and its label is in
+  the page itself, so it is not empty before the script runs.
+
 ## 0.5.0
 
 ### Added

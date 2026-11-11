@@ -78,9 +78,9 @@ WORDS = ["yes", "Yes.", "no", "NOT_ENOUGH_INFO", "not enough info", "نعم", "�
 SENTENCES = ["the loan period is 21 days for every book in the library", "the loan period is 14 days for every book in the library",
              "the loan period is not 21 days for every book in the library", "the loan period is 21 days for each book in the library",
              "لا يُسمح بالطعام في غرف الدراسة أبداً", "يُسمح بالطعام في غرف الدراسة أبداً", "the fee is ten pounds", "the fee is ten pounds today",
-             "give the made-up medicine 5mg once every day with food and check the level each week",
-             "give the made-up medicine 50mg once every day with food and check the level each week",
-             "give the made-up medicine 5 mg once every day with food and check the level each week",
+             "give the invented drug 5mg once every day with food and check the level each week",
+             "give the invented drug 50mg once every day with food and check the level each week",
+             "give the invented drug 5 mg once every day with food and check the level each week",
              "give 2 tablets of 5 mg in the morning and at night with a full glass of water",
              "give 5 tablets of 2 mg in the morning and at night with a full glass of water",
              "الجرعة ٥ ملغ مرة واحدة كل يوم مع الطعام ويُراجع المريض كل أسبوع",
@@ -218,11 +218,11 @@ ARABIC_TAIL = " مرة واحدة كل يوم مع الطعام ويُراجع �
 DOSES = [
     # Long shared sentences, so that word overlap alone is above 0.9. The first, third and fourth pair
     # were counted as the same answer before numbers were compared as digit runs.
-    ("Start the made-up medicine 5mg" + TAIL, "Start the made-up medicine 50mg" + TAIL, False),
-    ("Start the made-up medicine 2.5 mg" + TAIL, "Start the made-up medicine 25 mg" + TAIL, False),
+    ("Start the invented drug 5mg" + TAIL, "Start the invented drug 50mg" + TAIL, False),
+    ("Start the invented drug 2.5 mg" + TAIL, "Start the invented drug 25 mg" + TAIL, False),
     ("Give 2 tablets of 5 mg" + TAIL, "Give 5 tablets of 2 mg" + TAIL, False),
     ("الجرعة ٥ملغ" + ARABIC_TAIL, "الجرعة ٥٠ملغ" + ARABIC_TAIL, False),
-    ("Start the made-up medicine 5 mg" + TAIL, "Start the made-up medicine 5 mg" + TAIL + " Thanks.", True),
+    ("Start the invented drug 5 mg" + TAIL, "Start the invented drug 5 mg" + TAIL + " Thanks.", True),
 ]
 
 
@@ -250,4 +250,98 @@ def test_browser_treats_numbers_and_spreadsheet_formulas_as_python_does(tmp_path
     back = [r[1][0] for r in read_records(csv_text)]
     assert js["back"] == back
     assert back[:4] == ["a", "=1+1", "+1", "-1"] and "- bullet\nsecond line" in back and "null" in back
+
+
+def _pages():
+    with open(os.path.join(ROOT, "web", "ridi-update-check.html"), encoding="utf-8") as f:
+        browser = f.read()
+    with open(os.path.join(ROOT, "src", "ridi_check", "report_template.html"), encoding="utf-8") as f:
+        report = f.read()
+    return {"browser version": browser, "report": report}
+
+
+def test_the_language_button_is_never_empty_and_names_arabic_fonts():
+    for name, page in _pages().items():
+        # the label is in the page itself, in Arabic and marked as Arabic, before any script has run
+        assert '<button type="button" id="lang" lang="ar">العربية</button>' in page, name
+        rule = re.search(r'#lang\[lang="ar"\] \{ font-family: ([^;]+); \}', page)
+        assert rule, name
+        stack = [font.strip().strip('"') for font in rule.group(1).split(",")]
+        for font in ("Segoe UI", "Tahoma", "Noto Sans Arabic"):
+            assert font in stack, (name, font)
+        assert stack[-1] == "sans-serif", name          # whatever the system has, when it has none of the above
+        # the script keeps the language mark in step with the label it writes
+        assert '$("lang").lang = ' in page, name
+
+
+def test_the_second_example_has_one_name_wherever_it_is_shown():
+    english, arabic = "Invented drug names (illustration only", "أسماء أدوية مختلقة (للتوضيح فقط"
+    browser = _pages()["browser version"]
+    assert english in browser and arabic in browser
+    assert "invented drug names, for illustration only" in browser and "بأسماء أدوية مختلقة، للتوضيح فقط" in browser
+    with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as f:
+        readme = " ".join(f.read().split())
+    assert "invented drug names (illustration only)" in readme
+    old = ("Medicines, made up", "made-up medicines", "أدوية وهمية")
+    shown = {"browser version": browser, "README.md": readme}
+    for folder in ("docs", "web", "examples"):
+        for dirpath, _, files in os.walk(os.path.join(ROOT, folder)):
+            for file in files:
+                if file.endswith((".md", ".js", ".html", ".yml")):
+                    with open(os.path.join(dirpath, file), encoding="utf-8") as f:
+                        shown[os.path.join(folder, file)] = f.read()
+    for where, text in shown.items():
+        for label in old:
+            assert label not in text, (where, label)
+    # the names in the data are invented: none of these word parts of real medicines appears
+    with open(os.path.join(ROOT, "web", "sample_medicines.csv"), encoding="utf-8") as f:
+        data = f.read().lower()
+    for part in ("statin", "mycin", "cillin", "prazole", "sartan", "warfarin", "cyp", "hla-"):
+        assert part not in data, part
+
+
+PAGE_RUNNER = r"""
+// Runs a page's own script against a stand-in for the browser: enough to show a name that is not defined
+// or a string that is missing, in English and in Arabic. It does not lay anything out.
+const fs = require('fs'), vm = require('vm');
+const html = fs.readFileSync(process.argv[2], 'utf8');
+const blocks = {}; let m; const re = /<script id="([^"]+)" type="application\/json">([\s\S]*?)<\/script>/g;
+while ((m = re.exec(html))) blocks[m[1]] = m[2];
+const scripts = html.match(/<script>([\s\S]*?)<\/script>/g).map((s) => s.slice(8, -9));
+const elements = {}, listeners = {};
+function element(id) {
+  const el = { id, textContent: blocks[id] || '', innerHTML: '', value: '', hidden: false, dir: '', lang: '', open: false, dataset: {}, style: {},
+    files: [], options: [], classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+    setAttribute() {}, getAttribute() { return null; }, removeAttribute() {}, focus() {}, select() {}, scrollIntoView() {},
+    querySelectorAll() { return []; }, querySelector() { return null; }, closest() { return null; }, appendChild() {},
+    addEventListener(kind, fn) { listeners[id + ':' + kind] = fn; } };
+  return el;
+}
+const document = { getElementById: (id) => (elements[id] = elements[id] || element(id)), documentElement: element('html'), body: element('body'),
+  querySelectorAll: () => [], querySelector: () => null, addEventListener() {}, createElement: () => element('new') };
+const store = {}; const storage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } };
+const window = { addEventListener() {}, matchMedia: () => ({ matches: false, addEventListener() {} }), scrollTo() {}, location: { hash: '' } };
+const sandbox = { document, window, localStorage: storage, sessionStorage: storage, navigator: { language: 'en', clipboard: null }, console,
+  setTimeout() {}, FileReader: function () {}, TextDecoder, URL, Uint8Array };
+vm.createContext(sandbox);
+for (const s of scripts) vm.runInContext(s, sandbox);                      // first drawing, in English
+const first = elements.lang.textContent;
+listeners['lang:click']({});                                              // switch to Arabic and draw again
+const second = elements.lang.textContent;
+if (listeners['sample-set:change']) { listeners['sample-set:change']({ target: { value: 'medicines' } }); listeners['btn-sample-nokey:click']({}); }
+console.log(JSON.stringify({ first, second, firstLang: 'ar', drawn: (elements.report || elements.app).innerHTML.length > 500 }));
+"""
+
+
+@needs_node
+def test_both_pages_run_their_own_script_in_english_and_in_arabic(tmp_path):
+    """A name that is not defined in a page's script stops the whole page; nothing else here would notice."""
+    from ridi_check.cli import main
+    assert main(["report", os.path.join(ROOT, "web", "sample_medicines.csv"), "--out", str(tmp_path)]) == 0
+    (tmp_path / "page_runner.js").write_text(PAGE_RUNNER, encoding="utf-8")
+    for page in (os.path.join(ROOT, "web", "ridi-update-check.html"), str(tmp_path / "report.html")):
+        done = subprocess.run([NODE, str(tmp_path / "page_runner.js"), page], capture_output=True, text=True, encoding="utf-8")
+        assert done.returncode == 0, f"{page}:\n{done.stderr[-1500:]}"
+        seen = json.loads(done.stdout)
+        assert seen["first"] == "العربية" and seen["second"] == "English" and seen["drawn"], (page, seen)
 

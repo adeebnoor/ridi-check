@@ -22,9 +22,9 @@
       noteKey: "Synthetic example data, not yours: 30 questions about a made-up library handbook. The proposed version splits the handbook into smaller pieces, and each version was run twice.",
       noteNoKey: "Synthetic example data, not yours: the same 30 questions with the answer key hidden, so the changes are yours to judge.",
       noteFile: "{n} cases from your file.",
-      setLabel: "Example data: ", setLibrary: "Library handbook (30 questions)", setMedicines: "Medicines, made up (12 questions)",
-      noteKeyMed: "Synthetic example data, not yours: 12 questions about made-up medicines. The names, doses and effects are invented and are not medical guidance. The proposed version retrieves different passages, and each version was run twice.",
-      noteNoKeyMed: "Synthetic example data, not yours: the same 12 questions about made-up medicines with the answer key hidden, so the changes are yours to judge. Nothing here is medical guidance.",
+      setLabel: "Example data: ", setLibrary: "Library handbook (30 questions)", setMedicines: "Invented drug names (illustration only, 12 questions)",
+      noteKeyMed: "Synthetic example data, not yours: 12 questions that use invented drug names, for illustration only. The names, doses and effects are invented and are not medical guidance. The proposed version retrieves different passages, and each version was run twice.",
+      noteNoKeyMed: "Synthetic example data, not yours: the same 12 questions that use invented drug names, for illustration only, with the answer key hidden, so the changes are yours to judge. Nothing here is medical guidance.",
       whyTitle: "Why each version is run more than once",
       whyList: [
         "Mean accuracy hides opposite changes. An update can fix some answers and break others. The mean moves only by the difference, so the answers it broke stay out of sight unless every case is looked at.",
@@ -73,9 +73,9 @@
       noteKey: "بيانات مثال اصطناعية وليست بياناتك: 30 سؤالاً عن دليل مكتبة مختلَق. النسخة المقترحة تقطّع الدليل إلى قطع أصغر، وشُغّلت كل نسخة مرتين.",
       noteNoKey: "بيانات مثال اصطناعية وليست بياناتك: الأسئلة الثلاثون نفسها مع إخفاء مفتاح الإجابات، فالحكم على التغيّرات لك.",
       noteFile: "{n} حالة من ملفك.",
-      setLabel: "بيانات المثال: ", setLibrary: "دليل مكتبة (30 سؤالاً)", setMedicines: "أدوية وهمية (12 سؤالاً)",
-      noteKeyMed: "بيانات مثال اصطناعية وليست بياناتك: 12 سؤالاً عن أدوية وهمية. الأسماء والجرعات والتأثيرات مختلقة وليست إرشاداً طبياً. النسخة المقترحة تسترجع مقاطع مختلفة، وكل نسخة شُغّلت مرتين.",
-      noteNoKeyMed: "بيانات مثال اصطناعية وليست بياناتك: الأسئلة الاثنا عشر نفسها عن أدوية وهمية مع إخفاء مفتاح الإجابات، فالحكم على التغيّرات لك. لا شيء هنا إرشاد طبي.",
+      setLabel: "بيانات المثال: ", setLibrary: "دليل مكتبة (30 سؤالاً)", setMedicines: "أسماء أدوية مختلقة (للتوضيح فقط، 12 سؤالاً)",
+      noteKeyMed: "بيانات مثال اصطناعية وليست بياناتك: 12 سؤالاً بأسماء أدوية مختلقة، للتوضيح فقط. الأسماء والجرعات والتأثيرات مختلقة وليست إرشاداً طبياً. النسخة المقترحة تسترجع مقاطع مختلفة، وكل نسخة شُغّلت مرتين.",
+      noteNoKeyMed: "بيانات مثال اصطناعية وليست بياناتك: الأسئلة الاثنا عشر نفسها بأسماء أدوية مختلقة، للتوضيح فقط، مع إخفاء مفتاح الإجابات، فالحكم على التغيّرات لك. لا شيء هنا إرشاد طبي.",
       whyTitle: "لماذا تُشغَّل كل نسخة أكثر من مرة",
       whyList: [
         "متوسط الدقة يخفي التغيّرات المتعاكسة. قد يصلح التحديث إجابات ويكسر أخرى، والمتوسط يتحرك بمقدار الفرق فقط، فتبقى الإجابات التي كسرها غير ظاهرة ما لم تُفحص كل حالة.",
@@ -290,7 +290,7 @@
     const open = Array.from(document.querySelectorAll("details[open][data-k]")).map((d) => d.dataset.k);
     const app = $("app");
     document.documentElement.lang = state.lang; app.dir = state.lang === "ar" ? "rtl" : "ltr";
-    $("t-name").textContent = u("name"); $("lang").textContent = u("langBtn"); $("t-tagline").textContent = u("tagline");
+    $("t-name").textContent = u("name"); $("lang").textContent = u("langBtn"); $("lang").lang = state.lang === "ar" ? "en" : "ar"; $("t-tagline").textContent = u("tagline");
     $("btn-sample-key").textContent = u("sampleKey"); $("btn-sample-nokey").textContent = u("sampleNoKey");
     $("t-set-label").textContent = u("setLabel"); $("opt-set-library").textContent = u("setLibrary"); $("opt-set-medicines").textContent = u("setMedicines");
     $("sample-set").value = state.set;

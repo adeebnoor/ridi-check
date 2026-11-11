@@ -12,8 +12,8 @@ the same questions, more than once, and shows which answers changed and which of
 re-run. You need no test set, no answer key and no model judge.
 
 **Try it in your browser, with nothing to install:** [adeebnoor.github.io/ridi-check](https://adeebnoor.github.io/ridi-check/).
-It opens on two synthetic examples: a library handbook, and made-up medicines where mean accuracy rises
-while three answers break in every run.
+It opens on two synthetic examples: a library handbook, and one with invented drug names (illustration
+only) where mean accuracy rises while three answers break in every run.
 
 ![The report: where each case landed, and the change between versions against re-run variation](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/report.png)
 

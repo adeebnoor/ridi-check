@@ -49,6 +49,9 @@ header.top .lead { max-width: 62ch; display: flex; flex-direction: column; gap: 
 button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
   border-radius: 6px; padding: 7px 12px; cursor: pointer; }
 button:hover { border-color: var(--accent); }
+/* The language button shows the name of the other language. When that name is Arabic, its own stack names
+   the Arabic fonts that systems ship; with none of them the browser still uses any font that has the letters. */
+#lang[lang="ar"] { font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, "Noto Sans Arabic", "Noto Naskh Arabic", "Geeza Pro", Arial, sans-serif; }
 button:focus-visible, textarea:focus-visible, summary:focus-visible, .cell:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px; }
 button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -124,7 +127,7 @@ details.wrongs li { overflow-wrap: anywhere; }
       <h1 id="t-name">RIDI Update Check</h1>
       <p class="muted" id="t-tagline"></p>
     </div>
-    <button type="button" id="lang"></button>
+    <button type="button" id="lang" lang="ar">العربية</button>
   </header>
   <div class="small muted note" id="source-note"></div>
   <main id="report"></main>
@@ -227,7 +230,7 @@ function render() {
   document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr";
   app.dir = state.lang === "ar" ? "rtl" : "ltr";
   document.title = t("name");
-  $("t-name").textContent = t("name"); $("lang").textContent = t("langBtn"); $("t-tagline").textContent = t("tagline");
+  $("t-name").textContent = t("name"); $("lang").textContent = t("langBtn"); $("lang").lang = state.lang === "ar" ? "en" : "ar"; $("t-tagline").textContent = t("tagline");
   $("t-limits").textContent = t("limits"); $("t-limit-list").innerHTML = L().limitList.map((x) => "<li>" + esc(x) + "</li>").join("");
   let note = "<span>" + esc(t("source", { n: M.n, file: M.file, when: M.generated, version: M.tool_version })) + "</span>";
   if (M.labels.current || M.labels.proposed) note += '<span dir="auto">' + esc(t("versions", { a: M.labels.current || "—", b: M.labels.proposed || "—" })) + "</span>";

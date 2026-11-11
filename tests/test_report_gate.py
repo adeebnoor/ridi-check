@@ -281,7 +281,7 @@ MEDICINES = os.path.join(os.path.dirname(FIXTURE), "..", "..", "web", "sample_me
 
 
 def test_the_second_example_is_made_up_and_shows_what_it_is_meant_to_show(tmp_path, capsys):
-    """Made-up medicines: mean accuracy rises by one answer while three answers break in every run."""
+    """Invented drug names, illustration only: mean accuracy rises by one answer while three answers break in every run."""
     assert main(["report", MEDICINES, "--out", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "First run accuracy: 7/12 to 8/12; regressions 3, improvements 4." in out
