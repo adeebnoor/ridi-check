@@ -38,6 +38,14 @@ present: the browser-version parity tests need Node.js, and the Claude adapter e
 3. Run `pytest`. Update the docs and `CHANGELOG.md` when behaviour changes.
 4. Open a pull request and fill in the template.
 
+## Releasing (maintainers)
+
+1. Set the version in `src/ridi_check/__init__.py`, give it a section in `CHANGELOG.md`, run
+   `python tools/build_web.py`, and merge with CI green.
+2. Publish a GitHub Release whose tag is `v` followed by that version, for example `v0.3.2`.
+3. The `release` workflow builds the sdist and the wheel, checks them, tests the wheel and publishes to
+   PyPI through Trusted Publishing. It stops without publishing if the tag and the version differ.
+
 ## Reporting a bug
 
 Use the bug report form. The most useful report has the command you ran, what you expected, what

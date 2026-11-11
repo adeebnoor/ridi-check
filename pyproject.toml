@@ -5,16 +5,38 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ridi-check"
 dynamic = ["version"]
-description = "Tells the owner of an LLM assistant what an update changed, and which changes hold on re-run."
+description = "See what a model or prompt update changed in an LLM assistant's answers, and which changes hold on re-run."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = []
 authors = [{ name = "ridi-check contributors" }]
+keywords = ["llm", "evals", "regression-testing", "ai-agents", "prompt-testing", "rag", "ci"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/adeebnoor/ridi-check"
+Documentation = "https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.md"
+Changelog = "https://github.com/adeebnoor/ridi-check/blob/main/CHANGELOG.md"
+Issues = "https://github.com/adeebnoor/ridi-check/issues"
 
 [project.scripts]
 ridi-check = "ridi_check.cli:main"

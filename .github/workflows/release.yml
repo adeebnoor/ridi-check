@@ -1,0 +1,55 @@
+name: release
+# Publishes to PyPI when a GitHub Release is published. It uses PyPI Trusted Publishing (OpenID Connect):
+# no password or token is stored anywhere. On PyPI, the trusted publisher for the project is set to this
+# repository, the workflow file `release.yml` and the environment `pypi`.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      - run: twine check --strict dist/*
+      - name: the release tag must be the package version
+        shell: bash
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version=$(ls dist/*.tar.gz | sed -E 's/.*-([0-9][^-]*)\.tar\.gz/\1/')
+          if [ "v$version" != "$TAG" ]; then
+            echo "The release tag is $TAG but the package version is $version. Nothing was published."
+            exit 1
+          fi
+      - name: test the built wheel
+        run: |
+          pip install dist/*.whl pytest
+          pytest -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/ridi-check/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

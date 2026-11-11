@@ -3,9 +3,11 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
-## Unreleased
+## 0.3.2
 
 ### Added
+- A release workflow that publishes to PyPI through Trusted Publishing when a GitHub Release is published.
+- `index.html` at the repository root, so that a hosted copy of the browser version has a short address.
 - Adapter examples in `examples/adapters`: an OpenAI-compatible HTTP API, the Claude API through its
   official SDK, and a shell command. Each is tested against a local stand-in server.
 - `docs/REFERENCE.md`: every command and option, the settings and questions files, `results.csv`, the

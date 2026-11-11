@@ -1,0 +1,2 @@
+# The tests need files that are not part of the package (examples, docs, web); they live in the repository.
+prune tests

@@ -25,5 +25,11 @@ const { chromium } = require('playwright');
   const small = await phone.newPage();
   await small.goto(url); await small.waitForSelector('.tile');
   await small.screenshot({ path: path.join(out, 'report-phone-ar.png') });
+
+  // The repository's social preview, 1280 x 640.
+  const card = await browser.newContext({ viewport: { width: 1280, height: 640 }, deviceScaleFactor: 1, colorScheme: 'dark' });
+  const preview = await card.newPage();
+  await preview.goto('file://' + path.resolve(__dirname, 'social_preview.html'));
+  await preview.screenshot({ path: path.join(out, 'social-preview.png'), clip: { x: 0, y: 0, width: 1280, height: 640 } });
   await browser.close();
 })();

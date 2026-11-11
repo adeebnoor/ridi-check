@@ -92,3 +92,32 @@ def test_community_files_are_in_place():
         assert os.path.getsize(os.path.join(ROOT, name)) > 100, name
     security = read("SECURITY.md")
     assert "Report a vulnerability" in security and "no email address" in security
+
+
+def test_root_page_leads_to_the_browser_version():
+    page = read("index.html")
+    target = re.search(r'http-equiv="refresh" content="0; url=([^"]+)"', page).group(1)
+    assert target == "web/ridi-update-check.html" and os.path.exists(os.path.join(ROOT, target))
+    assert f'href="{target}"' in page                      # a plain link too, for readers without script or refresh
+    assert os.path.exists(os.path.join(ROOT, ".nojekyll"))  # the files are served as they are
+
+
+def test_release_workflow_publishes_without_any_stored_secret():
+    workflow = read(os.path.join(".github", "workflows", "release.yml"))
+    for needed in ("types: [published]", "python -m build", "twine check", "id-token: write", "name: pypi",
+                   "pypa/gh-action-pypi-publish@release/v1"):
+        assert needed in workflow, needed
+    assert workflow.index("twine check") < workflow.index("pypa/gh-action-pypi-publish")
+    assert not re.search(r"secrets\.|password:|PYPI_API_TOKEN|TWINE_PASSWORD|TWINE_USERNAME", workflow)
+    assert "push:" not in workflow and "pull_request" not in workflow     # a published Release is the only trigger
+
+
+def test_package_metadata():
+    text = read("pyproject.toml")
+    for needed in ('license = "MIT"', 'readme = "README.md"', "[project.urls]", "Homepage", "Changelog", "Issues",
+                   '"regression-testing"', "Programming Language :: Python :: 3.10", "Topic :: Software Development :: Testing"):
+        assert needed in text, needed
+    assert "License ::" not in text                         # the licence is given once, as an SPDX expression
+    assert 'authors = [{ name = "ridi-check contributors" }]' in text and "email" not in text
+    version = re.search(r'__version__ = "([^"]+)"', read(os.path.join("src", "ridi_check", "__init__.py"))).group(1)
+    assert f"## {version}" in read("CHANGELOG.md"), "the changelog has no section for the current version"
