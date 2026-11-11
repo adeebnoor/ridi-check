@@ -1,0 +1,14 @@
+{
+  "type": "http",
+  "url": "${OPENAI_BASE_URL}/chat/completions",
+  "headers": {"Authorization": "Bearer ${OPENAI_API_KEY}"},
+  "request": {
+    "model": "your-current-model",
+    "messages": [
+      {"role": "system", "content": "You answer questions about our product. Be brief."},
+      {"role": "user", "content": "{question}"}
+    ]
+  },
+  "answer_path": "choices.0.message.content",
+  "timeout": 120
+}

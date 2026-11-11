@@ -151,9 +151,11 @@ def command_adapter(command: str, timeout: float) -> Callable[[str, dict], dict]
 
 def http_adapter(config: dict, timeout: float) -> Callable[[str, dict], dict]:
     url = config.get("url")
-    if not isinstance(url, str) or not url.startswith(("http://", "https://")):
+    if not isinstance(url, str):
+        raise DefinitionError('http adapter: needs "url"')
+    url = _expand_env(url, "http adapter url")      # the address may come from the environment
+    if not url.startswith(("http://", "https://")):
         raise DefinitionError("http adapter: \"url\" must start with http:// or https://")
-    url = _expand_env(url, "http adapter url")
     template = config.get("request", {"question": "{question}"})
     answer_path = config.get("answer_path", "answer")
     context_path = config.get("context_path", "context")

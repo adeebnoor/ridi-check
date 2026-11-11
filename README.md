@@ -119,8 +119,12 @@ def answer(question: str) -> dict:
 | a program in any language | `command:<shell command>` (question on stdin, JSON or text on stdout) |
 | an HTTP service | `http://…`, or a JSON file that describes the request and the reply |
 
-The two versions should differ only in what the update changes. Keys belong in environment variables.
-Details and examples: [developer guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.md#connecting-an-assistant).
+Ready-made examples in [examples/adapters](https://github.com/adeebnoor/ridi-check/blob/main/examples/adapters/README.md): an OpenAI-compatible HTTP
+API (no code), the Claude API through its official SDK, and a shell command with `curl`. Each reads its key
+from an environment variable and is tested against a local stand-in server.
+
+The two versions should differ only in what the update changes. Details:
+[developer guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.md#connecting-an-assistant).
 
 ## FAQ
 
@@ -149,8 +153,7 @@ state between turns have not been tested.
 
 No dates and no promises; this is what is planned and what is not.
 
-- **Next:** a release on PyPI, a hosted link for the browser version, ready-made adapter examples for
-  common APIs.
+- **Next:** a release on PyPI and a hosted link for the browser version.
 - **Being considered:** intervals for the rates, multi-turn conversations, tool-using agents, more report
   languages.
 - **Not planned:** model-based judging, or any hosted service that receives your data.

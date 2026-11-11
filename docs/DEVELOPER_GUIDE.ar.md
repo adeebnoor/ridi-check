@@ -57,7 +57,8 @@ def answer(question: str) -> dict:
 | `http://…` أو `https://…` | المساعد خدمة | يرسل POST فيه `{"question": …}` ويقرأ `answer` و`context` من رد JSON. |
 | `path/to/system.json` | للطلب أو الرد شكل آخر | انظر أدناه. |
 
-تعريف JSON لنقطة محادثة على نمط OpenAI:
+محوّلات جاهزة لواجهة HTTP متوافقة مع OpenAI ولواجهة Claude ولأمر shell موجودة في
+[examples/adapters](../examples/adapters/README.md). تعريف JSON لنقطة محادثة على نمط OpenAI:
 
 ```json
 {

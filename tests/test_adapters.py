@@ -138,6 +138,17 @@ def test_http_adapter_failures(server, tmp_path):
         missing("q", META)
 
 
+def test_http_address_can_come_from_the_environment(server, tmp_path, monkeypatch):
+    monkeypatch.setenv("MY_BASE", server)
+    definition = tmp_path / "env_url.json"
+    definition.write_text(json.dumps({"type": "http", "url": "${MY_BASE}/ask"}), encoding="utf-8")
+    answer, _ = build_adapter(str(definition))
+    assert answer("hi", META)["answer"] == "echo hi"
+    monkeypatch.setenv("MY_BASE", "ftp://nowhere")
+    with pytest.raises(DefinitionError, match="must start with http"):
+        build_adapter(str(definition))
+
+
 def test_definition_file_problems(tmp_path, monkeypatch):
     bad = tmp_path / "bad.json"
     bad.write_text('{"type": "grpc"}', encoding="utf-8")

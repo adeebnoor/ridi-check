@@ -56,7 +56,8 @@ Returning a plain string is accepted. Anything else is recorded as a failed call
 | `http://…` or `https://…` | The assistant is a service | POSTs `{"question": …}`, reads `answer` and `context` from the JSON reply. |
 | `path/to/system.json` | The request or reply has another shape | See below. |
 
-A JSON definition for an OpenAI-style chat endpoint:
+Ready-made adapters for an OpenAI-compatible HTTP API, the Claude API and a shell command are in
+[examples/adapters](../examples/adapters/README.md). A JSON definition for an OpenAI-style chat endpoint:
 
 ```json
 {
