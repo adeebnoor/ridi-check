@@ -1,6 +1,6 @@
 # ridi-check use cases
 
-Twelve situations where ridi-check helps, and how to set each one up. In every case the rule is the
+Thirteen situations where ridi-check helps, and how to set each one up. In every case the rule is the
 same: the "current" and the "proposed" version should differ in the one thing you want to learn
 about, and in nothing else. Arabic version: [USE_CASES.ar.md](USE_CASES.ar.md).
 
@@ -18,6 +18,7 @@ about, and in nothing else. Arabic version: [USE_CASES.ar.md](USE_CASES.ar.md).
 | 10 | review an update with no reference answers | live version | update |
 | 11 | check an assistant that answers in Arabic or several languages | live version | update |
 | 12 | teach or demonstrate why averages hide change | toy assistant v1 | toy assistant v2 |
+| 13 | update an agent that uses tools or keeps state | live agent | updated agent |
 
 ## 1. A new model
 
@@ -102,9 +103,19 @@ that.
 (for example `WINDOW_WORDS`), run again into a new folder and watch regressions and improvements move
 while accuracy barely does.
 
+## 13. An agent with tools or memory
+
+*Set up.* Wrap the agent as one function that starts a fresh session, plays the case and returns the final
+answer, with the tool calls, numbered, as `context`. A multi-turn conversation is one case: put its turns in
+the `question` cell as a JSON list.
+*Read.* Under each changed case the report lists the tool calls only one version made, which is usually
+where the cause is: a tool no longer called, a different argument, a lost earlier turn.
+*Note.* [examples/adapters/agent_adapter.py](../examples/adapters/agent_adapter.py) shows this on a stand-in
+agent. It has not been tried on a production agent yet.
+
 ## When it is not the right tool
 
-- Agents that use tools, browse or keep state between turns. Not tested in this version.
+- Agents whose runs cannot be started fresh, or whose answer is an action in the world, not text.
 - Deciding whether an answer is *correct* without reference answers or your judgment.
 - Proving a system is safe or compliant. It reports counts of changed answers.
 - Very long free-text answers compared by exact match. Add a scoring function first.

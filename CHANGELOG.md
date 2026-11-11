@@ -5,6 +5,11 @@ library API may change between minor versions.
 
 ## Unreleased
 
+### Added
+- `examples/adapters/agent_adapter.py`: the pattern for an agent that uses tools and keeps state between
+  turns, shown on a stand-in agent. A conversation is one case, and tool calls are returned as `context`.
+- User guide: "Stable does not mean correct".
+
 ### Changed
 - The README, the guides and the CI example install from PyPI (`pip install ridi-check`) and link to the
   hosted browser version. Installing from the repository remains the way to get the development version.

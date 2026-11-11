@@ -63,8 +63,9 @@ Arabic. The numbers above come from `ridi-check demo`, which uses synthetic data
 - **You only have answers in a spreadsheet.** The [browser version](https://adeebnoor.github.io/ridi-check/) reads pasted cells and
   needs no install.
 
-It is **not** for proving that answers are correct or that a system is ready to deploy, for agents that use
-tools or keep state between turns (not tested), or for explaining why an answer changed. See
+It is **not** for proving that answers are correct or that a system is ready to deploy, or for explaining
+why an answer changed. Agents that use tools or keep state can be wrapped, but that has not been tried on a
+production agent. See
 [Limitations](#limitations) and the [use cases](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.md).
 
 ## Start in one minute
@@ -152,8 +153,10 @@ time. Add `expected` answers with a scoring function, or use `--similarity 0.9`.
 **Which providers and frameworks does it support?** Any. It talks to a function, a command or an HTTP
 endpoint, not to a provider.
 
-**Can I use it on an agent?** For its question-in, answer-out behaviour, yes. Agents that use tools or keep
-state between turns have not been tested.
+**Can I use it on an agent?** Yes, wrapped as one function: a question or a whole scripted conversation goes
+in, the final answer comes out, and the tool calls are returned as `context`, so the report shows which
+calls only one version made. [examples/adapters](https://github.com/adeebnoor/ridi-check/blob/main/examples/adapters/README.md#an-agent-with-tools-and-memory)
+has a working stand-in agent. It has not been tried on a production agent yet.
 
 ## Roadmap
 
@@ -177,12 +180,13 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 - Two runs is a thin estimate of re-run variation. More runs make the stable label firmer.
 - It is not a readiness or safety certificate. No output says a system is fit to deploy; the gate prints
   counts and the decision stays yours.
-- Not in this version: agents that use tools or keep state, model-based judging, statistical tests.
+- Agents that use tools or keep state have a documented pattern and a stand-in example, but the tool has
+  not been tried on a production agent. Not in this version: model-based judging, statistical tests.
 
 ## Documentation
 
 - [User guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.md): step by step, and how to read the report
-- [Use cases](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.md): twelve situations and how to set each one up
+- [Use cases](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.md): thirteen situations and how to set each one up
 - [Developer guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.md): adapters, files, CI, library use
 - [Reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md): every command and option, `results.csv`, the labelling rules
 - بالعربية: [دليل الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.ar.md) · [حالات الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.ar.md) ·

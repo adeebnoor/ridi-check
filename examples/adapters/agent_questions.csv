@@ -1,0 +1,13 @@
+case_id,question,expected
+a01,How many days is a book loan?,21 days
+a02,How many days is a film loan?,7 days
+a03,How many items can I borrow at a time?,12 items
+a04,How long can I book a study room?,2 hours
+a05,What is the fine for a book that is 5 days late?,100 pence
+a06,What is the fine for a book that is 9 days late?,180 pence
+a07,What is the fine for a film that is 3 days late?,300 pence
+a08,What is the fine for a film that is 8 days late?,800 pence
+a09,"[""I have a child card."", ""What is the fine for a book that is 4 days late?""]",No fine
+a10,"[""My book is 6 days late."", ""How much do I owe?""]",120 pence
+a11,"[""I want to borrow a film."", ""For how many days?""]",7 days
+a12,"[""I have a child card."", ""How many days is a book loan?""]",21 days

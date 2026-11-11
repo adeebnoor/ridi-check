@@ -105,6 +105,17 @@ longer than the others, the total tells you little: read the stable cases instea
 **Cases to review.** For each changed case: the question, both answers, what the second run gave,
 and the passages that only one version used. The passages are shown, not judged.
 
+## Stable does not mean correct
+
+A version that gives the same wrong answer every time looks stable, and without reference answers the
+report cannot tell you so. Three ways to cover that:
+
+- Add an `expected` column for the questions where a wrong answer would hurt most. Those cases are then
+  scored, and the ones wrong in both versions are listed separately in the report.
+- Read a sample of the "same answer" cases yourself once, before you rely on the check.
+- Keep whatever correctness evaluation you already have. ridi-check answers a different question: what did
+  this update change?
+
 ## Giving your call (no reference answers)
 
 In the report, each stable change has four buttons: Worse, Better, Same meaning, Not sure. When you
