@@ -76,6 +76,13 @@ and `*` maps over one. `${NAME}` is read from the environment when the run start
 is copied into `run_manifest.json` as given, so a literal key in it would be copied too: ridi-check
 warns when a credential-like header holds a literal value.
 
+A function or command that fails should raise, or exit non-zero: the call is recorded as failed and tried
+again. From a Python function you can tell the runner more by setting attributes on the exception you
+raise: `retry_after` (seconds to wait before the next attempt; no other call starts meanwhile),
+`retryable = False` (do not try this call again) and `service_failure = True` (the service is refusing
+every call; ten of these in a row stop the run). The http adapter sets them from the status code and the
+`Retry-After` header; see the [reference](REFERENCE.md#ridi-check-run).
+
 The two versions must differ only in what the update changes. A typical Python adapter:
 
 ```python

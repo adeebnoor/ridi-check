@@ -18,7 +18,7 @@ from .analysis import analyse
 from .contract import ContractError, read_results
 from .gate import evaluate
 from .report import read_judgments, text_summary, write_report
-from .runner import RunConfig, RunError, run
+from .runner import SERVICE_FAILURES, RunConfig, RunError, run
 
 CONFIG_NAME = "ridi-check.json"
 # `run` settings: name -> (type, default). The same names are the keys of ridi-check.json.
@@ -276,6 +276,14 @@ def _cmd_run(args: argparse.Namespace) -> int:
         print(f"Interrupted: {outcome.recorded_ok} of {outcome.calls_planned} calls are recorded in {raw}. "
               "Run the same command again to resume.", file=sys.stderr)
         return 130
+    if outcome.stopped_reason == "service":
+        print(f"Stopped: {SERVICE_FAILURES} calls in a row failed because the service refused them or did not answer "
+              "(a used-up quota, a missing key, a rate limit or nothing listening), so the remaining calls were not made.\n"
+              f"  Last error: {outcome.stopped_early}\n"
+              f"{outcome.recorded_ok} of {outcome.calls_planned} calls are recorded in {raw}. No results file was "
+              "written from this part. Run the same command again once the service answers; only the missing "
+              "calls are made.", file=sys.stderr)
+        return 2
     if outcome.stopped_early:
         print(f"Stopped: the first {outcome.calls_failed} calls all failed, so the connection to your assistant "
               f"is probably not working yet.\n  Last error: {outcome.stopped_early}\n"

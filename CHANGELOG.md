@@ -3,9 +3,15 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
-## Unreleased
+## 0.4.0
 
 ### Added
+- `run` and services that limit or refuse calls: a `Retry-After` header is obeyed (up to 120 seconds) and
+  no other call starts during that wait; HTTP 400, 401, 402, 403 and 404 are not tried again; and the run
+  stops, exit status 2, when ten calls in a row are refused (a used-up quota, a missing key, a rate limit)
+  or nothing is listening, instead of failing every remaining question. Running the same command again
+  continues from there. A Python adapter can ask for the same treatment through attributes on the
+  exception it raises.
 - `examples/adapters/agent_adapter.py`: the pattern for an agent that uses tools and keeps state between
   turns, shown on a stand-in agent. A conversation is one case, and tool calls are returned as `context`.
 - User guide: "Stable does not mean correct".

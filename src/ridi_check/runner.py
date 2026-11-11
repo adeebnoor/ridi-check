@@ -37,6 +37,8 @@ VERSIONS = ("current", "proposed")
 SIDE = {"current": "baseline", "proposed": "updated"}
 EMPTY_ANSWER = "(empty answer)"
 FAIL_FAST = 5  # stop when this many calls have failed and none has succeeded
+SERVICE_FAILURES = 10    # stop when this many calls in a row failed because the service refused or was unreachable
+MAX_RETRY_AFTER = 120.0  # seconds; a service that asks for a longer wait is not waited for in this run
 CONTEXT_ITEM_LIMIT = 120
 
 
@@ -79,7 +81,8 @@ class RunOutcome:
     calls_failed: int = 0
     attempts: int = 0
     recorded_ok: int = 0  # planned calls with a successful record, this invocation or earlier
-    stopped_early: str | None = None  # the error, when the first calls all failed and the run stopped
+    stopped_early: str | None = None  # the last error, when the run stopped because calls kept failing
+    stopped_reason: str | None = None  # "first": no call ever succeeded; "service": the service stopped answering
     cases: int = 0
     failed: list[dict] = field(default_factory=list)  # final record of each call that never succeeded
 
@@ -413,12 +416,17 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
     stop = threading.Event()
     lock = threading.Lock()
     progress = {"done": 0, "shown": time.monotonic()}
+    pause = {"until": 0.0}                  # no call starts before this time: a service asked every caller to wait
+    service_failed: set[tuple] = set()      # calls whose last attempt failed because the service refused them
 
     def call(q: Question, version: str, k: int) -> dict | None:
         record = None
         for attempt in range(1, config.retries + 2):
-            if stop.is_set():
+            with lock:
+                hold = pause["until"] - time.monotonic()
+            if stop.is_set() or (hold > 0 and stop.wait(hold)):
                 return record
+            failure: BaseException | None = None
             meta = {"case_id": q.case_id, "version": version, "run": k}
             record = {"case_id": q.case_id, "version": version, "run": k, "attempt": attempt,
                       "max_attempts": config.retries + 1, "status": "ok", "answer": None, "context": None,
@@ -429,17 +437,34 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
             except Exception as exc:  # a failed call is a result to record, not a crash
                 record["status"] = "failed"
                 record["error"] = f"{type(exc).__name__}: {exc}"
+                failure = exc
             record["ended_at"] = now_iso()
             writer.write(record)
             with lock:
                 outcome.attempts += 1
             if record["status"] == "ok":
                 return record
-            if attempt <= config.retries and stop.wait(config.retry_wait * (2 ** (attempt - 1))):
+            asked = getattr(failure, "retry_after", None)
+            with lock:
+                (service_failed.add if getattr(failure, "service_failure", False) else service_failed.discard)(
+                    (q.case_id, version, k))
+            if attempt > config.retries or not getattr(failure, "retryable", True):
+                return record       # trying again will not help, for example a quota that is used up
+            wait = config.retry_wait * (2 ** (attempt - 1))
+            if isinstance(asked, (int, float)) and not isinstance(asked, bool):
+                if asked > MAX_RETRY_AFTER:
+                    return record   # the service asked for a longer wait than this run makes
+                wait = max(wait, float(asked))
+                with lock:          # the other calls wait too, instead of each finding the limit for itself
+                    if time.monotonic() + wait > pause["until"]:
+                        pause["until"] = time.monotonic() + wait
+                        print(f"  the service asked to wait {wait:g}s; no call is started before then.", file=log)
+            if stop.wait(wait):
                 return record
         return record
 
     interrupted = False
+    streak = 0      # calls in a row, in the order they finished, that failed because of the service
     pool = ThreadPoolExecutor(max_workers=config.concurrency, thread_name_prefix="ridi-check")
     try:
         for k in range(1, config.runs + 1):
@@ -454,14 +479,19 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
                     ok[key] = record
                     failed.pop(key, None)
                     outcome.calls_ok += 1
+                    streak = 0
                 else:
+                    streak = streak + 1 if key in service_failed else 0
                     failed[key] = record
                     outcome.calls_failed += 1
                     print(f"failed: case {q.case_id}, {v}, run {kk}, after {record['attempt']} attempt(s): "
                           f"{record['error']}", file=log)
                     if not outcome.calls_ok and outcome.calls_failed >= FAIL_FAST and not stop.is_set():
-                        outcome.stopped_early = record["error"]
+                        outcome.stopped_early, outcome.stopped_reason = record["error"], "first"
                         stop.set()  # a broken connection would otherwise burn through every question
+                    elif streak >= SERVICE_FAILURES and not stop.is_set():
+                        outcome.stopped_early, outcome.stopped_reason = record["error"], "service"
+                        stop.set()  # a used-up quota or an outage would otherwise fail every remaining question
                 progress["done"] += 1
                 if time.monotonic() - progress["shown"] >= 2 and progress["done"] < len(todo):
                     progress["shown"] = time.monotonic()
@@ -481,6 +511,7 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
     invocation.update({
         "ended_at": now_iso(),
         "status": "interrupted" if interrupted else (
+            "stopped: the service kept refusing or failing" if outcome.stopped_reason == "service" else
             "stopped: the first calls all failed" if outcome.stopped_early else "completed"),
         "calls_ok": outcome.calls_ok,
         "calls_failed": outcome.calls_failed,

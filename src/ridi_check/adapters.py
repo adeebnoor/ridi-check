@@ -19,6 +19,8 @@ import re
 import subprocess
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any, Callable
 
 from .util import load_callable, sha256_file
@@ -30,7 +32,39 @@ BARE_PYTHON = re.compile(r"^[A-Za-z_][\w.]*:[A-Za-z_][\w.]*$")
 
 
 class AdapterError(Exception):
-    """A call to the system under test failed or returned the wrong shape."""
+    """A call to the system under test failed or returned the wrong shape.
+
+    The runner reads three optional attributes from any exception a call raises, this one or your own:
+    `retryable` (False: trying again will not help), `retry_after` (seconds the service asked to wait)
+    and `service_failure` (True: the service itself is refusing or unreachable, not this one question).
+    """
+
+    def __init__(self, message: str, *, status: int | None = None, retry_after: float | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+        self.retry_after = retry_after
+        # 408 timeout, 409 conflict, 425 too early, 429 rate limit and every 5xx may pass on a later attempt.
+        self.retryable = status is None or status in (408, 409, 425, 429) or status >= 500
+        # A missing or refused key, a used-up quota, a rate limit: the next question would fail the same
+        # way. A 400, a 404, a 500 or a timeout can be about one question only, so they do not count.
+        self.service_failure = status in (401, 402, 403, 429)
+
+
+def retry_after_seconds(value: str | None) -> float | None:
+    """The Retry-After header: a number of seconds, or a date. None when absent or unreadable."""
+    if not value:
+        return None
+    try:
+        return max(0.0, float(value.strip()))
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(value)
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=timezone.utc)
+        return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
+    except (TypeError, ValueError):
+        return None
 
 
 class DefinitionError(ValueError):
@@ -175,9 +209,13 @@ def http_adapter(config: dict, timeout: float) -> Callable[[str, dict], dict]:
                 raw = response.read().decode("utf-8", errors="replace")
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace").strip()[:300]
-            raise AdapterError(f"HTTP {exc.code}" + (f": {detail}" if detail else "")) from None
+            raise AdapterError(f"HTTP {exc.code}" + (f": {detail}" if detail else ""), status=exc.code,
+                               retry_after=retry_after_seconds(exc.headers.get("Retry-After"))) from None
         except urllib.error.URLError as exc:
-            raise AdapterError(f"request failed: {exc.reason}") from None
+            failure = AdapterError(f"request failed: {exc.reason}")
+            # Nobody is listening at the address: the next question would not be answered either.
+            failure.service_failure = not isinstance(exc.reason, TimeoutError)
+            raise failure from None
         except TimeoutError:
             raise AdapterError(f"request timed out after {timeout:g}s") from None
         try:

@@ -153,6 +153,7 @@ ridi-check gate ridi-out/results.csv
 | ما تراه | معناه | ما تفعله |
 |---|---|---|
 | `Stopped: the first calls all failed` | الاتصال بمساعدك لا يعمل بعد | اقرأ الخطأ المعروض وأصلح `my_assistant.py` ثم أعد التشغيل |
+| `Stopped: 10 calls in a row failed because the service refused them` | حصة مستنفدة أو مفتاح ناقص أو حد للمعدّل: الباقي سيفشل بالطريقة نفسها | انتظر، أو أصلح المفتاح أو الخطة، ثم أعد الأمر نفسه؛ تُجرى الاستدعاءات الناقصة فقط |
 | `N call(s) failed` | فشلت استدعاءات بعد 3 محاولات | أعد الأمر نفسه؛ تُعاد تلك فقط |
 | `Nothing to call: every call is already recorded` | هذا المجلد فيه تشغيل مكتمل | استخدم مجلد `--out` جديداً إن تغيّر المساعد |
 | `This output directory holds an earlier run with different inputs` | تغيّرت الأسئلة أو النسختان | استخدم مجلد `--out` جديداً |

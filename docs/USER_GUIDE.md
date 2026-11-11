@@ -154,6 +154,7 @@ allow some with `--max-stable-regressions N`. The gate prints counts; the decisi
 | You see | It means | Do this |
 |---|---|---|
 | `Stopped: the first calls all failed` | The connection to your assistant does not work yet | Read the error shown, fix `my_assistant.py`, run again |
+| `Stopped: 10 calls in a row failed because the service refused them` | A used-up quota, a missing key or a rate limit: the rest would fail the same way | Wait, or fix the key or the plan, then run the same command again; only the missing calls are made |
 | `N call(s) failed` | Some calls failed after 3 attempts | Run the same command again; only those are retried |
 | `Nothing to call: every call is already recorded` | This folder already holds a finished run | Use a new `--out` folder if the assistant changed |
 | `This output directory holds an earlier run with different inputs` | The questions or the versions changed | Use a new `--out` folder |

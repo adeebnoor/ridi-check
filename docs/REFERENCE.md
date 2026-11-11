@@ -53,6 +53,21 @@ nothing is deleted.
 
 `run` stops early when the first calls all fail, so a broken connection does not burn through every question.
 
+**When the service limits or refuses calls** (the http adapter, or your own function, see the
+[developer guide](DEVELOPER_GUIDE.md#connecting-an-assistant)):
+
+- HTTP 429, 408, 409, 425 and every 5xx are tried again, up to `--retries` times. HTTP 400, 401, 402, 403,
+  404 and the other 4xx are not: a used-up quota or a wrong key does not get better in a few seconds.
+- A `Retry-After` header is obeyed when it asks for up to 120 seconds, and during that wait no other call
+  is started either. A longer wait is not made: the call is recorded as failed, to be retried by running
+  the same command again later.
+- When ten calls in a row fail because the service refused them (401, 402, 403, 429 after its retries) or
+  nothing is listening at the address, the run stops, exit status 2. The remaining calls are not made, no
+  results file is written from that part, and the same command continues from there later. Calls that fail
+  for a reason of their own, such as a 400, a 500 or a timeout, never stop the run.
+
+A failed call is never compared: its case is `incomplete` and is left out of every rate.
+
 ### `ridi-check report RESULTS.csv`
 
 Writes `summary.json`, `review_cases.csv` and `report.html` next to the results file (or in `--out DIR`).
@@ -175,7 +190,7 @@ Field-by-field descriptions are in the [developer guide](DEVELOPER_GUIDE.md#file
 |---|---|---|---|
 | 0 | all calls recorded | written | every count within its limit |
 | 1 | finished, some calls failed | – | a limit was exceeded |
-| 2 | bad input, or the first calls all failed | bad input | bad input |
+| 2 | bad input, the first calls all failed, or the service kept refusing calls | bad input | bad input |
 | 130 | interrupted; resume by running again | – | – |
 
 ## Input files: what is read and what is refused

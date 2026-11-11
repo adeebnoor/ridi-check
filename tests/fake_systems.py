@@ -1,6 +1,7 @@
 """Stand-in assistants for the runner tests. Imported by `python:fake_systems:<name>`."""
 
 import threading
+import time
 
 calls = []                 # every (name, question) seen, in order
 _lock = threading.Lock()
@@ -18,6 +19,7 @@ def reset():
         fail_questions.clear()
         fail_first_attempts.clear()
         interrupt_after = None
+        other_call_started.clear()
 
 
 def _note(name, question):
@@ -49,6 +51,40 @@ def long_passages(question):
     shared = "The handbook says in its section on returns that " * 4
     return {"answer": "an answer", "context": [shared + "books come back in two weeks.",
                                                shared + "films come back in one week.", "part a | part b"]}
+
+
+class Busy(Exception):
+    """What a hand-written adapter can raise: the runner reads these two attributes from any exception."""
+
+    def __init__(self, message, retry_after=None, retryable=True):
+        super().__init__(message)
+        self.retry_after, self.retryable = retry_after, retryable
+
+
+def asks_to_wait(question):
+    _note("asks_to_wait", question)
+    if _attempts[("asks_to_wait", question)] == 1:
+        raise Busy("slow down", retry_after=0.3)
+    return "an answer"
+
+
+other_call_started = threading.Event()
+
+
+def asks_for_a_long_wait(question):
+    other_call_started.wait(10)     # so that the other call is under way before every call is told to wait
+    raise Busy("slow down", retry_after=60)
+
+
+def interrupts_soon(question):
+    other_call_started.set()
+    time.sleep(0.3)
+    raise KeyboardInterrupt
+
+
+def will_never_work(question):
+    _note("will_never_work", question)
+    raise Busy("this account is closed", retryable=False)
 
 
 def with_null(question):
