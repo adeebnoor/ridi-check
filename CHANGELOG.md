@@ -3,7 +3,7 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
-## Unreleased
+## 0.5.1
 
 ### Changed
 - Browser version: the second example is named "Invented drug names (illustration only)" in the list and
