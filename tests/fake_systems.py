@@ -87,6 +87,11 @@ def will_never_work(question):
     raise Busy("this account is closed", retryable=False)
 
 
+def repeats_its_key(question):
+    import os
+    raise RuntimeError(f"the service refused the key {os.environ['TOY_API_KEY']}")
+
+
 def with_null(question):
     return {"answer": "an answer\x00 with a null character", "context": ["doc\x00 1"]}
 

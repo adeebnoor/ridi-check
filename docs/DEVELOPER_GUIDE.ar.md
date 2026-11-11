@@ -139,7 +139,7 @@ def scorer(answer: str, expected: str) -> bool:
 و`regressions` و`improvements` و`changes_visible_in_mean_accuracy`
 و`changes_cancelled_in_mean_accuracy`) و`any_run_disagreement` و`judgments` أو
 `wrong_both_answer_changed` و`correct_both_answer_changed` (معرّفات الحالات التي تساوت درجتها واختلفت
-إجابتها) و`passages` إذا ذكر الملف مقاطع (`cases_with_passages` و`differ` و`by_state` وفيه
+إجابتها، تحت `stable` و`unconfirmed` و`varied`) و`labelled_by_similarity` عند استخدام عتبة التشابه و`passages` إذا ذكر الملف مقاطع (`cases_with_passages` و`differ` و`by_state` وفيه
 `{differ, n}` لكل حالة) و`notes`.
 
 **`review_cases.csv`**: كل حالة ليست «الإجابة نفسها / صحيحة في النسختين»، بكل تشغيلاتها وبأسماء

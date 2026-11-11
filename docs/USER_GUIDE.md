@@ -141,6 +141,13 @@ regression. Where a wrong answer is costly, count them too: `ridi-check gate rid
 --max-unstable 0` also fails when any case is unstable, since such a case is neither confirmed right nor
 confirmed wrong.
 
+With an answer key, a score can stay the same while the answer says something else. Where the wording
+itself matters, the strictest check is:
+
+```bash
+ridi-check gate ridi-out/results.csv --max-stable-regressions 0 --max-unstable 0 --max-incomplete 0 --max-answer-changes 0
+```
+
 ## Practical advice
 
 - **Run each version at least twice.** Two runs is the minimum to call anything stable, and it is a
@@ -152,6 +159,9 @@ confirmed wrong.
 - **Almost everything is "unstable" or "changed"?** Your assistant words the same answer differently
   each time. Either add `expected` answers with a scoring function, or count answers as the same
   when they share most of their words: `ridi-check report ridi-out/results.csv --similarity 0.9`.
+  Do not use word overlap where one word decides, such as a dose or a yes-or-no verdict: it can still
+  count "allowed" and "allowed only under supervision" as the same. The report names every case it
+  labels differently from exact match.
 - **Keys and passwords** belong in environment variables, never in the files.
 
 ## When something goes wrong

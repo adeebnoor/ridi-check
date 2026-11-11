@@ -170,7 +170,7 @@ const by = (s) => S.states[s] || 0;
 
 const CLS = D.classes;
 const JUDGMENTS = ["worse", "better", "same_meaning", "unsure"];
-const pillText = (c) => c.flag ? L().pill[c.state + (c.flag === "stable" ? "_changed" : "_changed_unconfirmed")] : L().pill[c.state];
+const pillText = (c) => c.flag ? L().pill[c.state + (c.flag === "stable" ? "_changed" : c.flag === "varied" ? "_varied" : "_changed_unconfirmed")] : L().pill[c.state];
 const isStable = (c) => c.state.indexOf("stable_") === 0 || c.flag === "stable";
 
 function tile(s, sub) {
@@ -221,7 +221,7 @@ function judgedText() {
 /* Cards are drawn a page at a time, so a report with thousands of cases to review opens at once. */
 function matching() {
   const out = [];
-  D.cards.forEach((c, i) => { if (state.filter === "all" || (state.filter === "uns" ? c.state === "unstable" : isStable(c))) out.push(i); });
+  D.cards.forEach((c, i) => { if (state.filter === "all" || (state.filter === "uns" ? c.state === "unstable" || c.flag === "varied" : isStable(c))) out.push(i); });
   return out;
 }
 function applyFilter() {
@@ -261,7 +261,7 @@ function render() {
   document.title = t("name");
   $("t-name").textContent = t("name"); $("lang").textContent = t("langBtn"); $("lang").lang = state.lang === "ar" ? "en" : "ar"; $("t-tagline").textContent = t("tagline");
   $("t-limits").textContent = t("limits"); $("t-limit-list").innerHTML = L().limitList.map((x) => "<li>" + esc(x) + "</li>").join("");
-  let note = "<span>" + esc(t("source", { n: M.n, file: M.file, when: M.generated, version: M.tool_version })) + "</span>";
+  let note = "<span>" + esc(t(M.n === 1 ? "sourceOne" : "source", { n: M.n, file: M.file, when: M.generated, version: M.tool_version })) + "</span>";
   if (M.labels.current || M.labels.proposed) note += '<span dir="auto">' + esc(t("versions", { a: M.labels.current || "—", b: M.labels.proposed || "—" })) + "</span>";
   note += "<span>" + esc(KEY ? t("modeNote") : t("modeNote", { rule: M.threshold >= 1 ? t("simExact") : t("simWords", { p: fmt(M.threshold * 100) }) })) + "</span>";
   $("source-note").innerHTML = note;
@@ -297,6 +297,8 @@ function render() {
     h += '<p class="small muted">' + esc(P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
         : !P.differ ? t("passagesNone", { n: P.cases_with_passages })
         : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + "</p>"; }
+  if ((D.summary.labelled_by_similarity || []).length) { const ids = D.summary.labelled_by_similarity;
+    h += '<p class="small muted">' + esc(t("bySimilarity", { n: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })) + "</p>"; }
   h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2
     ? " " + esc(t("anyRun", { b: S.any_run_disagreement.current, u: S.any_run_disagreement.proposed })) : "") + "</p>";
   h += "</div></section>";
@@ -308,7 +310,7 @@ function render() {
     const flagged = D.wrong.filter((w) => w[2]).length;
     h += '<details class="wrongs panel" data-k="wrongs"><summary>' + esc(t("wrongList", { n: D.wrong.length })) + '</summary><p class="small muted" style="padding-top:8px">' + esc(t("wrongNote")) +
       (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + (D.wrong.length > LIST_MAX ? " " + esc(t("wrongMore", { a: LIST_MAX, n: D.wrong.length })) : "") + "</p><ul>" + D.wrong.slice(0, LIST_MAX).map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
-      (w[2] ? ' <span class="tag">' + esc(L().pill[w[2] === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
+      (w[2] ? ' <span class="tag">' + esc(L().pill["wrong_both" + (w[2] === "stable" ? "_changed" : w[2] === "varied" ? "_varied" : "_changed_unconfirmed")]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
   }
   if (!KEY && D.stable_change_ids.length) {
     h += '<div class="out"><div class="row"><button type="button" id="export">' + esc(t("export")) + '</button><span class="small muted" id="export-msg" role="status"></span></div>' +

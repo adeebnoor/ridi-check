@@ -226,3 +226,42 @@ def test_a_free_limit_sent_as_402_with_retry_after_is_waited_out(write, tmp_path
     refused = [r for r in raw(cfg.out_dir) if r["status"] == "failed"]
     assert len(refused) == 2 and all("HTTP 402" in r["error"] for r in refused)       # every attempt is on record
 
+
+KEY_FROM_ENV, KEY_WRITTEN_OUT = "sk-test-0123456789abcdef", "written-out-key-ABCDEFGH"
+
+
+def test_a_key_that_the_service_repeats_is_kept_out_of_every_file(write, tmp_path, service, monkeypatch):
+    """Dummy keys only. A service can answer 401 with the key it was sent; that must not reach the files."""
+    monkeypatch.setenv("TOY_API_KEY", KEY_FROM_ENV)
+    definition = tmp_path / "service.json"
+    definition.write_text(json.dumps({"type": "http", "url": service.url, "headers": {
+        "Authorization": "Bearer ${TOY_API_KEY}", "X-Api-Key": KEY_WRITTEN_OUT}}), encoding="utf-8")
+    service.reply = lambda n, question: (401, {}, {"error": f"invalid keys {KEY_FROM_ENV} and {KEY_WRITTEN_OUT}"})
+    cfg = RunConfig(questions=questions(write, 1), current=str(definition), proposed="python:fake_systems:repeats_its_key",
+                    out_dir=str(tmp_path / "out"), runs=1, concurrency=1, retries=0, retry_wait=0)
+    log = io.StringIO()
+    outcome = run(cfg, log=log)
+    assert outcome.calls_failed == 2
+    written = {name: (tmp_path / "out" / name).read_text(encoding="utf-8")
+               for name in ("raw_outputs.jsonl", "run_manifest.json", "results.csv")}
+    written["what was printed"] = log.getvalue()
+    for where, text in written.items():
+        assert KEY_FROM_ENV not in text and KEY_WRITTEN_OUT not in text, where
+    assert written["raw_outputs.jsonl"].count("[redacted]") == 3          # two in the 401, one from the Python function
+    assert "HTTP 401" in written["raw_outputs.jsonl"] and "the service refused the key [redacted]" in written["raw_outputs.jsonl"]
+    # the definition is still on record, with the reference kept and the written-out key left out
+    manifest = json.loads(written["run_manifest.json"])
+    assert manifest["systems"]["current"]["definition_file_content"]["headers"] == {
+        "Authorization": "Bearer ${TOY_API_KEY}", "X-Api-Key": "[redacted]"}
+    assert "header 'X-Api-Key' holds a literal value. It is left out of run_manifest.json" in written["what was printed"]
+
+
+def test_short_values_and_ordinary_variables_are_not_taken_for_keys(monkeypatch):
+    from ridi_check.util import redact
+    monkeypatch.setenv("SHORT_TOKEN", "yes")                  # too short to be a key
+    monkeypatch.setenv("EDITOR_NAME", "an ordinary value")    # the name does not say it is a secret
+    monkeypatch.setenv("SERVICE_PASSWORD", "correct horse battery")
+    text = "yes, an ordinary value, and correct horse battery staple"
+    assert redact(text) == "yes, an ordinary value, and [redacted] staple"
+    assert redact(text, ["ordinary"]) == "yes, an [redacted] value, and [redacted] staple"
+

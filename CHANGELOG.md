@@ -5,6 +5,27 @@ library API may change between minor versions.
 
 ## Unreleased
 
+### Added
+- `gate --max-answer-changes N`, for answer-key mode: an optional limit on cases whose score stayed the
+  same while the answer changed, between the versions or from one run to the next.
+- A case whose score held on re-run while its answer did not is flagged `varied`, shown as a card and
+  written to `review_cases.csv`. Before, only an answer that changed between the versions was flagged.
+- Under `--similarity`, every case that the threshold labels differently from exact match is named in the
+  printed summary, in the report and in `summary.json` (`labelled_by_similarity`).
+
+### Security
+- A key that a service repeats in an error message is not kept: the values of credential headers, and of
+  environment variables whose names say they are secrets, are removed from `raw_outputs.jsonl`,
+  `results.csv` and what is printed. A credential written out in a definition file is left out of
+  `run_manifest.json`; it used to be copied there with a warning.
+
+### Fixed
+- Under `--similarity`, two long answers that differed only in a unit ("5mg" and "5g", "5 mg" and "5 g") or
+  by one word put in the place of another ("major" and "minor", "increase" and "decrease") were counted as
+  the same. A number is now compared together with its unit, and two answers with the same number of
+  words and not the same words are never the same.
+- "1 cases" in the report's and the browser version's source line is "1 case".
+
 ### Changed
 - Large files need much less memory. A `results.csv` is read one record at a time, repeated answers and
   passage names are kept once, and `run` keeps only the answer and the passages of each recorded call. At

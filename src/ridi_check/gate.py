@@ -24,10 +24,12 @@ class GateResult:
 def evaluate(
     a: Analysis, judgments: dict[str, str] | None = None, *, max_stable_regressions: int = 0,
     max_unjudged_changes: int = 0, max_incomplete: int = 0, max_unstable: int | None = None,
+    max_answer_changes: int | None = None,
 ) -> GateResult:
     key = a.mode == KEY
     judgments = judgments or {}
     lines: list[str] = []
+    notes: list[str] = []
     checks: list[tuple[str, int, int]] = []
 
     if key:
@@ -45,6 +47,15 @@ def evaluate(
         ]
         checks.append(("stable changes judged worse by the owner", len(worse), max_stable_regressions))
         checks.append(("stable changes not yet judged", len(unjudged), max_unjudged_changes))
+    if max_answer_changes is not None:
+        if key:     # off unless asked for: the answer key scores both answers the same
+            words = {"stable": "answer changed", "unconfirmed": "answer changed, not re-run", "varied": "answer varied on re-run"}
+            state_of = {case.case_id: state for case, state in a.items}
+            lines += [f"{state_of[i]}, {words[flag]}\tcase {i}" for i, flag in a.answer_change.items()]
+            checks.append(("answers that changed while the score stayed the same", len(a.answer_change), max_answer_changes))
+        else:
+            notes.append("note: --max-answer-changes is for answer-key mode. Without a key every changed answer is "
+                         "already counted: see --max-unjudged-changes.")
     if max_unstable is not None:      # off unless asked for: re-run variation is not a regression
         unstable = a.ids(UNSTABLE)
         lines += [f"unstable\tcase {i}" for i in unstable]
@@ -62,7 +73,6 @@ def evaluate(
         lines.append(f"{name}: {count} (limit {limit}){' - over the limit' if over else ''}")
     lines.append("gate: a limit was exceeded" if exceeded else "gate: every count is within its limit")
 
-    notes: list[str] = []
     if key and a.n_compared >= 3 and not a.correct_b and not a.correct_u:
         notes.append("note: no answer was scored correct in either version, so the scoring probably does not fit "
                      "the answers and no regression can show. Check the expected answers or the scorer.")

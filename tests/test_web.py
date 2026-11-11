@@ -29,7 +29,7 @@ for (const job of JSON.parse(fs.readFileSync(process.argv[3], 'utf8'))) {
     const s = core.buildSummary(a), review = core.reviewTable(a, {});
     out.push({ mode: r.mode, states: a.items.map((it) => [it.c.id, it.s]), counts: a.counts, first: s.first_run,
       any: s.any_run_disagreement, runs: s.runs_per_version, confirmable: s.confirmable_cases, compared: s.cases_compared,
-      changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, passages: s.passages || null,
+      changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, passages: s.passages || null, merged: s.labelled_by_similarity || null,
       cards: core.pageData(a).cards.map((c) => [c.id, c.state, c.flag]), strip: core.pageData(a).strip, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
   } catch (e) { if (!e.code) throw e; out.push({ error: e.code, row: e.info.row || null }); }
 }
@@ -68,6 +68,7 @@ def python_side(text, mode, sim):
             "any": s["any_run_disagreement"], "runs": s["runs_per_version"], "confirmable": s["confirmable_cases"],
             "compared": s["cases_compared"], "changed": s.get("wrong_both_answer_changed"),
             "correct_changed": s.get("correct_both_answer_changed"), "passages": s.get("passages"),
+            "merged": s.get("labelled_by_similarity"),
             "cards": [[c["id"], c["state"], c["flag"]] for c in page["cards"]], "strip": page["strip"],
             "review": to_csv(header, rows), "tiles": ledger_tiles(a)}
 
@@ -223,6 +224,15 @@ DOSES = [
     ("Give 2 tablets of 5 mg" + TAIL, "Give 5 tablets of 2 mg" + TAIL, False),
     ("الجرعة ٥ملغ" + ARABIC_TAIL, "الجرعة ٥٠ملغ" + ARABIC_TAIL, False),
     ("Start the invented drug 5 mg" + TAIL, "Start the invented drug 5 mg" + TAIL + " Thanks.", True),
+    # one word in the place of another, a unit in the place of another: never the same, however long the rest
+    ("Start the invented drug 5mg" + TAIL, "Start the invented drug 5g" + TAIL, False),
+    ("Start the invented drug 5 mg" + TAIL, "Start the invented drug 5 g" + TAIL + " Thanks.", False),
+    ("Return it within 30 days" + TAIL, "Return it within 30 weeks" + TAIL + " Thanks.", False),
+    ("Major interaction" + TAIL, "Minor interaction" + TAIL, False),
+    ("The combination is forbidden" + TAIL, "The combination is acceptable" + TAIL, False),
+    ("Increase the dose" + TAIL, "Decrease the dose" + TAIL, False),
+    ("الجمع بينهما ممنوع" + ARABIC_TAIL, "الجمع بينهما مسموح" + ARABIC_TAIL, False),
+    ("red, green and blue are allowed" + TAIL, "blue, green and red are allowed" + TAIL, True),
 ]
 
 

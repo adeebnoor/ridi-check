@@ -47,8 +47,10 @@ folder you choose, and makes no other network request. Reports are welcome on, f
 - a results file, questions file or settings file that makes the tool run code or write outside the
   output folder;
 - answer text that escapes the HTML report or the browser version and runs script;
-- a key or token that ends up in a file the tool writes, when it was given through an environment
-  variable.
+- a key or token that ends up in a file the tool writes or on the screen. The tool removes the values of
+  credential headers, and of environment variables whose names say they are secrets, from what it
+  records, also when a service repeats them in an error message; a credential written out in a
+  definition file is left out of the manifest.
 
 - a cell in a CSV file the tool writes that a spreadsheet program runs as a formula. Such cells are
   written with an apostrophe in front.

@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from typing import Any, Callable
 
-from .util import load_callable, sha256_file
+from .util import REDACTED, load_callable, redact, sha256_file
 
 DEFAULT_TIMEOUT = 120.0
 ENV_REFERENCE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
@@ -200,8 +200,11 @@ def http_adapter(config: dict, timeout: float) -> Callable[[str, dict], dict]:
     answer_path = config.get("answer_path", "answer")
     context_path = config.get("context_path", "context")
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    secrets: set[str] = set()       # what must not come back in an error message, should the service repeat it
     for name, value in (config.get("headers") or {}).items():
         headers[name] = _expand_env(str(value), f"http adapter header {name}")
+        if SECRET_HEADER.search(name):
+            secrets.update(part for part in (headers[name], *headers[name].split()) if len(part) >= 8)
 
     def answer(question: str, meta: dict) -> dict:
         body = json.dumps(_fill(template, question), ensure_ascii=False).encode("utf-8")
@@ -212,6 +215,7 @@ def http_adapter(config: dict, timeout: float) -> Callable[[str, dict], dict]:
                 raw = response.read().decode("utf-8", errors="replace")
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace").strip()[:300]
+            detail = redact(detail, secrets)
             raise AdapterError(f"HTTP {exc.code}" + (f": {detail}" if detail else ""), status=exc.code,
                                retry_after=retry_after_seconds(exc.headers.get("Retry-After"))) from None
         except urllib.error.URLError as exc:
@@ -224,7 +228,7 @@ def http_adapter(config: dict, timeout: float) -> Callable[[str, dict], dict]:
         try:
             reply = json.loads(raw)
         except ValueError:
-            raise AdapterError(f"the reply is not JSON: {raw[:200]!r}") from None
+            raise AdapterError(f"the reply is not JSON: {redact(raw[:200], secrets)!r}") from None
         try:
             found = json_path(reply, answer_path)
         except KeyError:
@@ -274,7 +278,7 @@ def build_adapter(definition: str, timeout: float | None = None) -> tuple[Callab
     description: dict = {"definition": definition, "type": kind}
     if os.path.isfile(definition.strip()):
         description["definition_file_sha256"] = sha256_file(definition.strip())
-        description["definition_file_content"] = config
+        description["definition_file_content"] = _without_literal_secrets(config)
     if kind == "python":
         if not isinstance(config.get("target"), str):
             raise DefinitionError('python adapter: needs "target": "module:function"')
@@ -287,6 +291,16 @@ def build_adapter(definition: str, timeout: float | None = None) -> tuple[Callab
             raise DefinitionError('command adapter: needs "command"')
         return command_adapter(config["command"], limit), description
     return http_adapter(config, limit), description
+
+
+def _without_literal_secrets(config: dict) -> dict:
+    """The definition as it goes into the manifest: a credential written out in a header is left out."""
+    headers = config.get("headers")
+    if not isinstance(headers, dict):
+        return config
+    kept = {name: (REDACTED if SECRET_HEADER.search(name) and not ENV_REFERENCE.search(str(value)) else value)
+            for name, value in headers.items()}
+    return {**config, "headers": kept}
 
 
 def literal_secret_headers(definition: str) -> list[str]:

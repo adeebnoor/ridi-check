@@ -145,11 +145,17 @@ const RidiCore = (function () {
     const x = normalise(a), y = normalise(b);
     if (x === y) return true;
     if (!(threshold < 1)) return false;
-    const A = new Set(x.split(" ")), B = new Set(y.split(" "));
+    const xs = x.split(" "), ys = y.split(" ");
+    const A = new Set(xs), B = new Set(ys);
     const neg = (S) => { for (const w of S) if (NEGATIONS.has(w)) return true; return false; };
     if (neg(A) !== neg(B)) return false;
     const nums = (s) => (s.match(/\p{Nd}+/gu) || []).join(" ");   /* the digit runs, in order: "5mg" and "50mg" differ */
     if (nums(x) !== nums(y)) return false;
+    /* every word that holds a digit; a bare number is taken together with the word after it (its unit) */
+    const contexts = (ws) => ws.map((w, i) => (/\p{Nd}/u.test(w) ? w + " " + (/^\p{Nd}+$/u.test(w) && i + 1 < ws.length ? ws[i + 1] : "") : null)).filter((c) => c !== null).join("|");
+    if (contexts(xs) !== contexts(ys)) return false;
+    /* the same number of words and not the same words: one word was put in the place of another */
+    if (xs.length === ys.length && xs.slice().sort().join(" ") !== ys.slice().sort().join(" ")) return false;
     let shared = 0; A.forEach((w) => { if (B.has(w)) shared++; });
     const union = A.size + B.size - shared;
     return union > 0 && shared / union >= threshold;
@@ -169,7 +175,7 @@ const RidiCore = (function () {
   function analyse(cases, mode, threshold) {
     threshold = threshold === undefined ? 1 : threshold;
     const key = mode === KEY, eq = makeEq(mode, threshold);
-    const a = { mode, threshold, items: [], counts: {}, answerChange: {}, n: cases.length, nCompared: 0, changed: 0,
+    const a = { mode, threshold, items: [], counts: {}, answerChange: {}, bySimilarity: [], n: cases.length, nCompared: 0, changed: 0,
       rerunB: 0, rerunBN: 0, rerunU: 0, rerunUN: 0, anyB: 0, anyU: 0, confirmable: 0, maxRunsB: 0, maxRunsU: 0,
       correctB: 0, correctU: 0, regressions: 0, improvements: 0 };
     (key ? KEY_STATES : NOKEY_STATES).forEach((s) => { a.counts[s] = 0; });
@@ -186,7 +192,9 @@ const RidiCore = (function () {
         const byAnswer = classify(c, NOKEY, threshold);
         if (byAnswer === "stable_change") a.answerChange[c.id] = "stable";
         else if (byAnswer === "change_unconfirmed") a.answerChange[c.id] = "unconfirmed";
+        else if (byAnswer === "unstable") a.answerChange[c.id] = "varied";
       }
+      if (!key && threshold < 1 && classify(c, mode, 1) !== s) a.bySimilarity.push(c.id);
       if (b.length > 1 && u.length > 1) a.confirmable++;
       if (key) {
         a.correctB += b[0].cor; a.correctU += u[0].cor;
@@ -223,8 +231,11 @@ const RidiCore = (function () {
     }
     if (key) {
       const flagged = (state, flag) => a.items.filter((it) => it.s === state && a.answerChange[it.c.id] === flag).map((it) => it.c.id);
-      summary.wrong_both_answer_changed = { stable: flagged("wrong_both", "stable"), unconfirmed: flagged("wrong_both", "unconfirmed") };
-      summary.correct_both_answer_changed = { stable: flagged("correct_both", "stable"), unconfirmed: flagged("correct_both", "unconfirmed") };
+      for (const [name, state] of [["wrong_both_answer_changed", "wrong_both"], ["correct_both_answer_changed", "correct_both"]]) {
+        summary[name] = { stable: flagged(state, "stable"), unconfirmed: flagged(state, "unconfirmed"), varied: flagged(state, "varied") };
+      }
+    } else if (a.threshold < 1) {
+      summary.labelled_by_similarity = a.bySimilarity.slice();
     }
     return summary;
   }

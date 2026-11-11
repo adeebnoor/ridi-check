@@ -231,26 +231,35 @@ def test_an_answer_that_changed_while_scored_correct_is_listed_and_keeps_its_sta
     assert main(["report", results]) == 0
     out = capsys.readouterr().out
     assert "correct_both                  3" in out and "stable_regression             1   cases: worse" in out
-    assert ("Correct in both versions but with a changed answer: reworded. The answer key scores both answers as "
-            "correct; read them if the wording matters.") in out
+    assert ("Correct in both versions but with a changed answer: reworded, wavering (varied on re-run). The answer key "
+            "scores both answers as correct; read them if the wording matters.") in out
     with open(tmp_path / "summary.json", encoding="utf-8") as f:
         summary = json.load(f)
-    # counted as correct in both, as before; an answer that only wavers between runs is not listed
+    # counted as correct in both, as before; an answer that wavers between runs is listed as that
     assert summary["states"]["correct_both"] == 3 and summary["first_run"]["change_between_versions"]["count"] == 1
-    assert summary["correct_both_answer_changed"] == {"stable": ["reworded"], "unconfirmed": []}
-    assert summary["wrong_both_answer_changed"] == {"stable": [], "unconfirmed": []}
+    assert summary["correct_both_answer_changed"] == {"stable": ["reworded"], "unconfirmed": [], "varied": ["wavering"]}
+    assert summary["wrong_both_answer_changed"] == {"stable": [], "unconfirmed": [], "varied": []}
     rows = {row["case_id"]: row for row in read_csv(tmp_path / "review_cases.csv")}
-    assert set(rows) == {"reworded", "worse"}
+    assert set(rows) == {"reworded", "wavering", "worse"}
     assert (rows["reworded"]["state"], rows["reworded"]["answer_change"]) == ("correct_both", "stable")
+    assert (rows["wavering"]["state"], rows["wavering"]["answer_change"]) == ("correct_both", "varied")
     html, data = page_data(tmp_path / "report.html")
     # it has a card of its own, after the cases whose score changed, and the strip cell leads to it
     assert [(card["id"], card["state"], card["flag"]) for card in data["cards"]] == [
-        ("worse", "stable_regression", None), ("reworded", "correct_both", "stable")]
+        ("worse", "stable_regression", None), ("reworded", "correct_both", "stable"), ("wavering", "correct_both", "varied")]
     assert data["cards"][1]["u"][0]["ans"] == "Use with monitoring."
     assert [cell for cell in data["strip"] if cell[0] in ("reworded", "kept")] == [["kept", "correct_both", -1],
                                                                                  ["reworded", "correct_both", 1]]
     assert data["strings"]["en"]["pill"]["correct_both_changed"] == "Correct in both, answer changed"
+    assert data["strings"]["en"]["pill"]["correct_both_varied"] == "Correct in both, answer varied on re-run"
     assert main(["gate", results, "--max-stable-regressions", "1"]) == 0   # listing it changes no count the gate uses
+    capsys.readouterr()
+    # unless the gate is asked to count answers that changed while the score stayed the same
+    assert main(["gate", results, "--max-stable-regressions", "1", "--max-answer-changes", "1"]) == 1
+    out = capsys.readouterr().out
+    assert "correct_both, answer changed\tcase reworded" in out and "correct_both, answer varied on re-run\tcase wavering" in out
+    assert "answers that changed while the score stayed the same: 2 (limit 1) - over the limit" in out
+    assert main(["gate", results, "--max-stable-regressions", "1", "--max-answer-changes", "2"]) == 0
 
 
 def test_with_one_run_a_changed_correct_answer_is_marked_as_not_rerun(write, capsys):
@@ -338,4 +347,58 @@ def test_a_passage_count_that_is_the_same_for_every_case_is_said_in_one_sentence
     one = write("one.csv", "case_id,baseline_correct,updated_correct,baseline_context,updated_context\na,1,0,doc 1,doc 2\n")
     assert main(["report", one, "--out", str(tmp_path / "one")]) == 0
     assert "in 1/1 cases that list passages: regression_unconfirmed 1/1." in capsys.readouterr().out
+
+
+SAME_SCORE_OTHER_ANSWER = (
+    "case_id,question,expected,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+    "baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n"
+    "rerun_differs,q1,not allowed,not allowed,fine to use,not allowed,not allowed,1,1,1,1\n"
+    "versions_differ,q2,not allowed,not allowed,not allowed,fine with checks,fine with checks,1,1,1,1\n"
+    "wrong_and_differ,q3,not allowed,fine,fine,risky,risky,0,0,0,0\n"
+)
+
+
+def test_a_score_that_holds_while_the_answer_does_not_is_shown_and_can_stop_the_gate(tmp_path, write, capsys):
+    """Scores given in the file can agree while the text says something else. By the answer key these cases
+    did not change; the report shows them all the same, and one option makes the gate count them."""
+    results = write("results.csv", SAME_SCORE_OTHER_ANSWER)
+    assert main(["report", results]) == 0
+    out = capsys.readouterr().out
+    assert "unstable                      0" in out                       # by the scores, nothing wavered
+    assert "Correct in both versions but with a changed answer: versions_differ, rerun_differs (varied on re-run)." in out
+    assert "Wrong in both versions but with a changed answer: wrong_and_differ." in out
+    rows = {row["case_id"]: row["answer_change"] for row in read_csv(tmp_path / "review_cases.csv")}
+    assert rows == {"rerun_differs": "varied", "versions_differ": "stable", "wrong_and_differ": "stable"}
+    _, data = page_data(tmp_path / "report.html")
+    assert sorted(card["id"] for card in data["cards"]) == ["rerun_differs", "versions_differ", "wrong_and_differ"]
+
+    strict = ["gate", results, "--max-stable-regressions", "0", "--max-unstable", "0", "--max-incomplete", "0"]
+    assert main(strict) == 0                                              # the answer key sees no change
+    capsys.readouterr()
+    assert main(strict + ["--max-answer-changes", "0"]) == 1
+    assert "answers that changed while the score stayed the same: 3 (limit 0) - over the limit" in capsys.readouterr().out
+
+    # without an answer key every changed answer is already counted, and the option says so
+    assert main(["gate", results, "--mode", "nokey", "--max-answer-changes", "0"]) == 1
+    printed = capsys.readouterr()
+    assert "--max-answer-changes is for answer-key mode" in printed.err and "stable changes not yet judged: 2" in printed.out
+
+
+def test_cases_that_only_word_overlap_calls_the_same_are_named(tmp_path, write, capsys):
+    results = write("results.csv", "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer\n"
+                    "padded,the loan period is three weeks for every book in the main library,"
+                    "the loan period is three weeks for every book in the main library,"
+                    "the loan period is three weeks for every book in the main library today,"
+                    "the loan period is three weeks for every book in the main library today\n"
+                    "plain,yes,yes,yes,yes\n")
+    assert main(["report", results, "--similarity", "0.9"]) == 0
+    out = capsys.readouterr().out
+    assert "same                          2" in out
+    assert "1 case(s) are labelled as they are because of the word-overlap rule; exact match would label them differently: padded." in out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        assert json.load(f)["labelled_by_similarity"] == ["padded"]
+    assert main(["report", results]) == 0                                 # exact match: no such list
+    assert "word-overlap rule" not in capsys.readouterr().out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        assert "labelled_by_similarity" not in json.load(f)
 

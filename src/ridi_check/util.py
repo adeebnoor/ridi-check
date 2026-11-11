@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import importlib
 import os
+import re
 import sys
 import tempfile
 from datetime import datetime, timezone
-from typing import Callable
+from typing import Callable, Iterable
 
 
 def now_iso() -> str:
@@ -44,6 +45,22 @@ def read_text(path: str, what: str = "The file") -> str:
     if "\x00" in text:
         # Usually UTF-16 saved without its mark, or not a text file at all. Python 3.10 cannot parse it either.
         raise ValueError(f"{what} holds null characters, so it is not plain UTF-8 text. {how}")
+    return text
+
+
+SECRET_NAME = re.compile(r"key|token|secret|password|passwd|credential|auth", re.I)
+REDACTED = "[redacted]"
+
+
+def redact(text: str, secrets: Iterable[str] = ()) -> str:
+    """`text` without the given secrets and without the value of any environment variable whose name says
+    it is one (API_KEY, TOKEN, SECRET, PASSWORD...). A service that repeats a key in its error message would
+    otherwise put it in raw_outputs.jsonl and on the screen. Values under eight characters are left alone:
+    they are too short to be a key and too likely to be an ordinary word."""
+    values = {v for v in secrets if v}
+    values |= {v for name, v in os.environ.items() if SECRET_NAME.search(name) and len(v) >= 8}
+    for value in sorted(values, key=len, reverse=True):
+        text = text.replace(value, REDACTED)
     return text
 
 

@@ -98,6 +98,7 @@ Prints the counts and one line per offending case. It prints no verdict about th
 |---|---|---|
 | `--max-stable-regressions N` | 0 | with an answer key: stable regressions allowed. Without one: stable changes you judged worse |
 | `--max-unjudged-changes N` | 0 | without an answer key: stable changes with no judgment, or judged unsure |
+| `--max-answer-changes N` | not checked | with an answer key: cases whose score stayed the same while the answer changed, between the versions or from one run to the next. `--max-answer-changes 0` belongs in a release check where the wording itself matters |
 | `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them; `--max-unstable 0` is the setting for a release check where a wrong answer is costly |
 | `--max-incomplete N` | 0 | cases that could not be compared because a call failed |
 | `--mode`, `--similarity`, `--judgments` | as for `report` | |
@@ -172,6 +173,12 @@ A `correct_both` case whose answer changed is flagged the same way, without chan
 key accepts both answers, and the wording may still matter to you. In the report it has a card of its own,
 after the cases whose score changed.
 
+The flag has three values: `stable` (the answer changed between the versions and held on re-run),
+`unconfirmed` (it changed and there was one run) and `varied` (a version gave different answers from one
+run to the next, though each was scored the same). With an answer key, "unstable" and `--max-unstable`
+speak of the score only; `varied` is where the text did not hold. `gate --max-answer-changes N` counts all
+three.
+
 When the file lists passages (`baseline_context`, `updated_context`), the report also counts the cases
 whose passages differ between the versions, in total and per state (`passages` in `summary.json`). It is a
 count of where retrieval changed. It does not say that the passages caused a change in the answer. When
@@ -179,9 +186,21 @@ the passages differ in every case, or in none, the report says that in one sente
 state. The built-in demo is such a case: its proposed version splits the handbook differently, so every
 passage has a new name.
 
-Under `--similarity`, two answers that differ in a negation word, or in their numbers, are never counted
-as the same. Numbers are the runs of digits in the answer, in order, so `5mg` and `50mg` differ, and so do
-"2 tablets of 5 mg" and "5 tablets of 2 mg". The default is exact match after normalisation.
+Under `--similarity`, two answers are never counted as the same when they differ
+
+- in a negation word;
+- in their numbers: the runs of digits in order, so `5mg` and `50mg` differ, and so do "2 tablets of 5 mg"
+  and "5 tablets of 2 mg"; and each number with its unit, so `5 mg` and `5 g` differ, and "30 days" and
+  "30 weeks";
+- by one word put in the place of another: when both answers have the same number of words and not the
+  same words, as in "major interaction" and "minor interaction".
+
+These guards catch a swapped word. They cannot catch an added clause that changes the meaning, such as
+"allowed" against "allowed only under supervision". Word overlap does not know which word matters: where
+one word decides, as with a dose or a verdict, use exact match (the default), or an answer key with a
+scorer written for the subject. Every case that the threshold labels differently from exact match is
+named in the printed summary, in the report and in `summary.json` (`labelled_by_similarity`), so that it
+can be read.
 
 The rates use first runs: the change between versions, and the re-run variation of each version (run 1
 against run 2). Both variations are always shown and neither is subtracted from the change. With an answer

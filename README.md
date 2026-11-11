@@ -110,7 +110,8 @@ latest release.
 
 A complete GitHub Actions workflow to copy: [examples/ci/ridi-check.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check.yml).
 `gate` prints counts and the offending cases; it never prints a verdict about your system. By default it
-does not count answers that did not hold on re-run; where a wrong answer is costly, add `--max-unstable 0`.
+does not count answers that did not hold on re-run; where a wrong answer is costly, add `--max-unstable 0`,
+and `--max-answer-changes 0` to count answers that changed while their score stayed the same.
 Limits such as `--max-stable-regressions 2` are in the [reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#ridi-check-gate-resultscsv).
 
 ## Connect your assistant
@@ -151,7 +152,8 @@ normalisation, or a function you write.
 the minimum for the stable label; use more when the decision is expensive. Calls = questions × 2 × runs.
 
 **Almost everything is "unstable" or "changed". Why?** Your assistant words the same answer differently each
-time. Add `expected` answers with a scoring function, or use `--similarity 0.9`.
+time. Add `expected` answers with a scoring function, or use `--similarity 0.9`. Word overlap does not
+know which word matters, so do not use it where one word decides, such as a dose or a verdict.
 
 **Which providers and frameworks does it support?** Any. It talks to a function, a command or an HTTP
 endpoint, not to a provider.

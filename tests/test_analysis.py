@@ -50,7 +50,7 @@ def test_a_changed_wrong_answer_stays_wrong_in_both_but_is_recorded(fixture_text
     assert {"s24", "s40"} <= set(a.ids("wrong_both"))
     assert a.answer_change == {"s24": "stable", "s40": "stable"}
     summary = build_summary(a)
-    assert summary["wrong_both_answer_changed"] == {"stable": ["s24", "s40"], "unconfirmed": []}
+    assert summary["wrong_both_answer_changed"] == {"stable": ["s24", "s40"], "unconfirmed": [], "varied": []}
     assert summary["states"]["wrong_both"] == 6
 
 
@@ -125,10 +125,13 @@ def test_normalise_matches_the_prototype():
 
 
 def test_word_overlap_threshold():
-    a, b = "the loan period is three weeks for all books", "the loan period is three weeks for most books"
+    a, b = "the loan period is three weeks for all books", "the loan period is three weeks for all books in the library"
     assert not same_answer(a, b)            # exact by default
-    assert same_answer(a, b, 0.75)          # 8 shared of 10 distinct words
+    assert same_answer(a, b, 0.75)          # 9 shared of 12 distinct words
     assert not same_answer(a, b, 0.9)
+    assert same_answer("red, green and blue", "blue, green and red", 0.9)       # the same words in another order
+    # one word in the place of another is never the same answer, however long the rest: "all" is not "most"
+    assert not same_answer(a, "the loan period is three weeks for most books", 0.5)
 
 
 @pytest.mark.parametrize("a, b", [

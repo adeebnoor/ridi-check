@@ -23,6 +23,7 @@ COMMON = {
         "tagline": "The current and the proposed version of an assistant, run on the same questions. "
                    "Which answers changed, and which changes hold when each version is run again.",
         "source": "{n} cases from {file}. Report written {when} by ridi-check {version}.",
+        "sourceOne": "1 case from {file}. Report written {when} by ridi-check {version}.",
         "versions": "Current version: {a}. Proposed version: {b}.",
         "ledger": "Where each case landed",
         "state": {
@@ -86,6 +87,7 @@ COMMON = {
         "tagline": "النسخة الحالية والنسخة المقترحة من المساعد على الأسئلة نفسها. "
                    "أي الإجابات تغيّرت، وأي تغيّر يثبت عند إعادة تشغيل كل نسخة.",
         "source": "{n} حالة من {file}. كُتب التقرير {when} بواسطة ridi-check {version}.",
+        "sourceOne": "حالة واحدة من {file}. كُتب التقرير {when} بواسطة ridi-check {version}.",
         "versions": "النسخة الحالية: {a}. النسخة المقترحة: {b}.",
         "ledger": "أين انتهت كل حالة",
         "state": {
@@ -158,10 +160,12 @@ KEY_MODE = {
             "wrong_both": "Wrong in both versions",
             "wrong_both_changed": "Wrong in both, answer changed",
             "wrong_both_changed_unconfirmed": "Wrong in both, answer changed, not re-run",
+            "wrong_both_varied": "Wrong in both, answer varied on re-run",
+            "correct_both_varied": "Correct in both, answer varied on re-run",
             "correct_both_changed": "Correct in both, answer changed",
             "correct_both_changed_unconfirmed": "Correct in both, answer changed, not re-run",
         },
-        "wrongChanged": "{n} of them gave a different wrong answer after the update; they also appear "
+        "wrongChanged": "{n} of them did not give the same wrong answer every time; they also appear "
                         "in the cases to review.",
         "correctChangedNote": "The answer key scores both answers as correct, so this case is not counted as a change. "
                               "The answers differ; read them if the wording matters, for example a number or a "
@@ -197,10 +201,12 @@ KEY_MODE = {
             "wrong_both": "خاطئة في النسختين",
             "wrong_both_changed": "خاطئة في النسختين وتغيّرت الإجابة",
             "wrong_both_changed_unconfirmed": "خاطئة في النسختين وتغيّرت الإجابة، بلا إعادة تشغيل",
+            "wrong_both_varied": "خاطئة في النسختين وتبدّلت الإجابة عند إعادة التشغيل",
+            "correct_both_varied": "صحيحة في النسختين وتبدّلت الإجابة عند إعادة التشغيل",
             "correct_both_changed": "صحيحة في النسختين وتغيّرت الإجابة",
             "correct_both_changed_unconfirmed": "صحيحة في النسختين وتغيّرت الإجابة، بلا إعادة تشغيل",
         },
-        "wrongChanged": "{n} منها أعطت إجابة خاطئة مختلفة بعد التحديث، وتظهر أيضًا ضمن حالات المراجعة.",
+        "wrongChanged": "{n} منها لم تُعطِ الإجابة الخاطئة نفسها في كل مرة، وتظهر أيضًا ضمن حالات المراجعة.",
         "correctChangedNote": "مفتاح الإجابات يعدّ الإجابتين صحيحتين، فلا تُحسب هذه الحالة تغيّراً. "
                               "نص الإجابة اختلف؛ اقرأها إن كانت الصياغة مهمة، كرقم أو شرط.",
         "passagesFocus": " ومن التراجعات الثابتة: {k} من {n}.",
@@ -221,6 +227,9 @@ KEY_MODE = {
 NOKEY_MODE = {
     "en": {
         "passagesFocus": " Among the stable changes: {k} of {n}.",
+        "bySimilarity": "{n} case(s) are labelled as they are because of the word-overlap rule; exact match would "
+                        "label them differently: {ids}. Word overlap cannot tell which word matters, so read these "
+                        "where one word decides.",
         "modeNote": "No answer key: two answers count as the same when {rule}. "
                     "A different answer is a change. Whether it is better or worse is your call.",
         "simExact": "they match after lower-casing and removing punctuation",
@@ -239,6 +248,9 @@ NOKEY_MODE = {
     },
     "ar": {
         "passagesFocus": " ومن التغيّرات الثابتة: {k} من {n}.",
+        "bySimilarity": "عدد الحالات التي صُنّفت كما هي بسبب قاعدة تداخل الكلمات: {n}، والمطابقة التامة كانت ستصنّفها "
+                        "بغير ذلك: {ids}. تداخل الكلمات لا يعرف أي كلمة هي الحاسمة، فاقرأ هذه الحالات حيث تحسم "
+                        "كلمة واحدة.",
         "modeNote": "بلا مفتاح إجابات: تُعدّ الإجابتان متطابقتين عندما {rule}. "
                     "الإجابة المختلفة تغيّر، والحكم بأنها أفضل أو أسوأ لك.",
         "simExact": "تتطابقان بعد توحيد حالة الأحرف وحذف علامات الترقيم",

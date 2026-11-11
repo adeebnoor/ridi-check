@@ -22,7 +22,7 @@
       sameWhen: "Count two answers as the same when", simExact: "they match (ignoring case and punctuation)", sim90: "they share 90% of their words", sim75: "they share 75% of their words",
       noteKey: "Synthetic example data, not yours: 30 questions about a made-up library handbook. The proposed version splits the handbook into smaller pieces, and each version was run twice.",
       noteNoKey: "Synthetic example data, not yours: the same 30 questions with the answer key hidden, so the changes are yours to judge.",
-      noteFile: "{n} cases from your file.",
+      noteFile: "{n} cases from your file.", noteFileOne: "1 case from your file.",
       setLabel: "Example data: ", setLibrary: "Library handbook (30 questions)", setMedicines: "Invented drug names (illustration only, 12 questions)",
       noteKeyMed: "Synthetic example data, not yours: 12 questions that use invented drug names, for illustration only. The names, doses and effects are invented and are not medical guidance. The proposed version retrieves different passages, and each version was run twice.",
       noteNoKeyMed: "Synthetic example data, not yours: the same 12 questions that use invented drug names, for illustration only, with the answer key hidden, so the changes are yours to judge. Nothing here is medical guidance.",
@@ -74,7 +74,7 @@
       sameWhen: "تُعدّ الإجابتان متطابقتين عندما", simExact: "تتطابقان (مع تجاهل حالة الأحرف والترقيم)", sim90: "تشتركان في 90% من الكلمات", sim75: "تشتركان في 75% من الكلمات",
       noteKey: "بيانات مثال اصطناعية وليست بياناتك: 30 سؤالاً عن دليل مكتبة مختلَق. النسخة المقترحة تقطّع الدليل إلى قطع أصغر، وشُغّلت كل نسخة مرتين.",
       noteNoKey: "بيانات مثال اصطناعية وليست بياناتك: الأسئلة الثلاثون نفسها مع إخفاء مفتاح الإجابات، فالحكم على التغيّرات لك.",
-      noteFile: "{n} حالة من ملفك.",
+      noteFile: "{n} حالة من ملفك.", noteFileOne: "حالة واحدة من ملفك.",
       setLabel: "بيانات المثال: ", setLibrary: "دليل مكتبة (30 سؤالاً)", setMedicines: "أسماء أدوية مختلقة (للتوضيح فقط، 12 سؤالاً)",
       noteKeyMed: "بيانات مثال اصطناعية وليست بياناتك: 12 سؤالاً بأسماء أدوية مختلقة، للتوضيح فقط. الأسماء والجرعات والتأثيرات مختلقة وليست إرشاداً طبياً. النسخة المقترحة تسترجع مقاطع مختلفة، وكل نسخة شُغّلت مرتين.",
       noteNoKeyMed: "بيانات مثال اصطناعية وليست بياناتك: الأسئلة الاثنا عشر نفسها بأسماء أدوية مختلقة، للتوضيح فقط، مع إخفاء مفتاح الإجابات، فالحكم على التغيّرات لك. لا شيء هنا إرشاد طبي.",
@@ -176,7 +176,7 @@
   }
 
   /* ---------- report ---------- */
-  const pillText = (c) => c.flag ? L().pill[c.state + (c.flag === "stable" ? "_changed" : "_changed_unconfirmed")] : L().pill[c.state];
+  const pillText = (c) => c.flag ? L().pill[c.state + (c.flag === "stable" ? "_changed" : c.flag === "varied" ? "_varied" : "_changed_unconfirmed")] : L().pill[c.state];
   const isStable = (c) => c.state.indexOf("stable_") === 0 || c.flag === "stable";
   function tile(s, sub) {
     const D = state.D;
@@ -228,7 +228,7 @@
   /* Cards are drawn a page at a time, so a report with thousands of cases to review opens at once. */
   function matching() {
     const out = [];
-    state.D.cards.forEach((c, i) => { if (state.filter === "all" || (state.filter === "uns" ? c.state === "unstable" : isStable(c))) out.push(i); });
+    state.D.cards.forEach((c, i) => { if (state.filter === "all" || (state.filter === "uns" ? c.state === "unstable" || c.flag === "varied" : isStable(c))) out.push(i); });
     return out;
   }
   function applyFilter() {
@@ -294,6 +294,8 @@
       h += '<p class="small muted">' + esc(P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
         : !P.differ ? t("passagesNone", { n: P.cases_with_passages })
         : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + "</p>"; }
+    if ((D.summary.labelled_by_similarity || []).length) { const ids = D.summary.labelled_by_similarity;
+      h += '<p class="small muted">' + esc(t("bySimilarity", { n: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })) + "</p>"; }
     h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2
       ? " " + esc(t("anyRun", { b: S.any_run_disagreement.current, u: S.any_run_disagreement.proposed })) : "") + "</p></div></section>";
 
@@ -304,7 +306,7 @@
       const flagged = D.wrong.filter((w) => w[2]).length;
       h += '<details class="wrongs panel" data-k="wrongs"><summary>' + esc(t("wrongList", { n: D.wrong.length })) + '</summary><p class="small muted" style="padding-top:8px">' + esc(t("wrongNote")) +
         (flagged ? " " + esc(t("wrongChanged", { n: flagged })) : "") + (D.wrong.length > LIST_MAX ? " " + esc(t("wrongMore", { a: LIST_MAX, n: D.wrong.length })) : "") + "</p><ul>" + D.wrong.slice(0, LIST_MAX).map((w) => '<li><span class="num muted">' + esc(w[0]) + '</span> <span dir="auto">' + esc(w[1]) + "</span>" +
-        (w[2] ? ' <span class="tag">' + esc(L().pill[w[2] === "stable" ? "wrong_both_changed" : "wrong_both_changed_unconfirmed"]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
+        (w[2] ? ' <span class="tag">' + esc(L().pill["wrong_both" + (w[2] === "stable" ? "_changed" : w[2] === "varied" ? "_varied" : "_changed_unconfirmed")]) + "</span>" : "") + "</li>").join("") + "</ul></details>";
     }
     h += '<div class="out"><div class="row">' + (!KEYM && D.stable_change_ids.length ? '<button type="button" id="copy-j">' + esc(u("copyJ")) + '</button><button type="button" id="forget">' + esc(u("forget")) + "</button>" : "") +
       (D.cards.length || D.wrong.length ? '<button type="button" id="copy-r">' + esc(u("copyR")) + "</button>" : "") +
@@ -335,7 +337,7 @@
     if (state.errorCode) state.error = fill(UI[state.lang].err[state.errorCode.code] || UI[state.lang].err.read, state.errorCode.info);
     const err = $("err"); err.hidden = !state.error; err.textContent = state.error || "";
     if (!state.D) { $("report").innerHTML = ""; return; }
-    let note = "<span>" + esc(state.source === "sample-key" ? u(state.set === "medicines" ? "noteKeyMed" : "noteKey") : state.source === "sample-nokey" ? u(state.set === "medicines" ? "noteNoKeyMed" : "noteNoKey") : u("noteFile", { n: state.A.n })) + "</span>";
+    let note = "<span>" + esc(state.source === "sample-key" ? u(state.set === "medicines" ? "noteKeyMed" : "noteKey") : state.source === "sample-nokey" ? u(state.set === "medicines" ? "noteNoKeyMed" : "noteNoKey") : u(state.A.n === 1 ? "noteFileOne" : "noteFile", { n: state.A.n })) + "</span>";
     note += "<span>" + esc(state.mode === "key" ? t("modeNote") : t("modeNote", { rule: state.sim >= 1 ? t("simExact") : t("simWords", { p: fmt(state.sim * 100) }) })) + "</span>";
     $("source-note").innerHTML = note;
     $("t-limits").textContent = t("limits"); $("t-limit-list").innerHTML = L().limitList.map((x) => "<li>" + esc(x) + "</li>").join("");

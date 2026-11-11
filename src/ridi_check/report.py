@@ -125,7 +125,7 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
         for name, state in (("wrong_both_answer_changed", WRONG_BOTH), ("correct_both_answer_changed", CORRECT_BOTH)):
             summary[name] = {
                 flag: [i for i, f in a.answer_change.items() if f == flag and state_of[i] == state]
-                for flag in ("stable", "unconfirmed")
+                for flag in ("stable", "unconfirmed", "varied")
             }
     else:
         judgments = judgments or {}
@@ -137,6 +137,8 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
             "still_to_decide": counts["unjudged"] + counts["unsure"],
             "ignored_not_a_stable_change": sorted(i for i in judgments if i not in set(stable)),
         }
+        if a.threshold < 1:     # cases that exact match would label differently: the owner can read them
+            summary["labelled_by_similarity"] = list(a.by_similarity)
     notes = []
     if exceeds is None:
         notes.append("No second run of both versions: re-run variation is unknown and no change is confirmed.")
@@ -419,16 +421,18 @@ def text_summary(summary: dict) -> str:
                     f"{f['changes_cancelled_in_mean_accuracy']} cancel out, regressions against improvements."
                 )
         changed = summary["wrong_both_answer_changed"]
-        if changed["stable"] or changed["unconfirmed"]:
-            ids = changed["stable"] + [f"{i} (not re-run)" for i in changed["unconfirmed"]]
+        if changed["stable"] or changed["unconfirmed"] or changed["varied"]:
+            ids = (changed["stable"] + [f"{i} (not re-run)" for i in changed["unconfirmed"]]
+                   + [f"{i} (varied on re-run)" for i in changed["varied"]])
             lines.append(
                 "Wrong in both versions but with a changed answer: "
                 + ", ".join(ids[:20]) + (f", and {len(ids) - 20} more" if len(ids) > 20 else "")
                 + ". Correctness counting does not see these."
             )
         changed = summary["correct_both_answer_changed"]
-        if changed["stable"] or changed["unconfirmed"]:
-            ids = changed["stable"] + [f"{i} (not re-run)" for i in changed["unconfirmed"]]
+        if changed["stable"] or changed["unconfirmed"] or changed["varied"]:
+            ids = (changed["stable"] + [f"{i} (not re-run)" for i in changed["unconfirmed"]]
+                   + [f"{i} (varied on re-run)" for i in changed["varied"]])
             lines.append(
                 "Correct in both versions but with a changed answer: "
                 + ", ".join(ids[:20]) + (f", and {len(ids) - 20} more" if len(ids) > 20 else "")
@@ -439,6 +443,13 @@ def text_summary(summary: dict) -> str:
         lines.append(
             f"Stable changes judged: {j['worse']} worse, {j['better']} better, {j['same_meaning']} same meaning, "
             f"{summary['judgments']['still_to_decide']} still to decide."
+        )
+    merged = summary.get("labelled_by_similarity")
+    if merged:
+        lines.append(
+            f"{len(merged)} case(s) are labelled as they are because of the word-overlap rule; exact match would label "
+            "them differently: " + ", ".join(merged[:20]) + (f", and {len(merged) - 20} more" if len(merged) > 20 else "")
+            + ". Word overlap cannot tell which word matters: read these where one word decides."
         )
     passages = summary.get("passages")
     if passages:

@@ -27,7 +27,7 @@ from .adapters import build_adapter, literal_secret_headers
 from .analysis import duplicate_note, duplicate_questions
 from .contract import read_records, run_column, to_csv
 from .scoring import load_scorer
-from .util import atomic_write_text, now_iso, read_text, sha256_file
+from .util import atomic_write_text, now_iso, read_text, redact, sha256_file
 
 RAW_OUTPUTS = "raw_outputs.jsonl"
 MANIFEST = "run_manifest.json"
@@ -346,8 +346,8 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
         systems[version] = description
         for header in literal_secret_headers(definition):
             print(
-                f"warning: --{version}: header {header!r} holds a literal value and is copied into "
-                f"{MANIFEST}. Write it as ${{ENV_VAR}} to keep it out.", file=log,
+                f"warning: --{version}: header {header!r} holds a literal value. It is left out of {MANIFEST}; "
+                "write it as ${ENV_VAR} so that it is not in the definition file either.", file=log,
             )
 
     os.makedirs(config.out_dir, exist_ok=True)
@@ -442,7 +442,7 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
                 record["answer"], record["context"] = out["answer"], out["context"]
             except Exception as exc:  # a failed call is a result to record, not a crash
                 record["status"] = "failed"
-                record["error"] = f"{type(exc).__name__}: {exc}"
+                record["error"] = redact(f"{type(exc).__name__}: {exc}")    # a key the service repeats is not kept
                 failure = exc
             record["ended_at"] = now_iso()
             writer.write(record)
