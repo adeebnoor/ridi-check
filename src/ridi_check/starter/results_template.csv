@@ -1,0 +1,4 @@
+case_id,question,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer
+q1,What is the refund window?,30 days,30 days,30 days,30 days
+q2,Can I return an opened item?,Yes within 14 days,Yes within 14 days,No,No
+q3,Do you ship abroad?,Yes,Yes,Yes,Not at the moment

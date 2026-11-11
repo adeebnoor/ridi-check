@@ -1,0 +1,23 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  pytest:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install ".[test]"
+      - run: pytest -q
+      - run: ridi-check demo
+      - name: the gate allows what its limit allows and stops what it does not
+        shell: bash
+        run: |
+          ridi-check gate ridi-demo/ridi-out/results.csv --max-stable-regressions 4
+          if ridi-check gate ridi-demo/ridi-out/results.csv; then echo "the gate should have exited 1"; exit 1; fi

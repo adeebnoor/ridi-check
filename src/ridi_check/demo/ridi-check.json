@@ -1,0 +1,11 @@
+{
+  "questions": "questions.csv",
+  "current": "python:toy_assistant:answer_current",
+  "proposed": "python:toy_assistant:answer_proposed",
+  "scorer": "toy_assistant:contains_expected",
+  "current_label": "handbook split by section",
+  "proposed_label": "handbook split into 13-word windows",
+  "runs": 2,
+  "out": "ridi-out",
+  "report": true
+}

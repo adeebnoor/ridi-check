@@ -1,0 +1,10 @@
+{
+  "questions": "questions.csv",
+  "current": "python:my_assistant:answer_current",
+  "proposed": "python:my_assistant:answer_proposed",
+  "current_label": "what is live today",
+  "proposed_label": "the update I want to ship",
+  "runs": 2,
+  "out": "ridi-out",
+  "report": true
+}

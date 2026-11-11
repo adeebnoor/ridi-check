@@ -1,0 +1,31 @@
+case_id,question,expected
+q01,How much is a replacement for a lost card?,four pounds
+q02,How often must membership be renewed?,three years
+q03,Who must sign for members under sixteen?,parent or guardian
+q04,How many items may members borrow at a time?,twelve items
+q05,For how many days are films and music lent?,seven days
+q06,How many times can a loan be renewed?,twice
+q07,Can reference books be borrowed?,cannot be borrowed
+q08,What does an overdue book cost a day?,twenty pence
+q09,What does an overdue film cost a day?,one pound
+q10,Is a fine charged on items borrowed with a child card?,No fine
+q11,When is borrowing suspended?,fifteen pounds
+q12,Where can fines be paid?,front desk or online
+q13,How many study rooms does the library have?,three study rooms
+q14,What does black and white printing cost a page?,ten pence
+q15,What does a library member pay for colour printing?,forty
+q16,What does a library member pay per page for colour?,forty
+q17,Is scanning to email free?,free
+q18,When are print jobs deleted from the queue?,twenty four hours
+q19,How can I pay at the printers?,card only
+q20,When does the library open in the morning?,nine
+q21,When does the library close on Saturday?,five on Saturday
+q22,Is the library open on Sunday?,closed on Sunday
+q23,How many ebooks can members borrow?,six ebooks
+q24,When is an ebook returned?,fourteen days
+q25,Does the wifi need a password?,no password
+q26,When is story time for children?,Wednesday at ten
+q27,Must places at the writing workshop be booked?,must be booked
+q28,How many people can the writing workshop take?,twenty participants
+q29,Can I borrow a laptop?,laptops
+q30,What is the fine for a lost book?,replacement cost

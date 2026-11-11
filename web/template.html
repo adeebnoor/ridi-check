@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--page-->
+<title>RIDI Update Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+__STYLE__
+</style>
+<!--/page-->
+</head>
+<body>
+<!--page-->
+<div class="wrap" id="app">
+  <header class="top">
+    <div class="lead">
+      <h1 id="t-name">RIDI Update Check</h1>
+      <p class="muted" id="t-tagline"></p>
+    </div>
+    <button type="button" id="lang"></button>
+  </header>
+
+  <div class="inputs">
+    <div class="row">
+      <button type="button" id="btn-sample-key" aria-pressed="true"></button>
+      <button type="button" id="btn-sample-nokey" aria-pressed="false"></button>
+    </div>
+    <details class="own" id="own" data-k="own">
+      <summary id="t-own"></summary>
+      <div class="body">
+        <p class="small muted" id="t-privacy"></p>
+        <div class="row">
+          <label class="filebtn" for="file"><span id="t-choose"></span><input type="file" id="file" accept=".csv,.tsv,.txt,text/csv,text/plain,text/tab-separated-values"></label>
+        </div>
+        <label for="paste" class="small" id="t-paste"></label>
+        <textarea id="paste" spellcheck="false" dir="ltr"></textarea>
+        <div>
+          <p class="small" id="t-opts" style="font-weight:600"></p>
+          <div class="opts small">
+            <label for="mode"><span id="t-mode-label"></span>
+              <select id="mode"><option value="auto" id="opt-auto"></option><option value="nokey" id="opt-nokey"></option></select></label>
+            <label for="sim"><span id="t-sim-label"></span>
+              <select id="sim"><option value="1" id="opt-sim1"></option><option value="0.9" id="opt-sim90"></option><option value="0.75" id="opt-sim75"></option></select></label>
+          </div>
+        </div>
+        <div class="row"><button type="button" class="primary" id="btn-run"></button></div>
+        <div>
+          <p class="small" id="t-format" style="font-weight:600"></p>
+          <p class="small muted" id="t-cols-note"></p>
+          <ul class="cols small" id="t-cols"></ul>
+        </div>
+      </div>
+    </details>
+    <p class="msg" id="err" role="alert" hidden></p>
+    <div class="small muted note" id="source-note"></div>
+  </div>
+
+  <main id="report"></main>
+
+  <section class="get">
+    <h2 id="t-get"></h2>
+    <ul class="muted" id="t-get-list"></ul>
+  </section>
+  <section class="limits">
+    <h2 id="t-limits"></h2>
+    <ul class="muted" id="t-limit-list"></ul>
+  </section>
+  <p class="small muted">ridi-check __VERSION__ · the RIDI method</p>
+</div>
+<script id="ridi-strings" type="application/json">__STRINGS__</script>
+<script id="ridi-sample" type="application/json">__SAMPLE__</script>
+<script>
+__CORE__
+</script>
+<script>
+__APP__
+</script>
+<!--/page-->
+</body>
+</html>

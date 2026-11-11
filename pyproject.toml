@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ridi-check"
+dynamic = ["version"]
+description = "Tells the owner of an LLM assistant what an update changed, and which changes hold on re-run."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+authors = [{ name = "ridi-check contributors" }]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+ridi-check = "ridi_check.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "ridi_check.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ridi_check = ["report_template.html", "starter/*", "demo/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

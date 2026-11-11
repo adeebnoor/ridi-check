@@ -1,0 +1,4 @@
+case_id,question
+q1,Replace this row with a question your users really ask.
+q2,Add one row per question. 30 to 100 questions is a good first set.
+q3,"Keep the case_id short and unique, and never reuse it for another question."

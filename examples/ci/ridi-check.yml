@@ -1,0 +1,26 @@
+# Copy to .github/workflows/ridi-check.yml in the repository that holds your assistant or agent.
+# It needs ridi-check.json, questions.csv and your adapter next to it: `ridi-check init` writes them.
+name: ridi-check
+on: [pull_request]
+
+jobs:
+  answers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install git+https://github.com/adeebnoor/ridi-check
+      # Calls the current and the proposed version on every question, twice each.
+      - run: ridi-check run --config ridi-check.json --out ridi-out
+        env:
+          MY_API_KEY: ${{ secrets.MY_API_KEY }}   # whatever your adapter reads
+      # Exits 1 when an answer that was right is now wrong in every run.
+      - run: ridi-check gate ridi-out/results.csv --max-stable-regressions 0
+      # Keep the report, also when the gate stopped the job.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ridi-report
+          path: ridi-out
