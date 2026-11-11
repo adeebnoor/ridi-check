@@ -123,7 +123,7 @@ def scorer(answer: str, expected: str) -> bool:
 لكل استدعاء للأمر بأوقاته وأعداده. يُرفض تشغيل ثانٍ في المجلد نفسه بملف أسئلة أو تعريف مختلف؛ أما
 تغيّر مصدر Python فيُنبَّه عليه ولا يُرفض، لأن إصلاح محوّل معطوب ثم الاستئناف أمر معتاد.
 
-**`results.csv`**: العقد موثّق في [README](../README.md#resultscsv). يكتبه `run` فقط بعد اكتمال
+**`results.csv`**: العقد موثّق في [المرجع](REFERENCE.md#resultscsv). يكتبه `run` فقط بعد اكتمال
 الاستدعاءات. يمكنك كتابته بنفسك واستخدام `report` و`gate` وحدهما.
 
 **`summary.json`**: `mode` و`cases` و`cases_compared` و`runs_per_version` و`states` (عدد كل حالة)

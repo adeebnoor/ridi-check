@@ -1,23 +1,69 @@
 # ridi-check
 
+**See what a model or prompt update really changed in your assistant's answers, before you ship it.**
+
+[![tests](https://github.com/adeebnoor/ridi-check/actions/workflows/tests.yml/badge.svg)](https://github.com/adeebnoor/ridi-check/actions/workflows/tests.yml)
+[![licence: MIT](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/badge-licence.svg)](https://github.com/adeebnoor/ridi-check/blob/main/LICENSE)
+[![Python 3.10+](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/badge-python.svg)](https://github.com/adeebnoor/ridi-check/blob/main/pyproject.toml)
+
 A new model or an edited prompt can change what your assistant or agent answers without anyone noticing:
 average accuracy barely moves while individual answers flip. ridi-check runs the old and the new version on
-the same questions, more than once, and shows which answers changed and which changes hold on re-run.
+the same questions, more than once, and shows which answers changed and which of those changes hold on
+re-run. You need no test set, no answer key and no model judge.
 
-## Stop a silent change in CI
+![The report: where each case landed, and the change between versions against re-run variation](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/report.png)
 
-```yaml
-- run: pip install git+https://github.com/adeebnoor/ridi-check
-- run: ridi-check run --config ridi-check.json     # calls both versions, writes ridi-out/results.csv
-- run: ridi-check gate ridi-out/results.csv        # exits 1 on a stable regression
+[What you will see](#what-you-will-see) · [Who it is for](#who-it-is-for) · [Start in one minute](#start-in-one-minute) ·
+[Use it in CI](#use-it-in-ci) · [Connect your assistant](#connect-your-assistant) · [FAQ](#faq) ·
+[Roadmap](#roadmap) · [Limitations](#limitations) · [Reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md)
+
+## What you will see
+
+**In your terminal or CI log**, `ridi-check gate` lists every answer that was right and is now wrong in
+every run, and exits 1 so the pipeline stops:
+
+```text
+ridi-check gate: ridi-demo/ridi-out/results.csv, 30 cases, answer-key mode
+stable_regression  case q02
+stable_regression  case q09
+stable_regression  case q18
+stable_regression  case q25
+counts: stable_regression=4 stable_improvement=1 regression_unconfirmed=0 improvement_unconfirmed=0 unstable=4 wrong_both=4 correct_both=17 incomplete=0
+stable regressions: 4 (limit 0) - over the limit
+gate: a limit was exceeded
 ```
 
-A complete workflow to copy: [examples/ci/ridi-check.yml](examples/ci/ridi-check.yml).
-**No install:** the browser version is one file, [web/ridi-update-check.html](web/ridi-update-check.html).
-Download it, open it, paste your results (CSV text or cells copied from a spreadsheet). Nothing leaves the page.
+**In the report**, each changed case shows the question, both answers, what the second run gave and the
+passages only one version used:
 
-It works with or without an answer key, in English and Arabic, and follows the RIDI method. It finds
-change, not correctness, and it is not a readiness certificate: see [Limitations](#limitations).
+![One case to review: a stable regression, both answers, and the passages that differ](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/report-case.png)
+
+Every question ends in one group:
+
+| Group | Meaning |
+|---|---|
+| Stable regression | right before, wrong after, in every run: an answer your update broke |
+| Stable improvement | wrong before, right after, in every run |
+| Stable change | no answer key: a different answer in every run, for you to judge |
+| Unstable on re-run | a version disagreed with itself, so the difference is not evidence about the update |
+| Wrong in both | no change, still wrong; listed separately |
+
+The report is one self-contained HTML file. It works offline, on a phone, in light and dark, in English and
+Arabic. The numbers above come from `ridi-check demo`, which uses synthetic data.
+
+## Who it is for
+
+- **You are about to swap the model, edit the prompt or change retrieval** and want to know which answers
+  move, not only whether an average moved.
+- **You have questions but no answer key.** The report shows what changed; you judge only the changes that
+  held on re-run.
+- **You want a CI check** that fails when an answer that was right becomes wrong in every run.
+- **You only have answers in a spreadsheet.** The [browser version](https://github.com/adeebnoor/ridi-check/blob/main/web/ridi-update-check.html) reads
+  pasted cells and needs no install.
+
+It is **not** for proving that answers are correct or that a system is ready to deploy, for agents that use
+tools or keep state between turns (not tested), or for explaining why an answer changed. See
+[Limitations](#limitations) and the [use cases](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.md).
 
 ## Start in one minute
 
@@ -38,76 +84,78 @@ ridi-check init my-check
 ```
 
 It writes `questions.csv`, `my_assistant.py` (one function to fill in), `ridi-check.json` and
-`ASK_YOUR_AI.md`, a prompt that lets your AI coding assistant do the wiring. Then, in that folder,
-`ridi-check run --limit 5` for a first try and `ridi-check run` for everything.
+`ASK_YOUR_AI.md`, a prompt that lets your AI coding assistant do the wiring. In that folder, try five
+questions with `ridi-check run --limit 5`, then run everything with `ridi-check run`. The
+[user guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.md) walks through each step and how to read the report.
 
-**Guides:** [user guide](docs/USER_GUIDE.md) · [use cases](docs/USE_CASES.md) ·
-[developer guide](docs/DEVELOPER_GUIDE.md) · بالعربية: [دليل الاستخدام](docs/USER_GUIDE.ar.md) ·
-[حالات الاستخدام](docs/USE_CASES.ar.md) · [دليل المطورين](docs/DEVELOPER_GUIDE.ar.md)
+**No install at all:** download [web/ridi-update-check.html](https://github.com/adeebnoor/ridi-check/blob/main/web/ridi-update-check.html), open it and
+paste your results (CSV text or cells copied from a spreadsheet). The page makes no network request.
 
-## Commands
+## Use it in CI
 
-**`ridi-check run`** calls both versions `--runs N` times (default 2) on every question and writes
-`raw_outputs.jsonl` (every attempt, as it completes), `run_manifest.json` and `results.csv`. A failed call is
-recorded as failed and its case stays in the file. Run the same command again to resume: recorded calls are
-skipped, failed ones are retried, nothing is deleted. Settings come from the command line or from
-`ridi-check.json`: `--questions`, `--current`, `--proposed`, `--out`, `--limit`, `--concurrency 4`,
-`--retries 2`, `--timeout`, `--scorer module:function`, `--report`, `--open`.
-The questions file is CSV or JSONL with `case_id`, `question` and optionally `expected`. With `expected`,
-answers are scored by exact match after normalisation, or by your `scorer(answer, expected)`. No model judge.
+```yaml
+- run: pip install git+https://github.com/adeebnoor/ridi-check
+- run: ridi-check run --config ridi-check.json     # calls both versions, writes ridi-out/results.csv
+- run: ridi-check gate ridi-out/results.csv        # exits 1 on a stable regression
+```
 
-**`ridi-check report results.csv`** writes `summary.json`, `review_cases.csv` (every case that is not
-same / correct in both, with all its runs) and `report.html`: one file, offline, English and Arabic.
-Options: `--mode nokey`, `--similarity 0.9`, `--judgments judgments.csv`, `--lang ar`, `--open`. Without an
-answer key you judge only the stable changes: in the report, or in a `judgments.csv` with `case_id` and
-`judgment` (`worse|better|same_meaning|unsure`).
+A complete GitHub Actions workflow to copy: [examples/ci/ridi-check.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check.yml).
+`gate` prints counts and the offending cases; it never prints a verdict about your system. Limits such as
+`--max-stable-regressions 2` are in the [reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#ridi-check-gate-resultscsv).
 
-**`ridi-check gate results.csv`** is for a deploy script. It prints counts and one line per offending case,
-and exits 1 when stable regressions exceed `--max-stable-regressions` (default 0), when, with no answer key,
-unjudged stable changes exceed `--max-unjudged-changes` (default 0), or when cases could not be compared
-(`--max-incomplete`, default 0). Exit 2 means the file was not usable.
+## Connect your assistant
 
-**`ridi-check demo`** and **`ridi-check init`** create the example and the starter folder shown above.
-`init --by-hand` writes a results template for people who already have the answers in a spreadsheet.
+ridi-check has no model provider built in. Your assistant is the system under test, reached through one
+function:
 
-## Writing an adapter
+```python
+def answer(question: str) -> dict:
+    return {"answer": "text", "context": ["doc-12", "doc-40"]}   # context is optional
+```
 
-A system is one function: `answer(question: str) -> {"answer": str, "context": list[str] | None}`.
-`context` holds the ids or titles of the passages the answer used, if any. Pass a system as
-`python:module:function`, `command:<shell command>` (question on stdin, JSON or text on stdout), an
-`http://` URL (POSTs `{"question": ...}`), or a JSON definition file for other request shapes.
-Keep secrets in `${ENV_VARS}`. Details and examples: [developer guide](docs/DEVELOPER_GUIDE.md).
+| Your assistant is… | Pass it as |
+|---|---|
+| importable from Python | `python:module:function` |
+| a program in any language | `command:<shell command>` (question on stdin, JSON or text on stdout) |
+| an HTTP service | `http://…`, or a JSON file that describes the request and the reply |
 
-## `results.csv`
+The two versions should differ only in what the update changes. Keys belong in environment variables.
+Details and examples: [developer guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.md#connecting-an-assistant).
 
-One row per question. You can also make this file by hand and skip `run`.
+## FAQ
 
-| Column | Required | Meaning |
-|---|---|---|
-| `case_id` | yes | unique |
-| `question`, `expected` | no | shown in the report |
-| `baseline_answer`, `updated_answer` | yes, unless the `_correct` columns are given | first run of the current and the proposed version |
-| `baseline_repeat_answer`, `updated_repeat_answer` | no | second run; then `baseline_repeat2_answer`, and so on |
-| `baseline_correct`, `updated_correct` | no | 0 or 1; present means answer-key mode |
-| `baseline_repeat_correct`, `updated_repeat_correct` | no | 0 or 1 for the repeats |
-| `baseline_context`, `updated_context` | no | passage ids or titles separated by ` \| ` |
-| `run_errors` | no | written by `run` when a call failed; such a case is `incomplete` |
+**Do I need a test set or an answer key?** No. Without an `expected` column the report shows which answers
+differ and you judge only the stable changes. With one, it speaks of regressions and improvements.
 
-Missing or duplicate `case_id`, non-binary `_correct` values and files with neither answers nor correctness
-are rejected, with the row.
+**Does my data go anywhere?** No. ridi-check calls only your assistant and writes local files. The report
+and the browser version make no network request.
 
-## How cases are labelled
+**Does it use a model to judge answers?** No. A judge adds its own error. Scoring is exact match after
+normalisation, or a function you write.
 
-With an answer key two runs are equal when their correctness is equal; without one, when the answers match
-after lower-casing, removing punctuation and collapsing spaces (or share `--similarity` of their words).
+**How many questions and runs?** 30 to 100 real user questions is a good first set. Two runs per version is
+the minimum for the stable label; use more when the decision is expensive. Calls = questions × 2 × runs.
 
-1. Any run of a version differs from that version's first run: `unstable`.
-2. Else the first runs of the two versions are equal: `correct_both` / `wrong_both`, or `same`.
-3. Else `stable_regression` / `stable_improvement`, or `stable_change` without a key. With a single run of
-   either version the label is `*_unconfirmed`: "stable" needs at least two runs of both versions.
+**Almost everything is "unstable" or "changed". Why?** Your assistant words the same answer differently each
+time. Add `expected` answers with a scoring function, or use `--similarity 0.9`.
 
-The rates use first runs: change between versions, and the re-run variation of each version (run 1 against
-run 2). Both variations are always shown and neither is subtracted from the change.
+**Which providers and frameworks does it support?** Any. It talks to a function, a command or an HTTP
+endpoint, not to a provider.
+
+**Can I use it on an agent?** For its question-in, answer-out behaviour, yes. Agents that use tools or keep
+state between turns have not been tested.
+
+## Roadmap
+
+No dates and no promises; this is what is planned and what is not.
+
+- **Next:** a release on PyPI, a hosted link for the browser version, ready-made adapter examples for
+  common APIs.
+- **Being considered:** intervals for the rates, multi-turn conversations, tool-using agents, more report
+  languages.
+- **Not planned:** model-based judging, or any hosted service that receives your data.
+
+Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issues).
 
 ## Limitations
 
@@ -120,6 +168,17 @@ run 2). Both variations are always shown and neither is subtracted from the chan
   counts and the decision stays yours.
 - Not in this version: agents that use tools or keep state, model-based judging, statistical tests.
 
+## Documentation
+
+- [User guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.md): step by step, and how to read the report
+- [Use cases](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.md): twelve situations and how to set each one up
+- [Developer guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.md): adapters, files, CI, library use
+- [Reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md): every command and option, `results.csv`, the labelling rules
+- بالعربية: [دليل الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.ar.md) · [حالات الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.ar.md) ·
+  [دليل المطورين](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.ar.md)
+
+ridi-check follows the RIDI method.
+
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/adeebnoor/ridi-check/blob/main/LICENSE).

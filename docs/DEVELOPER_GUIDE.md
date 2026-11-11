@@ -123,7 +123,7 @@ and one entry per invocation with its timestamps and counts. A second run into t
 a different questions file or definition is refused; changed Python source is reported, not refused,
 because fixing a broken adapter and resuming is a normal thing to do.
 
-**`results.csv`**: the contract in the [README](../README.md#resultscsv). `run` writes it only after
+**`results.csv`**: the contract in the [reference](REFERENCE.md#resultscsv). `run` writes it only after
 an invocation finishes. You can also write it yourself and use `report` and `gate` alone.
 
 **`summary.json`**: `mode`, `cases`, `cases_compared`, `runs_per_version`, `states` (count per state),
