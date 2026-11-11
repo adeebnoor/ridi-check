@@ -13,6 +13,9 @@ library API may change between minor versions.
   answer while three answers break in every run; and a short explanation of why each version is run more
   than once, with the rule that is applied.
 - The user guide and the CI example say when to add `gate --max-unstable 0`.
+- README: what happens when a provider limits or refuses calls, including what a live run against a real
+  service showed; opening the CSV files in a spreadsheet; and the measured size limits with the platforms
+  they were not measured on.
 
 ### Fixed
 - A refusal that carries a `Retry-After` header is tried again after that wait, whatever its status. A

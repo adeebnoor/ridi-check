@@ -125,3 +125,15 @@ def test_package_metadata():
     assert 'authors = [{ name = "ridi-check contributors" }]' in text and "email" not in text
     version = re.search(r'__version__ = "([^"]+)"', read(os.path.join("src", "ridi_check", "__init__.py"))).group(1)
     assert f"## {version}" in read("CHANGELOG.md"), "the changelog has no section for the current version"
+
+
+def test_the_size_figures_on_the_front_page_are_the_measured_ones():
+    """The README is the PyPI page: its figures must be the ones in the reference, with their caveat."""
+    with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as f:
+        readme = f.read()
+    with open(os.path.join(ROOT, "docs", "REFERENCE.md"), encoding="utf-8") as f:
+        reference = f.read()
+    for figure in ("552 MB", "17.9 MB", "100,000 cases"):
+        assert figure in readme and figure in reference, figure
+    assert "not on Windows or macOS and not in the browser" in " ".join(readme.split())
+

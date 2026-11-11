@@ -161,6 +161,22 @@ in, the final answer comes out, and the tool calls are returned as `context`, so
 calls only one version made. [examples/adapters](https://github.com/adeebnoor/ridi-check/blob/main/examples/adapters/README.md#an-agent-with-tools-and-memory)
 has a working stand-in agent. It has not been tried on a production agent yet.
 
+**What happens when my provider limits or refuses calls?** A `Retry-After` header is obeyed when it asks
+for up to 120 seconds, and no other call starts during that wait. HTTP 400, 401, 402, 403 and 404 are not
+tried again, unless the refusal itself carries `Retry-After`. After ten refusals in a row (a used-up quota,
+a missing key, a rate limit) the run stops with exit status 2, and the same command continues from there
+later. A failure that belongs to one question, such as a 400, a 500 or a timeout, is recorded and never
+stops the run. This was tried live against one free public model service: its limit arrived as HTTP 402
+with `Retry-After`, and 48 calls all finished, five of them on a second attempt after waits of 3 to 42
+seconds. That is one service on one day; yours may behave differently.
+[Details](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#ridi-check-run).
+
+**Can I open the CSV files in Excel?** Yes. A cell that starts with `=`, `+`, `-` or `@` is written with an
+apostrophe in front (`'=1+1`), so a spreadsheet does not run answer text as a formula. The tool takes the
+apostrophe off again when it reads the file, and `raw_outputs.jsonl` keeps every answer as it was given.
+Going the other way, save your sheet as "CSV UTF-8"; Excel's "Unicode Text" is read too, and other
+encodings are refused with a message that says how to save the file.
+
 ## Roadmap
 
 No dates and no promises; this is what is planned and what is not.
@@ -185,6 +201,12 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
   counts and the decision stays yours.
 - Agents that use tools or keep state have a documented pattern and a stand-in example, but the tool has
   not been tried on a production agent. Not in this version: model-based judging, statistical tests.
+- Size was measured on Linux with Python 3.13 only, not on Windows or macOS and not in the browser
+  version. There, 100,000 cases with three runs of each version take about 6 seconds and 552 MB in
+  `report`; the HTML report for them is 17.9 MB and opens in about 7 seconds; and a cell above 64 MB is
+  refused with a message. The whole file is held in memory. The
+  [measured limits](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#measured-limits)
+  have the full table.
 
 ## Documentation
 

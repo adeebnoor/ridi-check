@@ -70,6 +70,13 @@ nothing is deleted.
 
 A failed call is never compared: its case is `incomplete` and is left out of every rate.
 
+This was tried live against one free public model service, with six and then eight calls in flight. Its
+limit arrived as HTTP 402 with a `Retry-After` header. In the run made after that was handled, 48 calls
+all finished: 43 on the first attempt, four after waits of 3 to 42 seconds that the service asked for, and
+one after a timeout. An earlier run of 24 calls, interrupted by the limit, was completed by running the
+same command again, which made only the five missing calls. One service on one day is not a survey of
+providers.
+
 ### `ridi-check report RESULTS.csv`
 
 Writes `summary.json`, `review_cases.csv` and `report.html` next to the results file (or in `--out DIR`).
