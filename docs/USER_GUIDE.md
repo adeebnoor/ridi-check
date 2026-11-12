@@ -149,6 +149,10 @@ wrong answer is costly, the strictest check is:
 ridi-check gate ridi-out/results.csv --strict
 ```
 
+`--strict` works with exact match only. It refuses `--similarity` below 1, because word overlap can count
+"allowed" and "allowed only under supervision" as one answer. A workflow with this policy pinned is in
+[examples/ci/ridi-check-strict.yml](../examples/ci/ridi-check-strict.yml).
+
 To check first that nobody changed the table by hand, run `ridi-check verify ridi-out`: it builds
 `results.csv` again from the recorded calls and prints every cell that differs.
 

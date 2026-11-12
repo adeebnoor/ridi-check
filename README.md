@@ -109,10 +109,12 @@ latest release.
 ```
 
 A complete GitHub Actions workflow to copy: [examples/ci/ridi-check.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check.yml).
+Where a wrong answer is costly, copy [examples/ci/ridi-check-strict.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check-strict.yml)
+instead: two runs of each version, the table checked against the record, and every limit at zero.
 `gate` prints counts and the offending cases; it never prints a verdict about your system. By default it
 does not count answers that did not hold on re-run, changes seen in a single run, or answers that changed
 while their score stayed the same. Where a wrong answer is costly, use `ridi-check gate ... --strict`,
-which puts every limit at zero.
+which puts every limit at zero and does not accept `--similarity`.
 Limits such as `--max-stable-regressions 2` are in the [reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#ridi-check-gate-resultscsv).
 
 ## Connect your assistant

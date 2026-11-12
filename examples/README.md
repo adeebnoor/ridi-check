@@ -7,4 +7,6 @@ Everything in this folder is synthetic.
   numbers comes from a real assistant, dataset or study; they exist to show what a report looks like.
   `ridi-check demo` runs the same files.
 - `ci/ridi-check.yml` is a GitHub Actions workflow to copy into your own repository.
+  `ci/ridi-check-strict.yml` is the same with the strict policy pinned, for an assistant whose wrong answer
+  is costly.
 - `adapters/` holds ready-made ways to connect a real assistant; see its README. They hold no key.

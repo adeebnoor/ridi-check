@@ -518,3 +518,30 @@ def test_one_case_that_lists_passages_is_one_case(write, capsys):
     assert main(["report", results]) == 0
     assert "Retrieved passages are the same in both versions in the one case that lists passages." in capsys.readouterr().out
 
+
+def test_the_strict_gate_does_not_take_word_overlap(write, capsys):
+    """Under word overlap an answer with an added condition can count as the same answer. A strict gate that
+    let it pass would not be strict, so the two options are refused together."""
+    frame = "When the question was put to the assistant a second time with the full history attached, it said that {}, and it gave the same two sources as before."
+    before, after = frame.format("the combination is allowed"), frame.format("the combination is allowed only under supervision")
+    results = write("results.csv", "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer\n"
+                    f'a,"{before}","{before}","{after}","{after}"\n')
+    assert main(["gate", results, "--similarity", "0.9"]) == 0            # word overlap calls it the same answer
+    assert "same=1" in capsys.readouterr().out
+    assert main(["gate", results, "--strict"]) == 1                        # exact match does not
+    assert "stable changes not yet judged: 1 (limit 0) - over the limit" in capsys.readouterr().out
+    assert main(["gate", results, "--strict", "--similarity", "0.9"]) == 2
+    printed = capsys.readouterr()
+    assert "--strict cannot be used with --similarity below 1" in printed.err and printed.out == ""
+    assert main(["gate", results, "--strict", "--similarity", "1"]) == 1   # naming exact match is fine
+
+
+def test_the_strict_ci_example_pins_the_policy():
+    root = os.path.join(os.path.dirname(FIXTURE), "..", "..")
+    with open(os.path.join(root, "examples", "ci", "ridi-check-strict.yml"), encoding="utf-8") as f:
+        steps = [line.strip() for line in f if line.strip().startswith("- run:")]
+    assert steps == ["- run: pip install ridi-check",
+                     "- run: ridi-check run --config ridi-check.json --out ridi-out --runs 2",
+                     "- run: ridi-check verify ridi-out",
+                     "- run: ridi-check gate ridi-out/results.csv --strict --min-runs 2"]
+

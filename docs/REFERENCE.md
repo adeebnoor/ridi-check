@@ -99,7 +99,7 @@ Prints the counts and one line per offending case. It prints no verdict about th
 |---|---|---|
 | `--max-stable-regressions N` | 0 | with an answer key: stable regressions allowed. Without one: stable changes you judged worse |
 | `--max-unjudged-changes N` | 0 | without an answer key: stable changes with no judgment, or judged unsure |
-| `--strict` | off | every limit at zero unless you give it a value: the three above that are zero already, `--max-unstable`, `--max-unconfirmed`, `--max-case-only` and, with an answer key, `--max-answer-changes`; and `--min-runs 2`. The setting for a release check where a wrong answer is costly |
+| `--strict` | off | every limit at zero unless you give it a value: the three above that are zero already, `--max-unstable`, `--max-unconfirmed`, `--max-case-only` and, with an answer key, `--max-answer-changes`; and `--min-runs 2`. The setting for a release check where a wrong answer is costly. It cannot be combined with `--similarity` below 1, because word overlap can count an answer with an added condition as the same answer |
 | `--min-runs N` | not checked | every case must have at least N runs of each version. Without it, a file with one run passes when nothing changed in it, although nothing was re-run |
 | `--max-case-only N` | not checked | cases whose answers differ only in letter case, which is not counted as a change |
 | `--max-unconfirmed N` | not checked | regressions seen in a single run (without an answer key: changes seen in a single run). With one run nothing is confirmed, so by default these are reported on standard error and not counted |

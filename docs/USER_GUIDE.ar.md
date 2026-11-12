@@ -146,6 +146,10 @@ ridi-check gate ridi-out/results.csv
 ridi-check gate ridi-out/results.csv --strict
 ```
 
+الخيار `--strict` يعمل بالمطابقة التامة فقط، ويرفض `--similarity` أقل من 1، لأن تداخل الكلمات قد يعدّ
+«مسموح» و«مسموح تحت الإشراف فقط» إجابة واحدة. وملف workflow بهذه السياسة مثبّتة موجود في
+[examples/ci/ridi-check-strict.yml](../examples/ci/ridi-check-strict.yml).
+
 وللتأكد أولاً من أن أحداً لم يعدّل الجدول باليد شغّل `ridi-check verify ridi-out`: يعيد بناء
 `results.csv` من الاستدعاءات المسجّلة ويطبع كل خلية اختلفت.
 

@@ -366,6 +366,12 @@ def _cmd_verify(args: argparse.Namespace) -> int:
 
 
 def _cmd_gate(args: argparse.Namespace) -> int:
+    if args.strict and args.similarity < 1:
+        # Word overlap can call "allowed" and "allowed only under supervision" the same answer once the rest of
+        # the answer is long. A strict gate that lets that through would not be strict.
+        raise ContractError("--strict cannot be used with --similarity below 1. Word overlap can count an answer with "
+                            "an added condition as the same answer, and the strict gate would let it pass. Use "
+                            "--strict with exact match, or the limits one by one without --strict.")
     cases, mode = read_results(args.results, args.mode)
     analysis = analyse(cases, mode, args.similarity)
     judgments = {}

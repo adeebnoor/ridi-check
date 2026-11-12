@@ -1,0 +1,41 @@
+# The strict policy, for an assistant whose wrong answer is costly. Copy to .github/workflows/ridi-check.yml
+# in the repository that holds your assistant or agent. It needs ridi-check.json, questions.csv and your
+# adapter next to it: `ridi-check init` writes them.
+#
+# What it pins, and why each line is there:
+#   - two runs of each version, so that "nothing changed" was re-run and not assumed;
+#   - `verify`, so that the table the gate reads is the one the recorded calls give;
+#   - `gate --strict --min-runs 2` with exact match: every limit at zero. Do not add --similarity here:
+#     word overlap can count an answer with an added condition as the same answer, and the tool refuses the
+#     two options together.
+# The gate prints counts. It does not say that the proposed version is fit to deploy: that stays a person's
+# decision, made on the cases it lists.
+name: ridi-check (strict)
+on: [pull_request]
+
+jobs:
+  answers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ridi-check
+      # Calls the current and the proposed version on every question, twice each. The last lines of this
+      # step hold the SHA-256 of raw_outputs.jsonl: the job log keeps it outside the output folder.
+      - run: ridi-check run --config ridi-check.json --out ridi-out --runs 2
+        env:
+          MY_API_KEY: ${{ secrets.MY_API_KEY }}   # whatever your adapter reads
+      # The table must be what the recorded calls give.
+      - run: ridi-check verify ridi-out
+      # Exits 1 on a stable regression, an answer that did not hold on re-run, a change seen in a single run,
+      # a case that was not compared, a case with fewer than two runs, answers that differ only in letter
+      # case and, with an answer key, an answer that changed while its score stayed the same.
+      - run: ridi-check gate ridi-out/results.csv --strict --min-runs 2
+      # Keep the report and the record, also when the gate stopped the job.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ridi-report
+          path: ridi-out

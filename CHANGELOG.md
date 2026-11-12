@@ -3,6 +3,17 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Changed
+- `gate --strict` refuses `--similarity` below 1, with exit status 2. Before, word overlap could count an
+  answer with an added condition ("allowed" and "allowed only under supervision") as the same answer, and
+  the strict gate let it pass.
+
+### Added
+- `examples/ci/ridi-check-strict.yml`: a workflow with the strict policy pinned: two runs of each version,
+  `verify`, and `gate --strict --min-runs 2` with exact match.
+
 ## 0.9.0
 
 ### Added
