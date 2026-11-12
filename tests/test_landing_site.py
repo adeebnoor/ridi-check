@@ -50,7 +50,7 @@ def test_assets_exist_and_no_external_runtime_dependencies():
 def test_social_image_is_a_real_1200_by_630_png():
     """Social cards generally need raster images rather than an SVG-only Open Graph tag."""
     data = (ROOT / "assets" / "og-card.png").read_bytes()
-    assert data[:8] == b"\\x89PNG\\r\\n\\x1a\\n"
+    assert data[:8] == bytes([137, 80, 78, 71, 13, 10, 26, 10])
     import struct
     assert struct.unpack(">II", data[16:24]) == (1200, 630)
     assert 'assets/og-card.png' in SITE
