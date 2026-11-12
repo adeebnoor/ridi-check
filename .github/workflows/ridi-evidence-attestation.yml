@@ -1,0 +1,76 @@
+name: RIDI reproducible evidence attestation
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/ridi-evidence-attestation.yml'
+      - 'src/ridi_check/**'
+      - 'pyproject.toml'
+
+# Public-repo, synthetic-only proof of the RIDI evidence and gate contract.
+# This does NOT attest clinical correctness or any external model's identity.
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  synthetic-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install project from this commit
+        run: python -m pip install -e .
+      - name: Run the deterministic offline demo (30 cases, 2 versions, 2 runs)
+        run: ridi-check demo ridi-demo
+      - name: Check raw records, derived scores, and evidence fingerprints
+        working-directory: ridi-demo
+        run: python -m ridi_check verify ridi-out
+      - name: Confirm strict release gate REJECTS the deliberate demo regressions
+        working-directory: ridi-demo
+        shell: bash
+        run: |
+          set +e
+          python -m ridi_check gate ridi-out/results.csv --strict --check-scores --scorer toy_assistant:contains_expected > gate_negative_control.log 2>&1
+          actual=$?
+          set -e
+          cat gate_negative_control.log
+          if [ "$actual" -ne 1 ]; then
+            echo "ERROR: expected strict gate to reject unsafe synthetic demo; got $actual"
+            exit 1
+          fi
+          grep -q 'stable regressions: 4 (limit 0)' gate_negative_control.log
+          grep -q 'scored runs that do not have the score toy_assistant:contains_expected gives: 0' gate_negative_control.log
+          echo 'PASS: gate rejected the regressions and the scorer agreed with the recorded scores.'
+      - name: Sign evidence.json with GitHub Actions identity
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ridi-demo/ridi-out/evidence.json
+      - name: Independently verify the GitHub attestation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if gh attestation verify ridi-demo/ridi-out/evidence.json --repo "$GITHUB_REPOSITORY"; then
+              echo 'PASS: signed evidence attestation verifies.'
+              exit 0
+            fi
+            sleep 6
+          done
+          echo 'ERROR: failed to verify attestation'
+          exit 1
+      - name: Preserve the entire synthetic run record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ridi-synthetic-evidence
+          path: |
+            ridi-demo/ridi-out/
+            ridi-demo/gate_negative_control.log
+          if-no-files-found: error
