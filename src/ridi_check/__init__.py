@@ -1,3 +1,3 @@
 """ridi-check: what did an update change, and which changes hold on re-run."""
 
-__version__ = "0.9.1"
+__version__ = "0.10.0"

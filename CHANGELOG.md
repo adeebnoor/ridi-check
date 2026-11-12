@@ -3,7 +3,7 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
-## Unreleased
+## 0.10.0
 
 ### Added
 - With an answer key and answer text in the file, one table counts the cases by what the score did (the

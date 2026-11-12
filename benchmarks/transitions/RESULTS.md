@@ -1,6 +1,6 @@
 # Results on the transition set
 
-Measured with ridi-check 0.9.1 on `transitions.csv`: 1131 constructed pairs, 935 in English and 196 in Arabic. This file is written by `measure.py`; a test fails when it is out of date.
+Measured with ridi-check 0.10.0 on `transitions.csv`: 1131 constructed pairs, 935 in English and 196 in Arabic. This file is written by `measure.py`; a test fails when it is out of date.
 
 Read it for what it is. The pairs are made from fragments put into sentence frames, and each label
 follows from the fragment: nobody independent has judged them. The numbers say how the comparison
