@@ -36,7 +36,7 @@ def test_landing_is_not_old_redirect():
 
 def test_assets_exist_and_no_external_runtime_dependencies():
     assert (ROOT / "web" / "ridi-update-check.html").is_file()
-    for path in ["assets/site.css", "assets/site.js", "assets/favicon.svg", "assets/og-card.svg"]:
+    for path in ["assets/site.css", "assets/site.js", "assets/favicon.svg", "assets/og-card.svg", "assets/og-card.png"]:
         assert (ROOT / path).is_file(), path
     for tag, attrs in parsed():
         if tag == "script" and "src" in attrs:
@@ -44,6 +44,17 @@ def test_assets_exist_and_no_external_runtime_dependencies():
         if tag == "link" and attrs.get("rel") in {"stylesheet", "icon"}:
             assert attrs["href"].startswith("./assets/"), attrs
     assert "fetch(" not in JS and "XMLHttpRequest" not in JS
+
+
+
+def test_social_image_is_a_real_1200_by_630_png():
+    """Social cards generally need raster images rather than an SVG-only Open Graph tag."""
+    data = (ROOT / "assets" / "og-card.png").read_bytes()
+    assert data[:8] == b"\\x89PNG\\r\\n\\x1a\\n"
+    import struct
+    assert struct.unpack(">II", data[16:24]) == (1200, 630)
+    assert 'assets/og-card.png' in SITE
+    assert 'content="image/png"' in SITE
 
 
 def test_every_arabic_translation_key_is_provided():
