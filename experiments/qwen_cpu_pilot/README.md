@@ -36,3 +36,11 @@ Hardware, OS, numeric kernels and parallelism can change generation details desp
 ## What remains for an external scientific evaluation
 
 Use preselected production-representative tasks, real update pairs, blinded independent adjudicators, confidence intervals with justified sampling, cross-framework comparison on the same inputs, and a preregistered analytic protocol. A strict gate failing on these three cases is an engineering detection result, not a safety clearance or evidence of patient harm.
+
+## Human-labelled BoolQ addition (48 cases, exploratory)
+
+See [SCIENTIFIC_AUDIT.md](SCIENTIFIC_AUDIT.md) for **all** results and limitations, and [boolq_builder.py](boolq_builder.py) to recreate the frozen case selection without redistributing the full source dataset. The independent GitHub workflow [43312668253](https://github.com/adeebnoor/ridi-check/actions/runs/43312668253) executed 192/192 Qwen model requests, verified and signed BoolQ evidence, and reported 26/48 → 36/48 correct with six published-gold regressions and 16 improvements. These observations do not demonstrate statistically decisive superiority or medical correctness.
+
+**Scientific warning:** A published BoolQ `YES` gold label (case `p0155`: whether Hindi is India's *national language*) contradicts the passage explicitly saying India has *no national language*. The 1.5B model's `NO` aligns with the passage but was scored as a regression. Keep this conflict visible and obtain blinded adjudication rather than equating every gold-label regression with a true semantic mistake.
+
+**Reproduction warning:** The first Qwen GitHub run matched Windows `results.csv` exactly, but another GitHub run changed p03/p06 *baseline* answers despite fixed temperature and seed. BoolQ first-run answers matched across Windows and GitHub; the repeated proposed-model answers for p0358/p0603 did not. Thus the reproducibility result is scoped, not universal determinism.
