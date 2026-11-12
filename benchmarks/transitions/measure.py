@@ -13,7 +13,7 @@ import csv
 import os
 
 from ridi_check import __version__
-from ridi_check.analysis import same_answer
+from ridi_check.analysis import normalise, normalise_cased, same_answer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SETTINGS = [("exact match", 1.0), ("overlap 0.9", 0.9), ("overlap 0.75", 0.75)]
@@ -38,6 +38,9 @@ def measure(rows: list[dict]) -> dict[tuple[str, str], list]:
 
 def render(rows: list[dict]) -> str:
     table = measure(rows)
+    by_case = [r for r in rows if normalise(r["answer_a"]) == normalise(r["answer_b"])
+               and normalise_cased(r["answer_a"]) != normalise_cased(r["answer_b"])]
+    meant = sum(r["category"] == "letter case that matters" for r in by_case)
     out = [
         "# Results on the transition set",
         "",
@@ -66,7 +69,9 @@ def render(rows: list[dict]) -> str:
         "## What this shows",
         "",
         "- Exact match sees every change of a sign, a number, a unit, a negation or a word. It does not see a",
-        "  change that lower-casing hides: a letter case that matters, as in `mg` and `Mg`.",
+        "  change that lower-casing hides: a letter case that matters, as in `mg` and `Mg`. Those pairs are not",
+        f"  counted as a change, and the report names them: all {meant} of them, together with {len(by_case) - meant} pairs",
+        "  where the case does not matter, such as a capital at the start. It cannot tell the two kinds apart.",
         "- Exact match also calls a change what a reader would not: a courtesy added to the answer, a list in",
         "  another order, another word for the same thing. Those are the cases the owner judges.",
         "- Word overlap accepts an added courtesy. It also accepts an added condition (\"allowed\" against",

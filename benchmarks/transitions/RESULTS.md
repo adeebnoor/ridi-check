@@ -44,7 +44,9 @@ Right means: seen as the same.
 ## What this shows
 
 - Exact match sees every change of a sign, a number, a unit, a negation or a word. It does not see a
-  change that lower-casing hides: a letter case that matters, as in `mg` and `Mg`.
+  change that lower-casing hides: a letter case that matters, as in `mg` and `Mg`. Those pairs are not
+  counted as a change, and the report names them: all 44 of them, together with 44 pairs
+  where the case does not matter, such as a capital at the start. It cannot tell the two kinds apart.
 - Exact match also calls a change what a reader would not: a courtesy added to the answer, a list in
   another order, another word for the same thing. Those are the cases the owner judges.
 - Word overlap accepts an added courtesy. It also accepts an added condition ("allowed" against

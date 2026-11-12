@@ -417,7 +417,9 @@ def test_a_change_seen_in_a_single_run_passes_by_default_and_not_under_strict(wr
         assert line in capsys.readouterr().out
         assert main(["gate", results, "--strict"]) == 1
         assert line in capsys.readouterr().out
-        assert main(["gate", results, "--strict", "--max-unconfirmed", "1"]) == 0      # a value given stays
+        assert main(["gate", results, "--strict", "--max-unconfirmed", "1"]) == 1      # strict also asks for two runs
+        assert "cases with fewer than 2 runs of a version: 1 (limit 0) - over the limit" in capsys.readouterr().out
+        assert main(["gate", results, "--strict", "--max-unconfirmed", "1", "--min-runs", "1"]) == 0   # values given stay
         capsys.readouterr()
 
 
@@ -462,4 +464,57 @@ def test_the_same_passages_in_another_order_or_number_are_counted_apart(tmp_path
     assert moves["order"] == [["A", 1, 2, None, None, False], ["B", 2, 1, None, None, False]]      # each passage and where it stood
     assert moves["number"] == [["B", 3, 2, None, None, False]] and moves["same"] == [] and moves["other"] == []
     assert {card["id"]: card["ord"] for card in data["cards"]} == {"order": True, "number": True, "same": False, "other": False}
+
+
+def test_a_file_with_one_run_cannot_pass_the_strict_gate_because_nothing_changed(write, capsys):
+    """With one run of each version "the same answer" was never re-run. --min-runs, which --strict sets to 2,
+    stops on it; a file with two runs that agree passes."""
+    once = write("once.csv", "case_id,baseline_answer,updated_answer\na,No interaction found.,No interaction found.\n")
+    twice = write("twice.csv", "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer\n"
+                  "a,No interaction found.,No interaction found.,No interaction found.,No interaction found.\n")
+    assert main(["gate", once]) == 0
+    capsys.readouterr()
+    for arguments in (["--strict"], ["--min-runs", "2"]):
+        assert main(["gate", once] + arguments) == 1
+        out = capsys.readouterr().out
+        assert "fewer than 2 runs of a version\tcase a" in out and "cases with fewer than 2 runs of a version: 1 (limit 0) - over the limit" in out
+        assert main(["gate", twice] + arguments) == 0
+        capsys.readouterr()
+    assert main(["gate", twice, "--min-runs", "3"]) == 1
+
+
+def test_answers_that_differ_only_in_letter_case_are_named_and_can_stop_the_gate(tmp_path, write, capsys):
+    """Lower-casing makes "5 mg" and "5 Mg" one answer. That stays so, and the cases are named so they can be read."""
+    results = write("results.csv", "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer\n"
+                    "unit,Give 5 mg.,Give 5 mg.,Give 5 Mg.,Give 5 Mg.\n"
+                    "gene,the gene p53 is negative,the gene P53 is negative,the gene p53 is negative,the gene p53 is negative\n"
+                    "shout,yes,yes,yes.,yes\nreal,yes,yes,no,no\n")
+    assert main(["report", results]) == 0
+    out = capsys.readouterr().out
+    assert "same                          3" in out and "stable_change                 1   cases: real" in out   # the labels are as before
+    assert ("2 case(s) hold answers that differ only in letter case, as in mg and Mg, which is not counted as a change: "
+            "unit, gene.") in out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        assert json.load(f)["differ_only_in_letter_case"] == ["unit", "gene"]
+    html, _ = page_data(tmp_path / "report.html")
+    assert "caseOnly" in html
+
+    assert main(["gate", results, "--max-unjudged-changes", "1"]) == 0
+    capsys.readouterr()
+    for arguments in (["--max-case-only", "0"], ["--strict"]):
+        assert main(["gate", results, "--max-unjudged-changes", "1"] + arguments) == 1
+        out = capsys.readouterr().out
+        assert "answers differ only in letter case\tcase unit" in out
+        assert "cases whose answers differ only in letter case: 2 (limit 0) - over the limit" in out
+    assert main(["gate", results, "--max-unjudged-changes", "1", "--max-case-only", "2"]) == 0
+    capsys.readouterr()
+    plain = write("plain.csv", "case_id,baseline_answer,updated_answer\na,Yes,yes!\n")       # "Yes" and "yes" is the case in point
+    assert main(["report", plain]) == 0
+    assert "differ only in letter case" in capsys.readouterr().out
+
+
+def test_one_case_that_lists_passages_is_one_case(write, capsys):
+    results = write("results.csv", "case_id,baseline_answer,updated_answer,baseline_context,updated_context\na,x,y,doc 1,doc 1\n")
+    assert main(["report", results]) == 0
+    assert "Retrieved passages are the same in both versions in the one case that lists passages." in capsys.readouterr().out
 

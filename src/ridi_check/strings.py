@@ -23,6 +23,9 @@ COMMON = {
                        "this count does not set any group of cases apart. An update that changes how documents are "
                        "split, or how passages are named, gives this result.",
         "passagesNone": "The retrieved passages are the same in both versions in all {n} cases that list passages.",
+        "passagesNoneOne": "The retrieved passages are the same in both versions in the one case that lists passages.",
+        "caseOnly": "{n} case(s) hold answers that differ only in letter case, as in mg and Mg, which is not counted "
+                    "as a change: {ids}. Read them where the case of a letter carries meaning.",
         "name": "RIDI Update Check",
         "langBtn": "العربية",
         "tagline": "The current and the proposed version of an assistant, run on the same questions. "
@@ -96,6 +99,9 @@ COMMON = {
                        "لا يميّز أي مجموعة من الحالات. يحدث ذلك حين يغيّر التحديث طريقة تقسيم المستندات أو تسمية "
                        "المقاطع.",
         "passagesNone": "المقاطع المسترجعة متطابقة بين النسختين في كل الحالات التي ذُكرت مقاطعها وعددها {n}.",
+        "passagesNoneOne": "المقاطع المسترجعة متطابقة بين النسختين في الحالة الوحيدة التي ذُكرت مقاطعها.",
+        "caseOnly": "عدد الحالات التي تختلف إجاباتها في حالة الأحرف فقط (مثل mg و Mg) ولا تُحسب تغيّراً: {n}، وهي: "
+                    "{ids}. اقرأها حيث يكون لحالة الحرف معنى.",
         "name": "RIDI Update Check",
         "langBtn": "English",
         "tagline": "النسخة الحالية والنسخة المقترحة من المساعد على الأسئلة نفسها. "

@@ -72,8 +72,17 @@ def _is_digit(ch: str) -> bool:
     return _kind(ch) == "d"
 
 
-@lru_cache(maxsize=8192)   # the same answer is compared several times within a case
 def normalise(text: str) -> str:
+    return _normalised(text, True)
+
+
+def normalise_cased(text: str) -> str:
+    """`normalise` without the lower-casing: used only to find answers that differ in letter case alone."""
+    return _normalised(text, False)
+
+
+@lru_cache(maxsize=16384)   # the same answer is compared several times within a case
+def _normalised(text: str, fold: bool) -> str:
     """Lower-case, punctuation to spaces, whitespace collapsed, as the prototype's `norm` does, except that
     the signs that carry meaning are kept, each as a word of its own: "< 5 mg" is not "> 5 mg".
 
@@ -84,7 +93,7 @@ def normalise(text: str) -> str:
     follows (HIV-). A point or a comma between two digits stays inside the number (2.5, 1,000). A hyphen
     inside a word (x-ray, 5-10) and all other punctuation become a space.
     """
-    s = str(text).lower()
+    s = str(text).lower() if fold else str(text)
     last = len(s) - 1
     out = []
     for i, ch in enumerate(s):
@@ -147,6 +156,13 @@ def same_answer(a: str, b: str, threshold: float = 1.0) -> bool:
     return union > 0 and shared / union >= threshold
 
 
+def _differ_in_case_only(b: list[Run], u: list[Run]) -> bool:
+    """Do two answers that count as the same differ in letter case: a run against the first run of its
+    version, or the first runs of the two versions? Lower-casing hides it (mg and Mg), so it is listed."""
+    pairs = [(r.answer, b[0].answer) for r in b[1:]] + [(r.answer, u[0].answer) for r in u[1:]] + [(b[0].answer, u[0].answer)]
+    return any(x and y and x != y and normalise(x) == normalise(y) and normalise_cased(x) != normalise_cased(y) for x, y in pairs)
+
+
 def make_eq(mode: str, threshold: float = 1.0) -> Callable[[Run, Run], bool]:
     if mode == KEY:
         return lambda r, s: r.correct == s.correct
@@ -199,6 +215,7 @@ class Analysis:
     correct_b: int = 0      # key mode, first run
     correct_u: int = 0
     by_similarity: list[str] = field(default_factory=list)  # no-key mode under a threshold: see analyse
+    case_only: list[str] = field(default_factory=list)      # answers that are equal except for letter case (mg, Mg)
     regressions: int = 0    # key mode, first run, 1 -> 0
     improvements: int = 0   # key mode, first run, 0 -> 1
 
@@ -239,6 +256,8 @@ def analyse(cases: list[Case], mode: str, threshold: float = 1.0) -> Analysis:
                 a.answer_change[case.case_id] = "unconfirmed"
             elif by_answer == UNSTABLE:      # the score held on re-run and the answer did not
                 a.answer_change[case.case_id] = "varied"
+        if _differ_in_case_only(b, u):
+            a.case_only.append(case.case_id)
         if not key and threshold < 1 and classify(case, mode, 1.0) != state:
             a.by_similarity.append(case.case_id)    # exact match would label this case differently
         if len(b) > 1 and len(u) > 1:

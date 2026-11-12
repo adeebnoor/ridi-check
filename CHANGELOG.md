@@ -3,6 +3,24 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Added
+- Every case whose answers differ only in letter case, such as "5 mg" and "5 Mg", is named in the printed
+  summary, in the report and in `summary.json` (`differ_only_in_letter_case`). It is still not counted as
+  a change. `gate --max-case-only N` counts these cases.
+- `gate --min-runs N`: every case must have at least N runs of each version.
+- `run` prints the SHA-256 of `raw_outputs.jsonl` when it finishes, `verify` prints it again, and
+  `verify --raw-sha256 HEX` exits 1 when the record no longer has a fingerprint that was kept elsewhere.
+  Without that, a record and a table that were changed together still agree.
+
+### Changed
+- `gate --strict` also asks for two runs of each version and counts answers that differ only in letter
+  case. A file with one run of each version no longer passes it because nothing changed in that run.
+
+### Fixed
+- "in all 1 cases" in the line about passages is "in the one case".
+
 ## 0.8.0
 
 ### Added

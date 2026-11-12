@@ -178,12 +178,13 @@ seconds. That is one service on one day; yours may behave differently.
 [benchmarks/transitions](https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions) holds 1,131
 constructed pairs of answers in English and Arabic, with the measured result for each kind of change. Exact
 match, the default, saw 738 of the 782 pairs that say something else; the 44 it missed differ only in a
-letter case that matters, such as `mg` and `Mg`. It also called a change 167 of the 349 pairs that a reader
+letter case that matters, such as `mg` and `Mg`, and the report names every case of that kind. It also called a change 167 of the 349 pairs that a reader
 would call the same answer, which is why the owner judges. The pairs are constructed and their labels were
 not judged by independent raters, so this shows how the rules behave, not how often such changes happen.
 
 **Can someone edit `results.csv` and pass the gate?** They can edit it; `ridi-check verify ridi-out`
-builds the table again from the recorded calls and prints every cell that differs.
+builds the table again from the recorded calls and prints every cell that differs. To show later that the
+record itself was not changed, keep the fingerprint that `run` prints and give it to `verify --raw-sha256`.
 
 **Can I open the CSV files in Excel?** Yes. A cell that starts with `=`, `+`, `-` or `@` is written with an
 apostrophe in front (`'=1+1`), so a spreadsheet does not run answer text as a formula. The tool takes the

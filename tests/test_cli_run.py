@@ -146,3 +146,28 @@ def test_verify_scores_again_with_the_runs_own_scorer_and_says_when_the_version_
     assert "could not be loaded" in err and "so the scores are not checked" in err
     assert "This run was written by ridi-check 0.1.0" in err
 
+
+
+def test_a_fingerprint_kept_elsewhere_shows_a_record_that_was_changed_with_its_table(run_args, tmp_path, capsys):
+    """`verify` compares the table with the record. When both are edited together they still agree; only a
+    fingerprint of the record, kept somewhere else when the run ended, can show that."""
+    import re
+    assert main(run_args) == 0
+    printed = re.search(r"sha256 ([0-9a-f]{64})  raw_outputs\.jsonl", capsys.readouterr().out)
+    assert printed, "run prints the fingerprint of the record"
+    fingerprint, out_dir = printed.group(1), tmp_path / "out"
+    assert main(["verify", str(out_dir), "--raw-sha256", fingerprint]) == 0
+    assert f"sha256 {fingerprint}  raw_outputs.jsonl" in capsys.readouterr().out
+    assert main(["verify", str(out_dir), "--raw-sha256", fingerprint[:16]]) == 0          # its first sixteen characters are enough
+    assert main(["verify", str(out_dir), "--raw-sha256", "abc"]) == 1                    # and three are not
+    capsys.readouterr()
+
+    # the same edit made to the record and to the table
+    for name in ("raw_outputs.jsonl", "results.csv"):
+        path = out_dir / name
+        path.write_text(path.read_text(encoding="utf-8").replace("new answer to question three", "old answer to question three"), encoding="utf-8")
+    (out_dir / "results.csv").write_text((out_dir / "results.csv").read_text(encoding="utf-8").replace(",1,1,0,0,", ",1,1,1,1,"), encoding="utf-8")
+    assert main(["verify", str(out_dir)]) == 0                                            # they agree with each other
+    capsys.readouterr()
+    assert main(["verify", str(out_dir), "--raw-sha256", fingerprint]) == 1               # and not with what was kept
+    assert "raw_outputs.jsonl does not have the fingerprint given" in capsys.readouterr().out

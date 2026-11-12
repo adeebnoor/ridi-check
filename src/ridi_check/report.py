@@ -121,6 +121,8 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
         "first_run": first_run,
         "any_run_disagreement": {"current": a.any_run_b, "proposed": a.any_run_u},
     }
+    if a.case_only:     # equal after lower-casing, and not equal before it
+        summary["differ_only_in_letter_case"] = list(a.case_only)
     listed = [(c, s) for c, s in a.items if s != INCOMPLETE and (c.baseline_context or c.updated_context)]
     if listed:      # a count of where the retrieved passages differ; it says nothing about cause
         differs = [(s, any(passage_difference(c)[:2])) for c, s in listed]
@@ -496,6 +498,13 @@ def text_summary(summary: dict) -> str:
             f"Stable changes judged: {j['worse']} worse, {j['better']} better, {j['same_meaning']} same meaning, "
             f"{summary['judgments']['still_to_decide']} still to decide."
         )
+    cased = summary.get("differ_only_in_letter_case")
+    if cased:
+        lines.append(
+            f"{len(cased)} case(s) hold answers that differ only in letter case, as in mg and Mg, which is not counted as "
+            "a change: " + ", ".join(cased[:20]) + (f", and {len(cased) - 20} more" if len(cased) > 20 else "")
+            + ". Read them where the case of a letter carries meaning."
+        )
     merged = summary.get("labelled_by_similarity")
     if merged:
         lines.append(
@@ -513,7 +522,8 @@ def text_summary(summary: dict) -> str:
                 "how passages are named, gives this result."
             )
         elif not differ:
-            lines.append(f"Retrieved passages are the same in both versions in all {listed} cases that list passages.")
+            lines.append("Retrieved passages are the same in both versions in "
+                         + ("the one case that lists passages." if listed == 1 else f"all {listed} cases that list passages."))
         else:
             lines.append(
                 f"Retrieved passages differ between the versions in {differ}/{listed} cases that list passages: "

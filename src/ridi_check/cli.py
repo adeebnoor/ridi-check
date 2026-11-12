@@ -19,6 +19,7 @@ from .contract import ContractError, read_results
 from .gate import evaluate
 from .report import read_judgments, text_summary, write_report
 from .runner import SERVICE_FAILURES, RunConfig, RunError, run, verify
+from .util import sha256_file
 
 CONFIG_NAME = "ridi-check.json"
 # `run` settings: name -> (type, default). The same names are the keys of ridi-check.json.
@@ -134,6 +135,9 @@ def build_parser() -> argparse.ArgumentParser:
                        description="Build results.csv again from raw_outputs.jsonl and compare it with the file, cell "
                                    "by cell. Exit 1 when a cell differs, for example after an edit by hand.")
     p.add_argument("out", metavar="DIR", help="the output folder that `run` wrote")
+    p.add_argument("--raw-sha256", metavar="HEX",
+                   help="the SHA-256 of raw_outputs.jsonl that `run` printed when it finished (at least its first 16 "
+                        "characters), kept somewhere else. Exit 1 when the record no longer has it.")
     p.set_defaults(handler=_cmd_verify)
 
     p = sub.add_parser("gate", help="exit non-zero when stable regressions exceed a limit",
@@ -148,9 +152,16 @@ def build_parser() -> argparse.ArgumentParser:
                    help="cases allowed whose answers did not hold on re-run. Not checked unless given.")
     p.add_argument("--strict", action="store_true",
                    help="every limit at zero unless you give it a value: stable regressions, changes not judged, "
-                        "cases not compared, unstable cases, changes seen in a single run and, with an answer "
-                        "key, answers that changed while the score stayed the same. For a release check where "
-                        "a wrong answer is costly.")
+                        "cases not compared, unstable cases, changes seen in a single run, answers that differ "
+                        "only in letter case and, with an answer key, answers that changed while the score "
+                        "stayed the same; and at least two runs of each version. For a release check where a "
+                        "wrong answer is costly.")
+    p.add_argument("--min-runs", type=_non_negative, default=None, metavar="N",
+                   help="every case must have at least N runs of each version. Not checked unless given; --strict "
+                        "asks for 2, so that a file with one run cannot pass because nothing changed in it.")
+    p.add_argument("--max-case-only", type=_non_negative, default=None, metavar="N",
+                   help="cases allowed whose answers differ only in letter case (mg and Mg), which is not counted "
+                        "as a change. Not checked unless given.")
     p.add_argument("--max-unconfirmed", type=_non_negative, default=None, metavar="N",
                    help="regressions seen in a single run (without an answer key: changes seen in a single run). "
                         "Not checked unless given: with one run nothing is confirmed.")
@@ -309,6 +320,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
     print(f"Calls: {outcome.calls_planned} planned, {outcome.calls_skipped} already recorded, "
           f"{outcome.calls_ok} succeeded, {outcome.calls_failed} failed ({outcome.attempts} attempts).")
     print(f"Wrote: {outcome.results_path}")
+    print(f"sha256 {sha256_file(raw)}  raw_outputs.jsonl   (keep this line elsewhere to show later that the record is unchanged)")
     if args.report:
         _print_report(outcome.results_path, args.similarity, bool(args.open))
     if args.limit:
@@ -332,6 +344,16 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     outcome = verify(args.out)
     for note in outcome.notes:
         print(f"note: {note}", file=sys.stderr)
+    for name, digest in outcome.fingerprints.items():
+        print(f"sha256 {digest}  {name}")
+    if args.raw_sha256:
+        # The table can be made to agree with a record that was itself changed. A fingerprint of the record,
+        # kept somewhere else when the run ended, is what shows that it was not.
+        given = args.raw_sha256.strip().lower()
+        if len(given) < 16 or not outcome.fingerprints["raw_outputs.jsonl"].startswith(given):
+            print("verify: raw_outputs.jsonl does not have the fingerprint given with --raw-sha256, so the record "
+                  "is not the one that fingerprint was taken from.")
+            return 1
     for difference in outcome.differences[:50]:
         print(difference)
     if len(outcome.differences) > 50:
@@ -354,13 +376,15 @@ def _cmd_gate(args: argparse.Namespace) -> int:
     if args.strict:     # the limits that are off by default are on; a value given on the command line stays
         args.max_unstable = 0 if args.max_unstable is None else args.max_unstable
         args.max_unconfirmed = 0 if args.max_unconfirmed is None else args.max_unconfirmed
+        args.min_runs = 2 if args.min_runs is None else args.min_runs
+        args.max_case_only = 0 if args.max_case_only is None else args.max_case_only
         if mode == "key" and args.max_answer_changes is None:
             args.max_answer_changes = 0
     result = evaluate(
         analysis, judgments, max_stable_regressions=args.max_stable_regressions,
         max_unjudged_changes=args.max_unjudged_changes, max_incomplete=args.max_incomplete,
         max_unstable=args.max_unstable, max_answer_changes=args.max_answer_changes,
-        max_unconfirmed=args.max_unconfirmed,
+        max_unconfirmed=args.max_unconfirmed, min_runs=args.min_runs, max_case_only=args.max_case_only,
     )
     print(f"ridi-check gate: {args.results}, {len(cases)} case{'' if len(cases) == 1 else 's'}, "
           f"{'answer-key mode' if mode == 'key' else 'no answer key'}")

@@ -306,8 +306,10 @@
     }
     if (D.summary.passages) { const P = D.summary.passages, F = P.by_state[D.focus];
       h += '<p class="small muted">' + esc((P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
-        : !P.differ ? t("passagesNone", { n: P.cases_with_passages })
+        : !P.differ ? t(P.cases_with_passages === 1 ? "passagesNoneOne" : "passagesNone", { n: P.cases_with_passages })
         : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + (P.reordered ? t("passagesOrder", { r: P.reordered }) : "") + (P.content_changed ? t("passagesContent", { r: P.content_changed }) : "")) + "</p>"; }
+    if ((D.summary.differ_only_in_letter_case || []).length) { const ids = D.summary.differ_only_in_letter_case;
+      h += '<p class="small muted">' + esc(t("caseOnly", { n: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })) + "</p>"; }
     if ((D.summary.labelled_by_similarity || []).length) { const ids = D.summary.labelled_by_similarity;
       h += '<p class="small muted">' + esc(t("bySimilarity", { n: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })) + "</p>"; }
     h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2

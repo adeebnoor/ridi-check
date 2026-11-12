@@ -29,7 +29,7 @@ for (const job of JSON.parse(fs.readFileSync(process.argv[3], 'utf8'))) {
     const s = core.buildSummary(a), review = core.reviewTable(a, {});
     out.push({ mode: r.mode, states: a.items.map((it) => [it.c.id, it.s]), counts: a.counts, first: s.first_run,
       any: s.any_run_disagreement, runs: s.runs_per_version, confirmable: s.confirmable_cases, compared: s.cases_compared,
-      changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, passages: s.passages || null, merged: s.labelled_by_similarity || null,
+      changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, passages: s.passages || null, merged: s.labelled_by_similarity || null, cased: s.differ_only_in_letter_case || null,
       cards: core.pageData(a).cards.map((c) => [c.id, c.state, c.flag, c.mov]), strip: core.pageData(a).strip, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
   } catch (e) { if (!e.code) throw e; out.push({ error: e.code, row: e.info.row || null }); }
 }
@@ -69,13 +69,13 @@ def python_side(text, mode, sim):
             "any": s["any_run_disagreement"], "runs": s["runs_per_version"], "confirmable": s["confirmable_cases"],
             "compared": s["cases_compared"], "changed": s.get("wrong_both_answer_changed"),
             "correct_changed": s.get("correct_both_answer_changed"), "passages": s.get("passages"),
-            "merged": s.get("labelled_by_similarity"),
+            "merged": s.get("labelled_by_similarity"), "cased": s.get("differ_only_in_letter_case"),
             "cards": [[c["id"], c["state"], c["flag"], c["mov"]] for c in page["cards"]], "strip": page["strip"],
             "review": to_csv(header, rows), "tiles": ledger_tiles(a)}
 
 
 WORDS = ["yes", "Yes.", "no", "NOT_ENOUGH_INFO", "not enough info", "نعم", "نعم.", "كلا", "Paris, France", "paris france",
-         'say "hi"', "a;b", "tab\there", "two\nlines", " padded ", "x-ray", "=1+1", "'quoted'", "100%", "٣ أيام",
+         'say "hi"', "a;b", "tab\there", "two\nlines", " padded ", "x-ray", "=1+1", "'quoted'", "100%", "٣ أيام", "YES", "Not_Enough_Info", "5 Mg", "5 mg",
          "-5", "+2 units", "@home", "'=kept", "- a bullet"]
 SENTENCES = ["the loan period is 21 days for every book in the library", "the loan period is 14 days for every book in the library",
              "the loan period is not 21 days for every book in the library", "the loan period is 21 days for each book in the library",
@@ -486,6 +486,10 @@ def test_the_transition_set_and_its_measured_table_are_up_to_date():
     assert table[("different", "added condition")][1] == table[("different", "added condition")][0]     # exact match sees it
     assert table[("different", "added condition")][2] < table[("different", "added condition")][0]      # word overlap can miss it
     assert table[("different", "letter case that matters")][1] == 0                                     # lower-casing hides it
+    from ridi_check.analysis import normalise, normalise_cased
+    hidden = [r for r in measure.load() if r["category"] == "letter case that matters"]
+    assert len(hidden) == 44 and all(normalise(r["answer_a"]) == normalise(r["answer_b"])
+                                     and normalise_cased(r["answer_a"]) != normalise_cased(r["answer_b"]) for r in hidden)   # and every one is named
     # the figures quoted in the README and the reference are these
     different = [sum(cell[i] for (gold, _), cell in table.items() if gold == "different") for i in range(4)]
     same = [sum(cell[i] for (gold, _), cell in table.items() if gold == "same") for i in range(4)]

@@ -99,7 +99,9 @@ Prints the counts and one line per offending case. It prints no verdict about th
 |---|---|---|
 | `--max-stable-regressions N` | 0 | with an answer key: stable regressions allowed. Without one: stable changes you judged worse |
 | `--max-unjudged-changes N` | 0 | without an answer key: stable changes with no judgment, or judged unsure |
-| `--strict` | off | every limit at zero unless you give it a value: the three above that are zero already, `--max-unstable`, `--max-unconfirmed` and, with an answer key, `--max-answer-changes`. The setting for a release check where a wrong answer is costly |
+| `--strict` | off | every limit at zero unless you give it a value: the three above that are zero already, `--max-unstable`, `--max-unconfirmed`, `--max-case-only` and, with an answer key, `--max-answer-changes`; and `--min-runs 2`. The setting for a release check where a wrong answer is costly |
+| `--min-runs N` | not checked | every case must have at least N runs of each version. Without it, a file with one run passes when nothing changed in it, although nothing was re-run |
+| `--max-case-only N` | not checked | cases whose answers differ only in letter case, which is not counted as a change |
 | `--max-unconfirmed N` | not checked | regressions seen in a single run (without an answer key: changes seen in a single run). With one run nothing is confirmed, so by default these are reported on standard error and not counted |
 | `--max-answer-changes N` | not checked | with an answer key: cases whose score stayed the same while the answer changed, between the versions or from one run to the next. `--max-answer-changes 0` belongs in a release check where the wording itself matters |
 | `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them; `--max-unstable 0` is the setting for a release check where a wrong answer is costly |
@@ -114,7 +116,11 @@ score or an answer edited by hand, and a case that was added or removed. Exit st
 agrees with the record, 1 when a cell differs, 2 when the folder does not hold what `run` wrote.
 
 It checks the table against the record, not the record against the assistant: it cannot tell whether a
-recorded answer is right, or whether `raw_outputs.jsonl` itself was replaced. When the questions file of
+recorded answer is right. On its own it also cannot tell whether `raw_outputs.jsonl` was changed together
+with the table: the two would still agree. For that, `run` prints the SHA-256 of the record when it
+finishes, and `verify` prints it again. Keep the line somewhere the folder's owner cannot edit, such as a
+CI log or a registered protocol, and give it back with `--raw-sha256 HEX` (its first 16 characters are
+enough): `verify` then exits 1 when the record no longer has that fingerprint. When the questions file of
 the run is no longer there unchanged, the questions and expected answers are taken from `results.csv`
 and are not themselves checked; when the run's own scorer cannot be loaded, the scores are not checked.
 Both are said on standard error.
@@ -192,6 +198,10 @@ still make no difference. The same rule is used when answers are scored against 
 2. Else the first runs of the two versions are equal: `correct_both` / `wrong_both`, or `same`.
 3. Else `stable_regression` / `stable_improvement`, or `stable_change` without a key. With a single run of
    either version the label is `*_unconfirmed`: "stable" needs at least two runs of both versions.
+
+Lower-casing makes "5 mg" and "5 Mg" one answer, and "Yes" and "yes". That stays so. Because the case of a
+letter can carry meaning, every case whose answers are equal after lower-casing and not before it is named
+in the printed summary, in the report and in `summary.json` (`differ_only_in_letter_case`).
 
 A case whose first-run call failed is `incomplete` and is left out of every rate. A `wrong_both` case whose
 wrong answer changed keeps its state and is flagged, because correctness counting alone does not see it.
@@ -368,7 +378,9 @@ in [RESULTS.md](https://github.com/adeebnoor/ridi-check/blob/main/benchmarks/tra
 test fails when it is out of date. In short:
 
 - Exact match, the default, saw 738 of the 782 pairs that say something else. The 44 it missed are all of
-  one kind: a letter case that matters, such as `mg` and `Mg`, which lower-casing hides.
+  one kind: a letter case that matters, such as `mg` and `Mg`, which lower-casing hides. They are not
+  counted as a change, and they are not lost: every case whose answers differ only in letter case is named
+  in the report (`differ_only_in_letter_case`), all 44 of these among them, and `gate --strict` stops on them.
 - Exact match also called a change 167 of the 349 pairs that a reader would call the same answer: an added
   courtesy, a list in another order, another word for the same thing. These are what the owner judges.
 - Word overlap at 0.9 accepted 24 of the 58 added courtesies, and missed 16 of the 69 pairs where a

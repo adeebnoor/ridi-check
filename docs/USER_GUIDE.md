@@ -153,8 +153,9 @@ To check first that nobody changed the table by hand, run `ridi-check verify rid
 `results.csv` again from the recorded calls and prints every cell that differs.
 
 `--strict` puts every limit at zero: stable regressions, changes you have not judged, cases not compared, unstable
-cases, changes seen in a single run and, with an answer key, answers that changed while the score stayed
-the same. A limit you give yourself, such as `--max-unstable 2`, stays as you gave it.
+cases, changes seen in a single run, answers that differ only in letter case and, with an answer key,
+answers that changed while the score stayed the same; and it asks for two runs of each version, so that a
+file with one run cannot pass because nothing changed in it. A limit you give yourself, such as `--max-unstable 2`, stays as you gave it.
 
 ## Practical advice
 

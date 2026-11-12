@@ -157,8 +157,8 @@ const RidiCore = (function () {
   /* Lower-case, punctuation to spaces, whitespace collapsed, except that the signs that carry meaning are kept,
      each as a word of its own: every mathematical symbol, a percent sign after a digit, "/" and "*" between two
      letters or digits, "!" before "=", and a hyphen that is a sign (-5, HIV-). Same rules as analysis.py. */
-  function normalise(text) {
-    const s = Array.from(String(text).toLowerCase());
+  function normalise(text, keepCase) {
+    const s = Array.from(keepCase ? String(text) : String(text).toLowerCase());
     const inWord = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c), isDigit = (c) => c !== undefined && /\p{Nd}/u.test(c);
     let out = "";
     for (let i = 0; i < s.length; i++) {
@@ -210,7 +210,7 @@ const RidiCore = (function () {
   function analyse(cases, mode, threshold) {
     threshold = threshold === undefined ? 1 : threshold;
     const key = mode === KEY, eq = makeEq(mode, threshold);
-    const a = { mode, threshold, items: [], counts: {}, answerChange: {}, bySimilarity: [], n: cases.length, nCompared: 0, changed: 0,
+    const a = { mode, threshold, items: [], counts: {}, answerChange: {}, bySimilarity: [], caseOnly: [], n: cases.length, nCompared: 0, changed: 0,
       rerunB: 0, rerunBN: 0, rerunU: 0, rerunUN: 0, anyB: 0, anyU: 0, confirmable: 0, maxRunsB: 0, maxRunsU: 0,
       correctB: 0, correctU: 0, regressions: 0, improvements: 0 };
     (key ? KEY_STATES : NOKEY_STATES).forEach((s) => { a.counts[s] = 0; });
@@ -229,6 +229,9 @@ const RidiCore = (function () {
         else if (byAnswer === "change_unconfirmed") a.answerChange[c.id] = "unconfirmed";
         else if (byAnswer === "unstable") a.answerChange[c.id] = "varied";
       }
+      /* answers that count as the same and differ in letter case (mg, Mg): listed, because lower-casing hides them */
+      const pairs = b.slice(1).map((r) => [r.ans, b[0].ans]).concat(u.slice(1).map((r) => [r.ans, u[0].ans]), [[b[0].ans, u[0].ans]]);
+      if (pairs.some(([x, y]) => x && y && x !== y && normalise(x) === normalise(y) && normalise(x, true) !== normalise(y, true))) a.caseOnly.push(c.id);
       if (!key && threshold < 1 && classify(c, mode, 1) !== s) a.bySimilarity.push(c.id);
       if (b.length > 1 && u.length > 1) a.confirmable++;
       if (key) {
@@ -256,6 +259,7 @@ const RidiCore = (function () {
       confirmable_cases: a.confirmable, runs_per_version: { current: a.maxRunsB, proposed: a.maxRunsU },
       states: Object.assign({}, a.counts), case_ids: caseIds, first_run: first,
       any_run_disagreement: { current: a.anyB, proposed: a.anyU } };
+    if (a.caseOnly.length) summary.differ_only_in_letter_case = a.caseOnly.slice();
     const listed = a.items.filter((it) => it.s !== "incomplete" && (it.c.bc.length || it.c.uc.length));
     if (listed.length) {   /* a count of where the retrieved passages differ; it says nothing about cause */
       const differs = listed.map((it) => { const d = passageDifference(it.c); return [it.s, d[0].length || d[1].length ? 1 : 0]; });

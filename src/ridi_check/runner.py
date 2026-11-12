@@ -574,6 +574,7 @@ class VerifyOutcome:
     cells: int = 0
     differences: list[str] = field(default_factory=list)   # "case 7, updated_answer: the file has ..., the record has ..."
     notes: list[str] = field(default_factory=list)
+    fingerprints: dict[str, str] = field(default_factory=dict)   # file name -> SHA-256, to compare with one kept elsewhere
 
 
 def verify(out_dir: str) -> VerifyOutcome:
@@ -593,6 +594,7 @@ def verify(out_dir: str) -> VerifyOutcome:
     except (OSError, ValueError) as exc:
         raise RunError(f"{paths[MANIFEST]} cannot be read ({exc}).") from exc
     outcome = VerifyOutcome()
+    outcome.fingerprints = {name: sha256_file(paths[name]) for name in (RAW_OUTPUTS, RESULTS)}
     try:
         file_records = read_records(read_text(paths[RESULTS]))
     except ValueError as exc:
