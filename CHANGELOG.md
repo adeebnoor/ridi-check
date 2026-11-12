@@ -3,7 +3,7 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
-## Unreleased
+## 0.9.1
 
 ### Changed
 - `gate --strict` refuses `--similarity` below 1, with exit status 2. Before, word overlap could count an
