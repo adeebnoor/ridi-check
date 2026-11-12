@@ -1,0 +1,127 @@
+name: RIDI same-weights prompt-update evaluation (attested)
+
+# Changes the system instruction only. Both arms use identical Qwen1.5B GGUF weights.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/same-weights-prompt-update-20261113
+      - main
+    paths:
+      - 'experiments/same_weights_prompt/**'
+      - '.github/workflows/ridi-same-weights-prompt.yml'
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  same-weights:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install this exact RIDI source
+        run: python -m pip install -e .
+      - name: Download pinned llama.cpp CPU binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ridi-bin" "$RUNNER_TEMP/ridi-model"
+          curl -fLsS --retry 4 --retry-delay 4 \
+            'https://github.com/ggml-org/llama.cpp/releases/download/b12327/llama-b12327-bin-ubuntu-x64.tar.gz' \
+            -o "$RUNNER_TEMP/llama.tar.gz"
+          echo 'a78e768c62bebc3e8de5e8a04d32b5d6ef3727efcc5f042efc271d03d893bd94  '"$RUNNER_TEMP/llama.tar.gz" | sha256sum --check
+          tar -xf "$RUNNER_TEMP/llama.tar.gz" -C "$RUNNER_TEMP/ridi-bin"
+          chmod +x "$RUNNER_TEMP/ridi-bin/llama-b12327/llama-server"
+      - name: Download once and pin Qwen2.5-1.5B for BOTH model arms
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 4 --retry-delay 5 --max-time 1100 \
+            'https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf' \
+            -o "$RUNNER_TEMP/ridi-model/qwen15.gguf"
+          echo '6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e  '"$RUNNER_TEMP/ridi-model/qwen15.gguf" | sha256sum --check
+      - name: Verify frozen prompt adapter and config
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd experiments/same_weights_prompt
+          echo 'd91234a6400aa92e6b3ed61dc69c4642d668228d7a76cf0db02f518e49ca04b4  same_model.py' | sha256sum --check
+          echo 'b79a464d492e8d87f384a36651f44562811a5de095de034f4eb5e021c1ece083  ridi-check.json' | sha256sum --check
+      - name: Obtain and freeze identical BoolQ 48-case inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 4 --retry-delay 4 \
+            'https://raw.githubusercontent.com/svinkapeppa/boolq/master/dev.jsonl' \
+            -o "$RUNNER_TEMP/boolq-dev.jsonl"
+          echo 'ebc29ea3808c5c611672384b3de56e83349fe38fc1fe876fd29b674d81d0a80a  '"$RUNNER_TEMP/boolq-dev.jsonl" | sha256sum --check
+          python experiments/qwen_cpu_pilot/boolq_builder.py "$RUNNER_TEMP/boolq-dev.jsonl"
+          cp experiments/qwen_cpu_pilot/boolq/questions.csv experiments/same_weights_prompt/questions.csv
+          cd experiments/same_weights_prompt
+          echo '3fa33a0e7e968c99056ffe17a430a555a9678f717d6fdcc78e1c352dfa4eb462  questions.csv' | sha256sum --check
+      - name: Start a SINGLE local Qwen1.5B model instance on localhost
+        shell: bash
+        run: |
+          set -euo pipefail
+          LLAMA="$RUNNER_TEMP/ridi-bin/llama-b12327/llama-server"
+          nohup "$LLAMA" --model "$RUNNER_TEMP/ridi-model/qwen15.gguf" \
+            --host 127.0.0.1 --port 18122 --ctx-size 1024 \
+            --threads 4 --parallel 1 --n-gpu-layers 0 \
+            > "$RUNNER_TEMP/same-model.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:18122/health | grep -q ok; then
+              echo 'Qwen ready on localhost'; exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/same-model.log"
+          exit 1
+      - name: Execute 288 real calls with only the system prompt changed
+        working-directory: experiments/same_weights_prompt
+        run: ridi-check run --config ridi-check.json
+      - name: Rebuild/verify full traces, scores, hashes and evidence
+        working-directory: experiments/same_weights_prompt
+        run: ridi-check verify ridi-out
+      - name: Strict gate, with independent score consistency recheck
+        shell: bash
+        working-directory: experiments/same_weights_prompt
+        run: |
+          set +e
+          ridi-check gate ridi-out/results.csv --strict --check-scores > ridi-out/gate.log 2>&1
+          state=$?
+          set -e
+          cat ridi-out/gate.log
+          echo "STRICT_GATE_EXIT=$state"
+          if [ "$state" -gt 1 ]; then exit "$state"; fi
+      - name: GitHub/Sigstore attestation for real-model update evidence
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: experiments/same_weights_prompt/ridi-out/evidence.json
+      - name: Independently verify attestation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in 1 2 3 4 5; do
+            if gh attestation verify experiments/same_weights_prompt/ridi-out/evidence.json --repo "$GITHUB_REPOSITORY"; then exit 0; fi
+            sleep 6
+          done
+          exit 1
+      - name: Upload run files, with frozen inputs and gate result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ridi-same-weight-prompt-evidence
+          path: |
+            experiments/same_weights_prompt/ridi-out/
+            experiments/same_weights_prompt/same_model.py
+            experiments/same_weights_prompt/questions.csv
+            experiments/same_weights_prompt/ridi-check.json
+            experiments/same_weights_prompt/PRE_RUN_FROZEN.json
+          if-no-files-found: error
