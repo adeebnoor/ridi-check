@@ -3,7 +3,7 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
-## Unreleased
+## 0.8.0
 
 ### Added
 - Retrieved passages can carry a score and a content hash. An assistant may return each passage as an
