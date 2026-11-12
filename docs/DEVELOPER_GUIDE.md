@@ -155,11 +155,16 @@ an invocation finishes. You can also write it yourself and use `report` and `gat
 `regressions`, `improvements`, `changes_visible_in_mean_accuracy`,
 `changes_cancelled_in_mean_accuracy`), `any_run_disagreement`, `judgments` or
 `wrong_both_answer_changed` and `correct_both_answer_changed` (case ids whose score is equal and whose
-answer is not, under `stable`, `unconfirmed` and `varied`), `labelled_by_similarity` under a threshold, `passages` when the file lists passages (`cases_with_passages`, `differ`, and `by_state`
+answer is not, under `stable`, `unconfirmed` and `varied`), `score_and_answer_text` (answer-key mode with
+answer text: for each state, the number of its cases under each answer-text label), `same_text_scored_differently`
+(case ids where one answer text carries two scores), `score_check` when `--check-scores` was given,
+`labelled_by_similarity` under a threshold, `passages` when the file lists passages (`cases_with_passages`, `differ`, and `by_state`
 with `{differ, n}` per state), and `notes`.
 
 **`review_cases.csv`**: every case that is not same / correct in both, with all its runs under their
-contract column names, so the file can be read back by `report`.
+contract column names, so the file can be read back by `report`. With an answer key it also has
+`answer_change` and, when the file holds answer text, `answer_state`: the label the answer text of the case
+has without the key.
 
 ## The rules, exactly
 

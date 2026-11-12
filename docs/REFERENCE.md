@@ -87,6 +87,8 @@ Writes `summary.json`, `review_cases.csv` and `report.html` next to the results 
 | `--mode auto\|key\|nokey` | auto | `nokey` ignores the correctness columns and compares the answers |
 | `--similarity X` | 1 | without an answer key, count two answers as the same when they share this share of their words (for example 0.9), contain the same numbers and agree on negation |
 | `--judgments FILE` | – | your calls on the stable changes: `case_id`, `judgment` (`worse`, `better`, `same_meaning`, `unsure`) |
+| `--check-scores` | off | with an answer key: score every answer in the file again against its `expected` answer and say where the score in the file is another one. See [checking the scores](#checking-the-scores-of-a-file-made-by-hand) |
+| `--scorer MODULE:FUNCTION` | exact match | with `--check-scores`: the scorer to check against, as in `run` |
 | `--current-label TEXT`, `--proposed-label TEXT` | from the manifest | shown in the report |
 | `--lang en\|ar` | reader's language | language the report opens in |
 | `--open` | off | open the report in your browser |
@@ -106,6 +108,7 @@ Prints the counts and one line per offending case. It prints no verdict about th
 | `--max-answer-changes N` | not checked | with an answer key: cases whose score stayed the same while the answer changed, between the versions or from one run to the next. `--max-answer-changes 0` belongs in a release check where the wording itself matters |
 | `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them; `--max-unstable 0` is the setting for a release check where a wrong answer is costly |
 | `--max-incomplete N` | 0 | cases that could not be compared because a call failed |
+| `--check-scores`, `--scorer` | off | as for `report`; here every scored run that does not have the score the scorer gives counts against a limit of zero. `--strict` does not turn this on: scores given by a person need not follow a function |
 | `--mode`, `--similarity`, `--judgments` | as for `report` | |
 
 ### `ridi-check verify DIR`
@@ -181,6 +184,27 @@ in the file, whoever put them there, and `expected` is only shown. Scoring again
 `run`, which writes the `_correct` columns. `--mode nokey` leaves the `_correct` columns out on purpose
 and compares the answers.
 
+### Checking the scores of a file made by hand
+
+Because the scores of a file made by hand come from somewhere else, two checks say when they do not hang
+together. Neither changes a label or a count.
+
+- Always, with an answer key: a case whose runs hold the same answer text scored both 1 and 0 is named in
+  the printed summary, in the report, in `summary.json` (`same_text_scored_differently`) and on standard
+  error by `gate`. One text cannot be both correct and wrong, so the key or the scorer is not consistent
+  there.
+- When asked with `--check-scores`: every run that has answer text, in every case that has an `expected`
+  answer, is scored again, by exact match after normalisation or by the function given with `--scorer`,
+  and compared with the score in the file. `report` prints how many runs disagree and the first ten, and
+  writes the result to `summary.json` (`score_check`) and into the report; it still exits 0. `gate` counts
+  the runs that disagree against a limit of zero and exits 1 when there are any. Cases without an expected
+  answer and runs without answer text are left out and counted as that. When there is nothing to check,
+  the exit status is 2.
+
+Agreement shows that the scores in the file are the ones this scorer gives. It does not show that the
+answer key is right, and scores given by a person need not agree with any function. For a folder that `run` wrote, `verify`
+already scores again with the run's own scorer.
+
 ## How cases are labelled
 
 With an answer key two runs are equal when their correctness is equal; without one, when the answers match
@@ -214,6 +238,15 @@ The flag has three values: `stable` (the answer changed between the versions and
 run to the next, though each was scored the same). With an answer key, "unstable" and `--max-unstable`
 speak of the score only; `varied` is where the text did not hold. `gate --max-answer-changes N` counts all
 three.
+
+With an answer key and answer text in the file, the report also shows the two readings side by side in one
+table: each row is what the score did (the state of the case) and each column what the answer text did, by
+the rule used without a key (`stable_change`, `change_unconfirmed`, `unstable`, `same`, and
+`no_answer_text` for a case that lacks the text of a run). The counts are cases, each row adds up to the
+count of its state, and no case changes its state. The table is printed by `report`, drawn in the report
+and written to `summary.json` (`score_and_answer_text`); in `review_cases.csv` the column `answer_state`
+holds the column of each case. A score that changed with the same answer, and an answer that changed with
+the same score, are the cells to read.
 
 When the file lists passages (`baseline_context`, `updated_context`), the report also counts the cases
 whose passages differ between the versions, in total and per state (`passages` in `summary.json`). It is a
@@ -332,42 +365,45 @@ and passages (about 670 bytes a case):
 
 | Cases | File | Command | Time | Peak memory |
 |---|---|---|---|---|
-| 10,000 | 6.6 MB | `report` | 0.7 s | 54 MB |
-| 100,000 | 66.7 MB | `report` | 7 s | 318 MB |
-| 100,000 | 66.7 MB | `gate` | 5 s | 207 MB |
-| 100,000 | 66.7 MB | `report --mode nokey` | 7 s | 313 MB |
-| 100,000 | 66.7 MB | `report --mode nokey --similarity 0.9` | 7.5 s | 307 MB |
+| 10,000 | 6.6 MB | `report` | 0.9 s | 61 MB |
+| 100,000 | 66.7 MB | `report` | 9 s | 354 MB |
+| 100,000 | 66.7 MB | `gate` | 6 s | 235 MB |
+| 100,000 | 66.7 MB | `report --mode nokey` | 8.5 s | 348 MB |
+| 100,000 | 66.7 MB | `report --mode nokey --similarity 0.9` | 9 s | 346 MB |
 
-The times varied by about a second from one run to the next.
+The times varied by about a second from one run to the next, and by more from one day to the next on this
+shared machine; the memory figures did not vary.
 
-The cases are held in memory: allow about five times the size of the file for `report` and three times for
-`gate`. Answers that repeat from run to run, and passage names that repeat from case to case, are kept once,
+The cases are held in memory: allow five to six times the size of the file for `report` and three to four
+times for `gate`. Answers that repeat from run to run, and passage names that repeat from case to case, are kept once,
 so a file with little repetition needs more.
 
 **The files `report` writes** at 100,000 cases, of which 14,769 were not "correct in both":
-`report.html` 17.9 MB, `review_cases.csv` 20.7 MB, `summary.json` 0.6 MB. At 10,000 cases: 1.8 MB, 2.0 MB
-and 0.06 MB.
+`report.html` 18.5 MB, `review_cases.csv` 20.9 MB, `summary.json` 0.6 MB. At 10,000 cases: 1.9 MB, 2.0 MB
+and 0.07 MB.
 
 **Opening `report.html`** in Chromium on the same machine:
 
 | Cases | Cards to review | Opens in | A filter click | Switching language |
 |---|---|---|---|---|
-| 10,000 | 1,447 | 0.2 s | 0.06 s | 0.13 s |
-| 100,000 | 14,769 | 0.6 s | 0.04 s | 0.12 s |
+| 10,000 | 1,447 | 0.2 s | 0.06 s | 0.15 s |
+| 100,000 | 14,769 | 0.7 s | 0.07 s | 0.15 s |
 
 The page draws the cards fifty at a time, with "Show 50 more" and "Show all", and a filter starts again at
 the first fifty. Above 2,000 cases the one-cell-per-case strip is drawn as one bar that shows each state's
 share, and the list of cases wrong in both versions shows its first 500. "Show all" draws every card at
 once and is slow when there are thousands. Printing the page prints the cards that are drawn.
 
-**The browser version** in Chromium on the same machine: a 10,000-case file is read and shown in 0.8 s; the
-100,000-case file in 6 s, with about 1.4 GB of memory in use by the page. A file above two million
-characters is checked without being copied into the text box and is not kept across a refresh.
+**The browser version** in Chromium on the same machine: a 10,000-case file is read and shown in 0.5 s; the
+100,000-case file in 3 s, with about 270 MB of memory in use by the page. The page cuts each cell out of
+the text of the file and reads one row at a time; before that it built every cell character by character,
+and the same file took 13 s and about 1.4 GB on the same day. A file above two million characters is
+checked without being copied into the text box and is not kept across a refresh.
 
 **`run`**: 20,000 questions, two versions, three runs each, calling a Python function that answers at
-once, so the time is the tool's own: 120,000 calls recorded and reported in 9.4 s with a peak of 260 MB.
-`raw_outputs.jsonl` was 34.9 MB. Running the same command again, with nothing left to call, took 1.3 s
-and 138 MB. With a real assistant the calls themselves take nearly all of the time.
+once, so the time is the tool's own: 120,000 calls recorded and reported in 12 s with a peak of 262 MB.
+`raw_outputs.jsonl` was 34.9 MB. Running the same command again, with nothing left to call, took 3 s
+and 141 MB. With a real assistant the calls themselves take nearly all of the time.
 
 ## How the comparison rules behave
 

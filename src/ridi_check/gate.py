@@ -25,7 +25,7 @@ def evaluate(
     a: Analysis, judgments: dict[str, str] | None = None, *, max_stable_regressions: int = 0,
     max_unjudged_changes: int = 0, max_incomplete: int = 0, max_unstable: int | None = None,
     max_answer_changes: int | None = None, max_unconfirmed: int | None = None,
-    min_runs: int | None = None, max_case_only: int | None = None,
+    min_runs: int | None = None, max_case_only: int | None = None, score_check: dict | None = None,
 ) -> GateResult:
     key = a.mode == KEY
     judgments = judgments or {}
@@ -70,6 +70,18 @@ def evaluate(
     if max_case_only is not None:
         lines += [f"answers differ only in letter case\tcase {i}" for i in a.case_only]
         checks.append(("cases whose answers differ only in letter case", len(a.case_only), max_case_only))
+    if score_check is not None:     # asked for with --check-scores: the scores in the file against a scorer
+        lines += [f"score differs from the scorer\tcase {i}" for i in score_check["cases_that_disagree"]]
+        checks.append((f"scored runs that do not have the score {score_check['scorer']} gives",
+                       score_check["runs_that_disagree"], 0))
+        skipped = score_check["cases_without_expected"], score_check["runs_without_answer_text"]
+        if any(skipped):
+            notes.append(f"note: the score check left out {skipped[0]} case(s) with no expected answer and "
+                         f"{skipped[1]} run(s) with no answer text.")
+    if key and a.same_text_scored:
+        notes.append(f"note: {len(a.same_text_scored)} case(s) hold the same answer text scored both correct and wrong: "
+                     + ", ".join(a.same_text_scored[:20]) + (f", and {len(a.same_text_scored) - 20} more" if len(a.same_text_scored) > 20 else "")
+                     + ". The scoring of these cases is not consistent.")
     single = a.ids(REGRESSION_UNCONFIRMED if key else CHANGE_UNCONFIRMED)
     if max_unconfirmed is not None:   # off unless asked for: with one run nothing is confirmed either way
         lines += [f"{'regression' if key else 'change'} seen in a single run\tcase {i}" for i in single]

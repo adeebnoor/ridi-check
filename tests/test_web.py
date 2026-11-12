@@ -30,6 +30,7 @@ for (const job of JSON.parse(fs.readFileSync(process.argv[3], 'utf8'))) {
     out.push({ mode: r.mode, states: a.items.map((it) => [it.c.id, it.s]), counts: a.counts, first: s.first_run,
       any: s.any_run_disagreement, runs: s.runs_per_version, confirmable: s.confirmable_cases, compared: s.cases_compared,
       changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, passages: s.passages || null, merged: s.labelled_by_similarity || null, cased: s.differ_only_in_letter_case || null,
+      cross: s.score_and_answer_text || null, mixed: s.same_text_scored_differently || null,
       cards: core.pageData(a).cards.map((c) => [c.id, c.state, c.flag, c.mov]), strip: core.pageData(a).strip, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
   } catch (e) { if (!e.code) throw e; out.push({ error: e.code, row: e.info.row || null }); }
 }
@@ -70,6 +71,7 @@ def python_side(text, mode, sim):
             "compared": s["cases_compared"], "changed": s.get("wrong_both_answer_changed"),
             "correct_changed": s.get("correct_both_answer_changed"), "passages": s.get("passages"),
             "merged": s.get("labelled_by_similarity"), "cased": s.get("differ_only_in_letter_case"),
+            "cross": s.get("score_and_answer_text"), "mixed": s.get("same_text_scored_differently"),
             "cards": [[c["id"], c["state"], c["flag"], c["mov"]] for c in page["cards"]], "strip": page["strip"],
             "review": to_csv(header, rows), "tiles": ledger_tiles(a)}
 
@@ -270,6 +272,29 @@ def test_browser_treats_numbers_and_spreadsheet_formulas_as_python_does(tmp_path
     back = [r[1][0] for r in read_records(csv_text)]
     assert js["back"] == back
     assert back[:4] == ["a", "=1+1", "+1", "-1"] and "- bullet\nsecond line" in back and "null" in back
+
+
+@needs_node
+def test_the_browser_reads_a_csv_text_into_the_records_python_reads(tmp_path):
+    # quotes that open, close and double, line ends of every kind, cells that begin with a space or a formula sign
+    rng = random.Random(20261112)
+    alphabets = [['"', ",", "\n", "\r", " ", "a", "'", "=", "-", "b", "\t", ";"], ['"', ",", "\n", "x", " ", "ي", "😀", '"', '"'],
+                 ['"', ";", "\r", "\n", "x", " ", "'", "+"], ["\t", '"', "\n", "q", " ", "@"]]
+    texts = ["".join(rng.choice(alphabets[k % 4]) for _ in range(rng.randint(0, 24))) for k in range(4000)]
+    texts += ["\ufeffcase_id,a\r\n1,\"x\"\"y\"\r\n", 'a,"never closed\nb,c', "a,b\n\n \n1,2", 'a,"x"y,"z" w\n']
+    (tmp_path / "in.json").write_text(json.dumps(texts), encoding="utf-8")
+    script = ("const fs=require('fs'),core=require(process.argv[1]);fs.writeFileSync(process.argv[3],JSON.stringify("
+              "JSON.parse(fs.readFileSync(process.argv[2],'utf8')).map((t)=>[core.readRecords(t),Array.from(core.iterRecords(t)).length])));")
+    subprocess.run([NODE, "-e", script, os.path.join(ROOT, "web", "core.js"), str(tmp_path / "in.json"), str(tmp_path / "out.json")], check=True)
+    from ridi_check.contract import read_records
+    browser = json.loads((tmp_path / "out.json").read_text(encoding="utf-8"))
+    with_records = 0
+    for text, (records, count) in zip(texts, browser):
+        python = [[row, cells] for row, cells in read_records(text)]
+        assert records == python, f"browser and Python read {text!r} differently"
+        assert count == len(python)
+        with_records += bool(python)
+    assert with_records > 3000
 
 
 def _pages():

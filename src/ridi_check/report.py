@@ -9,13 +9,13 @@ from importlib import resources
 
 from . import __version__
 from .analysis import (
-    CORRECT_BOTH, INCOMPLETE, STABLE_CHANGE, STABLE_REGRESSION, UNCHANGED_STATES, WRONG_BOTH, Analysis, analyse, duplicate_note,
-    duplicate_questions,
-    same_answer,
+    ANSWER_STATES, CORRECT_BOTH, INCOMPLETE, NO_ANSWER_TEXT, SAME, STABLE_CHANGE, STABLE_REGRESSION, UNCHANGED_STATES,
+    WRONG_BOTH, Analysis, analyse, duplicate_note, duplicate_questions, same_answer,
 )
 from .contract import (
     CONTEXT_SEPARATOR, KEY, NOKEY, Case, ContractError, read_records, read_results, run_column, to_csv,
 )
+from .scoring import check_scores, score_check_lines
 from .strings import strings_for
 from .util import atomic_write_text, now_iso, read_text, sha256_file
 
@@ -23,6 +23,8 @@ SUMMARY = "summary.json"
 REVIEW_CASES = "review_cases.csv"
 REPORT_HTML = "report.html"
 JUDGMENTS = ("worse", "better", "same_meaning", "unsure")
+ANSWER_COLUMN = {"stable_change": "changed", "change_unconfirmed": "changed, one run", "unstable": "varied on re-run",
+                 "same": "same answer", "no_answer_text": "no text"}
 NOTHING_CORRECT = (
     "No answer was scored correct in either version, so the scoring probably does not fit the answers. "
     "Exact match rarely fits free text: check the expected answers, pass a scorer, or use --mode nokey "
@@ -142,6 +144,16 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
                 flag: [i for i, f in a.answer_change.items() if f == flag and state_of[i] == state]
                 for flag in ("stable", "unconfirmed", "varied")
             }
+        # The score and the answer text of every case, side by side: rows are what the score did, columns
+        # what the text did by the rule used without a key. Left out when the file holds no answer text.
+        table: dict[str, dict[str, int]] = {}
+        for case, state in a.items:
+            if state != INCOMPLETE:
+                table.setdefault(state, dict.fromkeys(ANSWER_STATES, 0))[a.answer_state.get(case.case_id, SAME)] += 1
+        if any(row[column] for row in table.values() for column in ANSWER_STATES if column != NO_ANSWER_TEXT):
+            summary["score_and_answer_text"] = {state: table[state] for state in a.counts if state in table}
+        if a.same_text_scored:      # one answer text with two scores: the key or the scorer is not consistent
+            summary["same_text_scored_differently"] = list(a.same_text_scored)
     else:
         judgments = judgments or {}
         stable = a.ids(STABLE_CHANGE)
@@ -187,6 +199,8 @@ def review_table(a: Analysis, judgments: dict[str, str] | None = None) -> tuple[
     has = lambda attr: any(getattr(c, attr) for c in cases)  # noqa: E731
     any_answer = any(r.answer for c in cases for r in c.baseline + c.updated)
     header = ["case_id", "state"] + (["answer_change"] if key else ["judgment"])
+    if key and any_answer:      # the label the answer text has without the key, next to the label the score gives
+        header += ["answer_state"]
     header += (["question"] if has("question") else []) + (["expected"] if has("expected") else [])
     sides = (("baseline", runs_b), ("updated", runs_u))
     if any_answer or not key:
@@ -204,6 +218,9 @@ def review_table(a: Analysis, judgments: dict[str, str] | None = None) -> tuple[
         if state in UNCHANGED_STATES and case.case_id not in a.answer_change:
             continue
         row = [case.case_id, state, a.answer_change.get(case.case_id, "") if key else judgments.get(case.case_id, "")]
+        if "answer_state" in header:
+            by_answer = "" if state == INCOMPLETE else a.answer_state.get(case.case_id, SAME)
+            row.append("" if by_answer == NO_ANSWER_TEXT else by_answer)
         if "question" in header:
             row.append(case.question)
         if "expected" in header:
@@ -376,10 +393,15 @@ def labels_from_manifest(results_path: str) -> dict[str, str]:
 def write_report(
     results_path: str, out_dir: str | None = None, *, mode: str = "auto", threshold: float = 1.0,
     judgments_path: str | None = None, current_label: str | None = None, proposed_label: str | None = None,
-    lang: str | None = None,
+    lang: str | None = None, scorer: tuple | None = None,
 ) -> tuple[dict, dict[str, str], Analysis, list[str]]:
-    """Returns (summary, written paths, analysis, warnings)."""
+    """Returns (summary, written paths, analysis, warnings). `scorer` is (function, name) for --check-scores."""
     cases, resolved = read_results(results_path, mode)
+    score_check = None
+    if scorer:
+        if resolved != KEY:
+            raise ContractError("--check-scores is for answer-key mode: without correctness columns there are no scores to check.")
+        score_check = check_scores(cases, *scorer)
     a = analyse(cases, resolved, threshold)
     warnings: list[str] = []
     judgments: dict[str, str] = {}
@@ -389,6 +411,8 @@ def write_report(
             warnings.append("--judgments is not used in answer-key mode; the answer key decides.")
             judgments = {}
     summary = build_summary(a, judgments)
+    if score_check:
+        summary["score_check"] = score_check
     repeated = duplicate_questions([(c.case_id, c.question) for c in cases])
     if repeated:
         warnings.append(duplicate_note(repeated))
@@ -492,6 +516,23 @@ def text_summary(summary: dict) -> str:
                 + ", ".join(ids[:20]) + (f", and {len(ids) - 20} more" if len(ids) > 20 else "")
                 + ". The answer key scores both answers as correct; read them if the wording matters."
             )
+        table = summary.get("score_and_answer_text")
+        if table:
+            columns = [c for c in ANSWER_STATES if c != NO_ANSWER_TEXT or any(row[c] for row in table.values())]
+            lines.append("Score and answer text, side by side (cases). Rows: the score. Columns: the answer text, by "
+                         "the rule used without an answer key.")
+            lines.append("  " + " " * 26 + "".join(f"{ANSWER_COLUMN[c]:>{len(ANSWER_COLUMN[c]) + 3}}" for c in columns))
+            for state, row in table.items():
+                lines.append(f"  {state:<26}" + "".join(f"{row[c]:>{len(ANSWER_COLUMN[c]) + 3}}" for c in columns))
+        mixed = summary.get("same_text_scored_differently")
+        if mixed:
+            lines.append(
+                f"{len(mixed)} case(s) hold the same answer text scored both correct and wrong: "
+                + ", ".join(mixed[:20]) + (f", and {len(mixed) - 20} more" if len(mixed) > 20 else "")
+                + ". The scoring of these cases is not consistent: check the answer key or the scorer."
+            )
+        if summary.get("score_check"):
+            lines += score_check_lines(summary["score_check"])
     else:
         j = summary["judgments"]["of_stable_changes"]
         lines.append(

@@ -9,6 +9,8 @@ const RidiCore = (function () {
     "unstable", "wrong_both", "correct_both", "incomplete"];
   const NOKEY_STATES = ["stable_change", "change_unconfirmed", "unstable", "same", "incomplete"];
   const UNCHANGED = new Set(["correct_both", "same"]);
+  /* answer-key mode: what the answer text of a case did, whatever its score did */
+  const ANSWER_STATES = ["stable_change", "change_unconfirmed", "unstable", "same", "no_answer_text"];
   const NEGATIONS = new Set("not no never neither nor without none cannot t لا غير لم لن بدون ليس ليست".split(" "));
   const CSS_CLASS = { stable_regression: "s-reg", regression_unconfirmed: "s-reg", stable_improvement: "s-imp",
     improvement_unconfirmed: "s-imp", stable_change: "s-chg", change_unconfirmed: "s-chg", unstable: "s-uns",
@@ -19,49 +21,55 @@ const RidiCore = (function () {
 
   /* ---------- reading ---------- */
   function sniffDelimiter(text) {
-    if (!strip(text)) return ",";
-    const header = text.replace(/^﻿+/, "").split(/\r\n|\n|\r/)[0] || "";
+    if (!/\S/.test(text)) return ",";
+    text = text.replace(/^﻿+/, "");
+    const end = /[\r\n]/.exec(text), header = end ? text.slice(0, end.index) : text;   /* the first line only: the text is not split */
     if (!header.includes(",")) { if (header.includes("\t")) return "\t"; if (header.includes(";")) return ";"; }
     return ",";
   }
-  /* Same behaviour as Python's csv.reader with skipinitialspace=True. */
-  function readRecords(text) {
+  /* Same behaviour as Python's csv.reader with skipinitialspace=True. One record at a time, as [row number, cells],
+     blank records left out. A cell is cut out of the text in one piece where it can be, instead of being built up
+     character by character, so a large file does not leave a copy of itself behind as it is read. */
+  function* iterRecords(text) {
     text = String(text).replace(/^﻿+/, "");
-    const delim = sniffDelimiter(text), all = [];
-    let row = [], cur = "", state = 0; /* 0 start of field, 1 in field, 2 in quotes, 3 quote seen inside quotes */
-    let started = false;
-    const endField = () => { row.push(cur); cur = ""; };
-    const endRecord = () => { all.push(row); row = []; started = false; state = 0; };
-    for (let i = 0; i < text.length; i++) {
-      const c = text[i], nl = c === "\n" || c === "\r";
-      if (nl && state !== 2) {
-        if (c === "\r" && text[i + 1] === "\n") i++;
-        if (started) endField();
-        endRecord();
+    const delim = sniffDelimiter(text).charCodeAt(0), n = text.length;
+    const unguard = (cell) => (cell.length > 1 && cell[0] === "'" && "=+-@\t\r".indexOf(cell[1]) >= 0 ? cell.slice(1) : cell);
+    const blank = (cell) => strip(cell) === "";
+    let row = [], cur = "", seg = -1, state = 0; /* 0 start of field, 1 in field, 2 in quotes, 3 quote seen inside quotes */
+    let started = false, index = 0;
+    /* seg: where the piece of the field that is being read began, or -1 when there is none */
+    const take = (i) => { if (seg >= 0) { cur = cur === "" ? text.slice(seg, i) : cur + text.slice(seg, i); seg = -1; } };
+    const endField = (i) => { take(i); row.push(cur); cur = ""; };
+    for (let i = 0; i < n; i++) {
+      const c = text.charCodeAt(i);
+      if ((c === 10 || c === 13) && state !== 2) {
+        const at = i;
+        if (c === 13 && text.charCodeAt(i + 1) === 10) i++;
+        if (started) endField(at);
+        index++;
+        if (!row.every(blank)) yield [index, row.map(unguard)];
+        row = []; started = false; state = 0;
         continue;
       }
       started = true;
       if (state === 0) {
-        if (c === '"') state = 2;
-        else if (c === " ") { /* skipped */ }
-        else if (c === delim) endField();
-        else { cur += c; state = 1; }
+        if (c === 34) { state = 2; seg = i + 1; }
+        else if (c === 32) { /* skipped */ }
+        else if (c === delim) endField(i);
+        else { seg = i; state = 1; }
       } else if (state === 1) {
-        if (c === delim) { endField(); state = 0; } else cur += c;
+        if (c === delim) { endField(i); state = 0; }
       } else if (state === 2) {
-        if (c === '"') state = 3; else cur += c;
+        if (c === 34) { take(i); state = 3; }
       } else {
-        if (c === '"') { cur += '"'; state = 2; }
-        else if (c === delim) { endField(); state = 0; }
-        else { cur += c; state = 1; }
+        if (c === 34) { seg = i; state = 2; }             /* a doubled quote: the second one is text */
+        else if (c === delim) { endField(i); state = 0; }
+        else { seg = i; state = 1; }
       }
     }
-    if (started) { endField(); all.push(row); }
-    const out = [];
-    const unguard = (cell) => (cell.length > 1 && cell[0] === "'" && "=+-@\t\r".indexOf(cell[1]) >= 0 ? cell.slice(1) : cell);
-    all.forEach((r, i) => { if (r.some((cell) => strip(cell) !== "")) out.push([i + 1, r.map(unguard)]); });
-    return out;
+    if (started) { endField(n); index++; if (!row.every(blank)) yield [index, row.map(unguard)]; }
   }
+  const readRecords = (text) => Array.from(iterRecords(text));
   function runColumn(side, run, kind) {
     return run === 1 ? side + "_" + kind : run === 2 ? side + "_repeat_" + kind : side + "_repeat" + (run - 1) + "_" + kind;
   }
@@ -70,9 +78,10 @@ const RidiCore = (function () {
   const PLAIN_NUMBER = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/;
   function parseResults(text, mode) {
     mode = mode || "auto";
-    const records = readRecords(text);
-    if (records.length < 2) throw RidiError("empty");
-    const header = records[0][1].map((h) => strip(h).toLowerCase());
+    /* one record at a time: the rows of a large file are not all held while its cases are built */
+    const records = iterRecords(text), first = records.next(), second = records.next();
+    if (first.done || second.done) throw RidiError("empty");
+    const header = first.value[1].map((h) => strip(h).toLowerCase());
     const seen = new Set();
     for (const name of header) { if (name && seen.has(name)) throw RidiError("dupColumn", { name }); seen.add(name); }
     const col = {}; header.forEach((name, i) => { col[name] = i; });
@@ -98,7 +107,8 @@ const RidiCore = (function () {
     const resolved = mode !== "auto" ? mode : (hasKey ? KEY : NOKEY), key = resolved === KEY;
 
     const cases = [], firstRow = new Map();
-    for (const [row, record] of records.slice(1)) {
+    for (let next = second; !next.done; next = records.next()) {
+      const row = next.value[0], record = next.value[1];
       const at = (i) => (i >= 0 && i < record.length ? strip(record[i]) : "");
       const get = (name) => at(name in col ? col[name] : -1);
       const id = get("case_id");
@@ -122,6 +132,7 @@ const RidiCore = (function () {
       };
       c.bs = aligned("baseline_context_scores", c.bc, true); c.us = aligned("updated_context_scores", c.uc, true);
       c.bh = aligned("baseline_context_hashes", c.bc, false); c.uh = aligned("updated_context_hashes", c.uc, false);
+      const sameText = new Map();   /* runs that repeat an answer share one copy of it */
       for (const side of ["baseline", "updated"]) {
         const answers = new Map(runs[side + "|answer"] || []), corrects = runs[side + "|correct"] || [];
         const scored = new Map();
@@ -134,7 +145,8 @@ const RidiCore = (function () {
         const indices = Array.from(new Set([...answers.keys(), ...(key ? corrects.map((x) => x[0]) : [])])).sort((a, b) => a - b);
         const out = [];
         for (const index of indices) {
-          const ans = answers.has(index) ? at(answers.get(index)) : "";
+          let ans = answers.has(index) ? at(answers.get(index)) : "";
+          if (sameText.has(ans)) ans = sameText.get(ans); else sameText.set(ans, ans);
           const cor = key && scored.has(index) ? scored.get(index) : null;
           const missing = key ? cor === null : ans === "";
           if (index === 0) {
@@ -157,23 +169,32 @@ const RidiCore = (function () {
   /* Lower-case, punctuation to spaces, whitespace collapsed, except that the signs that carry meaning are kept,
      each as a word of its own: every mathematical symbol, a percent sign after a digit, "/" and "*" between two
      letters or digits, "!" before "=", and a hyphen that is a sign (-5, HIV-). Same rules as analysis.py. */
+  /* What a character is, worked out once for each character ever seen: "d" a digit, "w" another letter or
+     number, "m" a mathematical, currency or other symbol, "" anything else. */
+  const KIND = new Map();
+  function kind(c) {
+    if (c === undefined) return "";
+    let k = KIND.get(c);
+    if (k === undefined) { k = /\p{Nd}/u.test(c) ? "d" : /[\p{L}\p{N}]/u.test(c) ? "w" : /[\p{Sm}\p{Sc}\p{So}]/u.test(c) ? "m" : ""; KIND.set(c, k); }
+    return k;
+  }
   function normalise(text, keepCase) {
     const s = Array.from(keepCase ? String(text) : String(text).toLowerCase());
-    const inWord = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c), isDigit = (c) => c !== undefined && /\p{Nd}/u.test(c);
     let out = "";
     for (let i = 0; i < s.length; i++) {
-      const ch = s[i];
-      if (inWord(ch)) { out += ch; continue; }
-      const before = s[i - 1], after = s[i + 1];
-      if ((ch === "." || ch === "," || ch === "\u066b" || ch === "\u066c") && isDigit(before) && isDigit(after)) { out += ch; continue; }
-      const keep = /[\p{Sm}\p{Sc}\p{So}]/u.test(ch) || ((ch === "%" || ch === "\u066a") && isDigit(before)) ||
-        ((ch === "/" || ch === "*") && inWord(before) && inWord(after)) ||
-        (ch === "-" && ((isDigit(after) && !inWord(before)) || (inWord(before) && !inWord(after)))) || (ch === "!" && after === "=");
+      const ch = s[i], k = kind(ch);
+      if (k === "d" || k === "w") { out += ch; continue; }
+      const before = kind(s[i - 1]), after = kind(s[i + 1]), wordBefore = before === "d" || before === "w", wordAfter = after === "d" || after === "w";
+      if ((ch === "." || ch === "," || ch === "\u066b" || ch === "\u066c") && before === "d" && after === "d") { out += ch; continue; }
+      const keep = k === "m" || ((ch === "%" || ch === "\u066a") && before === "d") ||
+        ((ch === "/" || ch === "*") && wordBefore && wordAfter) ||
+        (ch === "-" && ((after === "d" && !wordBefore) || (wordBefore && !wordAfter))) || (ch === "!" && s[i + 1] === "=");
       out += keep ? " " + (ch === "\u2212" ? "-" : ch) + " " : " ";
     }
     return out.replace(/\s+/g, " ").trim();
   }
   function sameAnswer(a, b, threshold) {
+    if (a === b) return true;     /* the same text: nothing to work out */
     const x = normalise(a), y = normalise(b);
     if (x === y) return true;
     if (!(threshold < 1)) return false;
@@ -210,7 +231,7 @@ const RidiCore = (function () {
   function analyse(cases, mode, threshold) {
     threshold = threshold === undefined ? 1 : threshold;
     const key = mode === KEY, eq = makeEq(mode, threshold);
-    const a = { mode, threshold, items: [], counts: {}, answerChange: {}, bySimilarity: [], caseOnly: [], n: cases.length, nCompared: 0, changed: 0,
+    const a = { mode, threshold, items: [], counts: {}, answerChange: {}, answerState: {}, sameTextScored: [], bySimilarity: [], caseOnly: [], n: cases.length, nCompared: 0, changed: 0,
       rerunB: 0, rerunBN: 0, rerunU: 0, rerunUN: 0, anyB: 0, anyU: 0, confirmable: 0, maxRunsB: 0, maxRunsU: 0,
       correctB: 0, correctU: 0, regressions: 0, improvements: 0 };
     (key ? KEY_STATES : NOKEY_STATES).forEach((s) => { a.counts[s] = 0; });
@@ -223,11 +244,17 @@ const RidiCore = (function () {
       if (!eq(b[0], u[0])) a.changed++;
       if (b.length > 1) { a.rerunBN++; if (!eq(b[0], b[1])) a.rerunB++; if (!b.every((r) => eq(r, b[0]))) a.anyB++; }
       if (u.length > 1) { a.rerunUN++; if (!eq(u[0], u[1])) a.rerunU++; if (!u.every((r) => eq(r, u[0]))) a.anyU++; }
-      if ((s === "wrong_both" || s === "correct_both") && b.concat(u).every((r) => r.ans)) {
-        const byAnswer = classify(c, NOKEY, threshold);
-        if (byAnswer === "stable_change") a.answerChange[c.id] = "stable";
-        else if (byAnswer === "change_unconfirmed") a.answerChange[c.id] = "unconfirmed";
-        else if (byAnswer === "unstable") a.answerChange[c.id] = "varied";
+      if (key) {
+        const all = b.concat(u), byAnswer = all.every((r) => r.ans) ? classify(c, NOKEY, threshold) : "no_answer_text";
+        if (byAnswer !== "same") a.answerState[c.id] = byAnswer;
+        if (s === "wrong_both" || s === "correct_both") {
+          if (byAnswer === "stable_change") a.answerChange[c.id] = "stable";
+          else if (byAnswer === "change_unconfirmed") a.answerChange[c.id] = "unconfirmed";
+          else if (byAnswer === "unstable") a.answerChange[c.id] = "varied";
+        }
+        /* one answer text with two scores: the scoring is not consistent */
+        const scored = new Map();
+        if (all.some((r) => { if (!r.ans) return false; if (!scored.has(r.ans)) scored.set(r.ans, r.cor); return scored.get(r.ans) !== r.cor; })) a.sameTextScored.push(c.id);
       }
       /* answers that count as the same and differ in letter case (mg, Mg): listed, because lower-casing hides them */
       const pairs = b.slice(1).map((r) => [r.ans, b[0].ans]).concat(u.slice(1).map((r) => [r.ans, u[0].ans]), [[b[0].ans, u[0].ans]]);
@@ -275,6 +302,18 @@ const RidiCore = (function () {
       for (const [name, state] of [["wrong_both_answer_changed", "wrong_both"], ["correct_both_answer_changed", "correct_both"]]) {
         summary[name] = { stable: flagged(state, "stable"), unconfirmed: flagged(state, "unconfirmed"), varied: flagged(state, "varied") };
       }
+      /* the score (rows) and the answer text (columns) of every case; left out when the file holds no answer text */
+      const table = {};
+      for (const { c, s } of a.items) {
+        if (s === "incomplete") continue;
+        if (!table[s]) { table[s] = {}; ANSWER_STATES.forEach((col) => { table[s][col] = 0; }); }
+        table[s][a.answerState[c.id] || "same"]++;
+      }
+      if (Object.keys(table).some((s) => ANSWER_STATES.some((col) => col !== "no_answer_text" && table[s][col]))) {
+        summary.score_and_answer_text = {};
+        Object.keys(a.counts).forEach((s) => { if (table[s]) summary.score_and_answer_text[s] = table[s]; });
+      }
+      if (a.sameTextScored.length) summary.same_text_scored_differently = a.sameTextScored.slice();
     } else if (a.threshold < 1) {
       summary.labelled_by_similarity = a.bySimilarity.slice();
     }
@@ -314,6 +353,8 @@ const RidiCore = (function () {
     const hasQ = has((c) => c.q), hasE = has((c) => c.expected), hasErr = has((c) => c.err);
     const sides = [["baseline", runsB, "b"], ["updated", runsU, "u"]];
     let header = ["case_id", "state", key ? "answer_change" : "judgment"];
+    const answerState = key && anyAnswer;   /* the label the answer text has without the key */
+    if (answerState) header.push("answer_state");
     if (hasQ) header.push("question"); if (hasE) header.push("expected");
     const answerCols = anyAnswer || !key;
     if (answerCols) for (const [side, n] of sides) for (let k = 1; k <= n; k++) header.push(runColumn(side, k, "answer"));
@@ -325,6 +366,7 @@ const RidiCore = (function () {
     for (const { c, s } of a.items) {
       if (UNCHANGED.has(s) && !a.answerChange[c.id]) continue;
       const row = [c.id, s, key ? (a.answerChange[c.id] || "") : (judgments[c.id] || "")];
+      if (answerState) { const byAnswer = s === "incomplete" ? "" : (a.answerState[c.id] || "same"); row.push(byAnswer === "no_answer_text" ? "" : byAnswer); }
       if (hasQ) row.push(c.q); if (hasE) row.push(c.expected);
       if (answerCols) for (const [, n, f] of sides) for (let k = 0; k < n; k++) row.push(k < c[f].length ? c[f][k].ans : "");
       if (key) for (const [, n, f] of sides) for (let k = 0; k < n; k++) row.push(k < c[f].length && c[f][k].cor !== null ? String(c[f][k].cor) : "");
@@ -378,6 +420,6 @@ const RidiCore = (function () {
       strip: stripCells, cards, wrong, focus: key ? "stable_regression" : "stable_change", stable_change_ids: a.ids("stable_change") };
   }
 
-  return { parseResults, readRecords, analyse, classify, buildSummary, reviewTable, toCsv, pageData, normalise, sameAnswer, runColumn };
+  return { parseResults, readRecords, iterRecords, analyse, classify, buildSummary, reviewTable, toCsv, pageData, normalise, sameAnswer, runColumn };
 })();
 if (typeof module !== "undefined") module.exports = RidiCore;

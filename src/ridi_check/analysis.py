@@ -16,6 +16,9 @@ Three things are added to the prototype's rules, none of which changes its state
   the prototype turned every one of them into a space. With the default (exact match) this has no effect.
 - In answer-key mode, a case that is wrong in both versions, or correct in both, is also checked for
   a changed answer (`answer_change`). Its state stays as it is; correctness counting alone does not see it.
+- In answer-key mode every case also gets the label its answer text would have without the key
+  (`answer_state`), so that the score and the text can be read side by side, and a case whose runs hold
+  the same answer text with two different scores is listed (`same_text_scored`). Neither changes a state.
 """
 
 from __future__ import annotations
@@ -45,6 +48,9 @@ KEY_STATES = [
     UNSTABLE, WRONG_BOTH, CORRECT_BOTH, INCOMPLETE,
 ]
 NOKEY_STATES = [STABLE_CHANGE, CHANGE_UNCONFIRMED, UNSTABLE, SAME, INCOMPLETE]
+NO_ANSWER_TEXT = "no_answer_text"
+# Answer-key mode: what the answer text of a case did, whatever its score did.
+ANSWER_STATES = [STABLE_CHANGE, CHANGE_UNCONFIRMED, UNSTABLE, SAME, NO_ANSWER_TEXT]
 UNCHANGED_STATES = {CORRECT_BOTH, SAME}
 
 # "t" is what n't leaves behind once punctuation is removed (isn't -> isn t).
@@ -200,6 +206,10 @@ class Analysis:
     # wrong_both or correct_both case id -> stable | unconfirmed | varied: the score is equal, the answer is not
     # ("varied": the answer changed from one run to the next of the same version)
     answer_change: dict[str, str] = field(default_factory=dict)
+    # answer-key mode: case id -> the label its answer text has without the key, when that is not "same"
+    # (stable_change | change_unconfirmed | unstable | no_answer_text)
+    answer_state: dict[str, str] = field(default_factory=dict)
+    same_text_scored: list[str] = field(default_factory=list)   # runs with the same answer text, scored 0 and 1
     n: int = 0              # rows in the file
     n_compared: int = 0     # rows with a first run of both versions
     changed: int = 0        # first runs differ
@@ -248,14 +258,20 @@ def analyse(cases: list[Case], mode: str, threshold: float = 1.0) -> Analysis:
             a.rerun_u_n += 1
             a.rerun_u += 0 if eq(u[0], u[1]) else 1
             a.any_run_u += 0 if all(eq(r, u[0]) for r in u) else 1
-        if state in (WRONG_BOTH, CORRECT_BOTH) and all(r.answer for r in b + u):
-            by_answer = classify(case, "nokey", threshold)
-            if by_answer == STABLE_CHANGE:
-                a.answer_change[case.case_id] = "stable"
-            elif by_answer == CHANGE_UNCONFIRMED:
-                a.answer_change[case.case_id] = "unconfirmed"
-            elif by_answer == UNSTABLE:      # the score held on re-run and the answer did not
-                a.answer_change[case.case_id] = "varied"
+        if key:
+            by_answer = classify(case, "nokey", threshold) if all(r.answer for r in b + u) else NO_ANSWER_TEXT
+            if by_answer != SAME:
+                a.answer_state[case.case_id] = by_answer
+            if state in (WRONG_BOTH, CORRECT_BOTH):
+                if by_answer == STABLE_CHANGE:
+                    a.answer_change[case.case_id] = "stable"
+                elif by_answer == CHANGE_UNCONFIRMED:
+                    a.answer_change[case.case_id] = "unconfirmed"
+                elif by_answer == UNSTABLE:      # the score held on re-run and the answer did not
+                    a.answer_change[case.case_id] = "varied"
+            scored: dict[str, int | None] = {}
+            if any(r.answer and scored.setdefault(r.answer, r.correct) != r.correct for r in b + u):
+                a.same_text_scored.append(case.case_id)     # one text, two scores: the scoring is not consistent
         if _differ_in_case_only(b, u):
             a.case_only.append(case.case_id)
         if not key and threshold < 1 and classify(case, mode, 1.0) != state:

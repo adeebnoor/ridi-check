@@ -116,6 +116,16 @@ details.ctx > summary { cursor: pointer; font-size: 0.9rem; font-weight: 500; }
 details.wrongs > summary { cursor: pointer; font-weight: 500; }
 details.wrongs ul { margin: 10px 0 0; padding-inline-start: 18px; font-size: 0.9rem; display: flex; flex-direction: column; gap: 4px; }
 details.wrongs li { overflow-wrap: anywhere; }
+.cross { overflow-x: auto; }
+.cross table { border-collapse: collapse; font-size: 0.9rem; min-width: 100%; }
+.cross th, .cross td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: end; vertical-align: bottom; }
+.cross th { font-weight: 500; color: var(--muted); font-size: 0.82rem; }
+.cross th[scope="row"], .cross thead th:first-child { text-align: start; }
+.cross th[scope="row"] { color: var(--ink); font-size: 0.9rem; white-space: nowrap; }
+.cross td { font-family: var(--data); font-variant-numeric: tabular-nums; }
+.cross .dot { display: inline-block; margin-inline-end: 7px; }
+.cross td.zero { color: var(--muted); opacity: 0.6; }
+.cross tr:last-child th, .cross tr:last-child td { border-bottom: 0; }
 .limits ul { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 6px; max-width: 70ch; }
 .out { display: flex; flex-direction: column; gap: 8px; }
 @media (max-width: 520px) { .bars { grid-template-columns: minmax(0, 1fr); gap: 4px 0; } .bars .val { margin-bottom: 8px; } h1 { font-size: 1.35rem; } }
@@ -260,6 +270,25 @@ function stripHTML() {
       : '<span class="cell open ' + CLS[s] + '" role="listitem" title="' + label + '"></span>';
   }).join("") + '</div><p class="small muted">' + esc(t("stripNote")) + "</p>";
 }
+/* Answer-key mode: what the score did (rows) against what the answer text did (columns), in cases. */
+function crossHTML() {
+  const T = D.summary.score_and_answer_text, mixed = D.summary.same_text_scored_differently || [], C = D.summary.score_check;
+  if (!T && !mixed.length && !C) return "";
+  let h = "<section><h2>" + esc(t("crossTitle")) + '</h2><div class="panel">';
+  if (T) {
+    const rows = Object.keys(T), cols = Object.keys(L().answerCol).filter((c) => c !== "no_answer_text" || rows.some((r) => T[r][c]));
+    h += '<div class="cross"><table><thead><tr><th scope="col">' + esc(t("crossHead")) + "</th>" + cols.map((c) => '<th scope="col">' + esc(L().answerCol[c]) + "</th>").join("") +
+      "</tr></thead><tbody>" + rows.map((r) => '<tr><th scope="row"><span class="dot ' + CLS[r] + '"></span>' + esc(L().state[r]) + "</th>" +
+        cols.map((c) => '<td class="' + (T[r][c] ? "" : "zero") + '">' + T[r][c] + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
+      '<p class="small muted">' + esc(t("crossNote")) + "</p>";
+  }
+  if (mixed.length) h += '<p class="small" style="color:var(--uns)">' + esc(t("sameTextScored", { n: mixed.length, ids: mixed.slice(0, 20).join(", ") + (mixed.length > 20 ? ", …" : "") })) + "</p>";
+  if (C) { const ids = C.cases_that_disagree, skipped = C.cases_without_expected || C.runs_without_answer_text;   /* written by report --check-scores */
+    h += '<p class="small"' + (C.runs_that_disagree ? ' style="color:var(--uns)"' : "") + ">" + esc((C.runs_that_disagree
+      ? t("scoreCheckBad", { scorer: C.scorer, d: C.runs_that_disagree, n: C.runs_checked, c: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })
+      : t("scoreCheckOk", { scorer: C.scorer, n: C.runs_checked })) + (skipped ? t("scoreCheckSkipped", { e: C.cases_without_expected, a: C.runs_without_answer_text }) : "")) + "</p>"; }
+  return h + "</div></section>";
+}
 function render() {
   const open = Array.from(document.querySelectorAll("details[open][data-k]")).map((d) => d.dataset.k);
   const app = $("app");
@@ -314,6 +343,7 @@ function render() {
   h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2
     ? " " + esc(t("anyRun", { b: S.any_run_disagreement.current, u: S.any_run_disagreement.proposed })) : "") + "</p>";
   h += "</div></section>";
+  h += crossHTML();
   /* review */
   h += "<section><h2>" + esc(t("review")) + ' <span class="num muted">' + D.cards.length + '</span></h2><div class="filters">' +
     [["all", "fAll"], ["stable", "fStable"], ["uns", "fUns"]].map((f) => '<button type="button" data-filter="' + f[0] + '">' + esc(t(f[1])) + "</button>").join("") +

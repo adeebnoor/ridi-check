@@ -545,3 +545,180 @@ def test_the_strict_ci_example_pins_the_policy():
                      "- run: ridi-check verify ridi-out",
                      "- run: ridi-check gate ridi-out/results.csv --strict --min-runs 2"]
 
+
+
+SCORE_AND_TEXT = (
+    "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+    "baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n"
+    "kept,Avoid the combination.,Avoid the combination.,Avoid the combination.,Avoid the combination.,1,1,1,1\n"
+    "reworded,Avoid the combination.,Avoid the combination.,Use with monitoring.,Use with monitoring.,1,1,1,1\n"
+    "worse,Avoid the combination.,Avoid the combination.,Use freely.,Use freely.,1,1,0,0\n"
+    "rescored,Take with food.,Take with food.,Take with food.,Take with food.,1,1,0,0\n"
+    "wavering,Take one.,Take one.,Take two.,Take one.,0,0,0,0\n"
+)
+
+
+def test_the_score_and_the_answer_text_are_tabled_side_by_side(tmp_path, write, capsys):
+    results = write("results.csv", SCORE_AND_TEXT)
+    assert main(["report", results]) == 0
+    out = capsys.readouterr().out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        summary = json.load(f)
+    # rows: what the score did; columns: what the answer text did, by the rule used without an answer key
+    assert summary["score_and_answer_text"] == {
+        "stable_regression": {"stable_change": 1, "change_unconfirmed": 0, "unstable": 0, "same": 1, "no_answer_text": 0},
+        "wrong_both": {"stable_change": 0, "change_unconfirmed": 0, "unstable": 1, "same": 0, "no_answer_text": 0},
+        "correct_both": {"stable_change": 1, "change_unconfirmed": 0, "unstable": 0, "same": 1, "no_answer_text": 0},
+    }
+    # every row adds up to the count of its state: the table moves no case
+    assert {state: sum(row.values()) for state, row in summary["score_and_answer_text"].items()} == {
+        state: count for state, count in summary["states"].items() if count}
+    assert summary["states"]["stable_regression"] == 2 and summary["first_run"]["regressions"] == 2
+    lines = out.splitlines()
+    head = next(i for i, line in enumerate(lines) if line.startswith("Score and answer text, side by side"))
+    assert lines[head + 1].split() == ["changed", "changed,", "one", "run", "varied", "on", "re-run", "same", "answer"]
+    assert lines[head + 2].split() == ["stable_regression", "1", "0", "0", "1"]
+    # the same text scored 1 and then 0 is named: the key or the scorer is not consistent there
+    assert summary["same_text_scored_differently"] == ["rescored"]
+    assert ("1 case(s) hold the same answer text scored both correct and wrong: rescored. The scoring of these cases "
+            "is not consistent: check the answer key or the scorer.") in out
+    rows = {row["case_id"]: row for row in read_csv(tmp_path / "review_cases.csv")}
+    assert {i: (row["state"], row["answer_change"], row["answer_state"]) for i, row in rows.items()} == {
+        "reworded": ("correct_both", "stable", "stable_change"), "worse": ("stable_regression", "", "stable_change"),
+        "rescored": ("stable_regression", "", "same"), "wavering": ("wrong_both", "varied", "unstable")}
+    html, data = page_data(tmp_path / "report.html")
+    assert data["summary"]["score_and_answer_text"] == summary["score_and_answer_text"]
+    assert "crossHTML()" in html and data["strings"]["en"]["answerCol"]["same"] == "Same answer"
+    assert set(data["strings"]["ar"]["answerCol"]) == set(data["strings"]["en"]["answerCol"]) == set(
+        summary["score_and_answer_text"]["correct_both"])
+    assert main(["gate", results, "--max-stable-regressions", "2"]) == 0     # the table changes no count the gate uses
+
+
+def test_the_table_is_left_out_when_there_is_no_answer_text_or_no_key(tmp_path, write, capsys):
+    scores_only = write("scores.csv", "case_id,baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n"
+                                      "a,1,1,0,0\nb,1,1,1,1\n")
+    assert main(["report", scores_only, "--out", str(tmp_path / "scores")]) == 0
+    with open(tmp_path / "scores" / "summary.json", encoding="utf-8") as f:
+        summary = json.load(f)
+    assert "score_and_answer_text" not in summary and "same_text_scored_differently" not in summary
+    assert "answer_state" not in read_csv(tmp_path / "scores" / "review_cases.csv")[0]
+    results = write("results.csv", SCORE_AND_TEXT)
+    assert main(["report", results, "--mode", "nokey", "--out", str(tmp_path / "nokey")]) == 0
+    out = capsys.readouterr().out
+    with open(tmp_path / "nokey" / "summary.json", encoding="utf-8") as f:
+        summary = json.load(f)
+    assert "score_and_answer_text" not in summary and "Score and answer text" not in out
+    html, data = page_data(tmp_path / "nokey" / "report.html")
+    assert "crossTitle" not in data["strings"]["en"] and "answerCol" not in data["strings"]["en"]
+
+
+def test_some_cases_without_answer_text_get_a_column_of_their_own(tmp_path, write, capsys):
+    results = write("results.csv",
+                    "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+                    "baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n"
+                    "full,yes,yes,no,no,1,1,0,0\n"
+                    "bare,,,,,1,1,0,0\n")
+    assert main(["report", results]) == 0
+    out = capsys.readouterr().out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        summary = json.load(f)
+    assert summary["score_and_answer_text"]["stable_regression"] == {
+        "stable_change": 1, "change_unconfirmed": 0, "unstable": 0, "same": 0, "no_answer_text": 1}
+    assert "no text" in out
+    rows = {row["case_id"]: row for row in read_csv(tmp_path / "review_cases.csv")}
+    assert rows["bare"]["answer_state"] == "" and rows["full"]["answer_state"] == "stable_change"
+
+
+BY_HAND = (
+    "case_id,expected,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+    "baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n"
+    "agrees,21 days,21 days,21 days,14 days,14 days,1,1,0,0\n"
+    "punctuation,yes,Yes.,yes,yes,yes,1,1,1,1\n"
+    "mis-scored,closed,open,open,open,open,1,1,1,1\n"
+    "no-expected,,anything,anything,anything,anything,1,1,1,1\n"
+)
+
+
+def test_the_scores_of_a_file_made_by_hand_can_be_checked_against_its_expected_answers(tmp_path, write, capsys):
+    results = write("results.csv", BY_HAND)
+    assert main(["report", results]) == 0                    # not asked for: nothing is scored again
+    assert "Score check" not in capsys.readouterr().out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        assert "score_check" not in json.load(f)
+    assert main(["report", results, "--check-scores"]) == 0  # `report` says what it found and does not fail on it
+    out = capsys.readouterr().out
+    assert ("Score check against normalised exact match: 4 of 12 scored runs do not have the score it gives, in 1 "
+            "case(s): mis-scored.") in out
+    assert "  mis-scored baseline_correct: the file has 1, the scorer gives 0" in out
+    assert "Not checked: 1 case(s) have no expected answer." in out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        summary = json.load(f)
+    assert summary["score_check"] == {
+        "scorer": "normalised exact match", "runs_checked": 12, "runs_that_disagree": 4,
+        "cases_that_disagree": ["mis-scored"], "cases_without_expected": 1, "runs_without_answer_text": 0,
+        "first_disagreements": [f"mis-scored {column}: the file has 1, the scorer gives 0" for column in (
+            "baseline_correct", "baseline_repeat_correct", "updated_correct", "updated_repeat_correct")]}
+    assert summary["states"]["correct_both"] == 3            # the check moves no case: the file's scores are still used
+    html, data = page_data(tmp_path / "report.html")
+    assert data["summary"]["score_check"]["runs_that_disagree"] == 4 and "scoreCheckBad" in html
+    for lang in ("en", "ar"):
+        assert {"scoreCheckBad", "scoreCheckOk", "scoreCheckSkipped"} <= set(data["strings"][lang])
+    # the gate counts the runs that disagree against a limit of zero, only when asked
+    assert main(["gate", results, "--max-stable-regressions", "1"]) == 0
+    capsys.readouterr()
+    assert main(["gate", results, "--max-stable-regressions", "1", "--check-scores"]) == 1
+    printed = capsys.readouterr()
+    assert "score differs from the scorer\tcase mis-scored" in printed.out
+    assert "scored runs that do not have the score normalised exact match gives: 4 (limit 0) - over the limit" in printed.out
+    assert "left out 1 case(s) with no expected answer and 0 run(s) with no answer text" in printed.err
+
+
+def test_a_score_check_uses_the_scorer_that_is_named_and_says_when_all_agree(tmp_path, write, capsys):
+    results = write("results.csv",
+                    "case_id,expected,baseline_answer,updated_answer,baseline_correct,updated_correct\n"
+                    "a,21 days,The loan is 21 days.,It is 14 days.,1,0\n")
+    assert main(["gate", results, "--check-scores", "--max-unconfirmed", "1"]) == 1    # exact match does not fit a sentence
+    capsys.readouterr()
+    assert main(["gate", results, "--check-scores", "--scorer", "fake_systems:scorer_contains"]) == 0
+    assert "scored runs that do not have the score fake_systems:scorer_contains gives: 0 (limit 0)" in capsys.readouterr().out
+    assert main(["report", results, "--check-scores", "--scorer", "fake_systems:scorer_contains"]) == 0
+    assert ("Score check against fake_systems:scorer_contains: all 2 scored runs have the score it gives. This shows "
+            "that the scores follow this scorer, not that the answer key is right.") in capsys.readouterr().out
+
+
+def test_a_score_check_that_cannot_be_made_says_why(tmp_path, write, capsys):
+    results = write("results.csv", BY_HAND)
+    for extra, message in [
+        (["--scorer", "fake_systems:scorer_contains"], "--scorer is used together with --check-scores."),
+        (["--check-scores", "--mode", "nokey"], "--check-scores is for answer-key mode"),
+        (["--check-scores", "--scorer", "no_such_module:function"], "cannot import 'no_such_module'"),
+        (["--check-scores", "--scorer", "fake_systems:scorer_raises"], "The scorer failed on case agrees: ZeroDivisionError"),
+    ]:
+        for command in ("report", "gate"):
+            assert main([command, results, *extra]) == 2
+            assert message in capsys.readouterr().err
+    scores_only = write("scores.csv", "case_id,expected,baseline_correct,updated_correct\na,yes,1,0\n")
+    assert main(["report", scores_only, "--check-scores"]) == 2
+    assert "found nothing to check" in capsys.readouterr().err
+
+
+def test_a_run_with_no_answer_text_is_left_out_of_the_score_check_and_counted(write, capsys):
+    results = write("results.csv",
+                    "case_id,expected,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+                    "baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n"
+                    "a,yes,yes,,yes,yes,1,1,1,1\n")
+    assert main(["report", results, "--check-scores"]) == 0
+    out = capsys.readouterr().out
+    assert "all 3 scored runs have the score it gives" in out and "Not checked: 1 run(s) have no answer text." in out
+
+
+def test_a_long_list_of_disagreeing_scores_is_cut_short_in_print_and_at_fifty_in_the_summary(tmp_path, write, capsys):
+    rows = "".join(f"c{i},closed,open,open,1,1\n" for i in range(30))
+    results = write("results.csv", "case_id,expected,baseline_answer,updated_answer,baseline_correct,updated_correct\n" + rows)
+    assert main(["report", results, "--check-scores"]) == 0
+    out = capsys.readouterr().out
+    assert "60 of 60 scored runs do not have the score it gives, in 30 case(s): " in out and ", and 10 more." in out
+    assert out.count(": the file has 1, the scorer gives 0") == 10 and "  ... and 50 more; summary.json lists the first 50." in out
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        check = json.load(f)["score_check"]
+    assert len(check["first_disagreements"]) == 50 and len(check["cases_that_disagree"]) == 30

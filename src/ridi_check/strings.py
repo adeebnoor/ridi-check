@@ -206,6 +206,22 @@ KEY_MODE = {
         "wrongList": "Wrong in both versions ({n})",
         "wrongNote": "This check looks for change. These answers did not change and are still wrong.",
         "wrongMore": "The first {a} are listed here; all {n} are in review_cases.csv.",
+        "crossTitle": "Score and answer text, side by side",
+        "crossNote": "Each row is what the score did, and each column what the answer text did, by the rule this "
+                     "check uses when there is no answer key. The counts are cases. A score that changed with the "
+                     "same answer, or an answer that changed with the same score, is worth reading.",
+        "crossHead": "Score",
+        "answerCol": {
+            "stable_change": "Answer changed", "change_unconfirmed": "Answer changed, not re-run",
+            "unstable": "Answer varied on re-run", "same": "Same answer", "no_answer_text": "No answer text",
+        },
+        "sameTextScored": "{n} case(s) hold the same answer text scored both correct and wrong: {ids}. The scoring "
+                          "of these cases is not consistent: check the answer key or the scorer.",
+        "scoreCheckBad": "Score check against {scorer}: {d} of {n} scored runs do not have the score it gives, in "
+                         "{c} case(s): {ids}.",
+        "scoreCheckOk": "Score check against {scorer}: all {n} scored runs have the score it gives. This shows that "
+                        "the scores follow this scorer, not that the answer key is right.",
+        "scoreCheckSkipped": " Not checked: {e} case(s) with no expected answer and {a} run(s) with no answer text.",
     },
     "ar": {
         "modeNote": "وضع مفتاح الإجابات: تُعدّ النتيجتان متطابقتين إذا كانتا صحيحتين معًا أو خاطئتين معًا.",
@@ -245,6 +261,22 @@ KEY_MODE = {
         "wrongList": "خاطئة في النسختين ({n})",
         "wrongNote": "هذا الفحص يبحث عن التغيّر. هذه الإجابات لم تتغيّر وما زالت خاطئة.",
         "wrongMore": "تُعرض هنا أول {a} حالة؛ وكلها ({n}) في review_cases.csv.",
+        "crossTitle": "الدرجة ونص الإجابة جنباً إلى جنب",
+        "crossNote": "كل صف هو ما حدث للدرجة، وكل عمود هو ما حدث لنص الإجابة بالقاعدة التي يستخدمها هذا الفحص حين لا "
+                     "يوجد مفتاح إجابات. الأعداد حالات. الدرجة التي تغيّرت والإجابة نفسها، أو الإجابة التي تغيّرت "
+                     "والدرجة نفسها، تستحق القراءة.",
+        "crossHead": "الدرجة",
+        "answerCol": {
+            "stable_change": "تغيّرت الإجابة", "change_unconfirmed": "تغيّرت الإجابة، بلا إعادة تشغيل",
+            "unstable": "تبدّلت الإجابة عند إعادة التشغيل", "same": "الإجابة نفسها", "no_answer_text": "بلا نص إجابة",
+        },
+        "sameTextScored": "عدد الحالات التي فيها نص الإجابة نفسه قُيّم مرة صحيحاً ومرة خاطئاً: {n}، وهي: {ids}. "
+                          "تقييم هذه الحالات غير متّسق: راجع مفتاح الإجابات أو دالة التقييم.",
+        "scoreCheckBad": "فحص الدرجات مقابل {scorer}: {d} من {n} تشغيلاً مقيَّماً لا تحمل الدرجة التي يعطيها، في {c} "
+                         "حالة: {ids}.",
+        "scoreCheckOk": "فحص الدرجات مقابل {scorer}: كل التشغيلات المقيَّمة وعددها {n} تحمل الدرجة التي يعطيها. هذا "
+                        "يبيّن أن الدرجات تتبع هذه الدالة، لا أن مفتاح الإجابات صحيح.",
+        "scoreCheckSkipped": " لم يُفحص: {e} حالة بلا إجابة متوقعة و{a} تشغيلاً بلا نص إجابة.",
     },
 }
 

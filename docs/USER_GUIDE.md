@@ -103,8 +103,18 @@ How many calls will it make? questions × 2 versions × runs. 50 questions with 
 the two versions, and how many differ when the *same* version is asked twice. If the first bar is no
 longer than the others, the total tells you little: read the stable cases instead.
 
+**Score and answer text, side by side.** With an answer key, one table counts the cases by what the score
+did (the rows) and by what the answer text did (the columns). An answer that changed while the score stayed
+the same, and a score that changed while the answer stayed the same, are the cells to read: the answer key
+alone does not show the first, and the second means the scoring is not consistent.
+
 **Cases to review.** For each changed case: the question, both answers, what the second run gave,
 and the passages that only one version used. The passages are shown, not judged.
+
+**If you filled the scores in by hand.** `report` and `gate` use the 0 and 1 in the file as they are and do
+not score anything. `ridi-check report results.csv --check-scores` scores every answer again against its
+`expected` answer (exact match, or your function with `--scorer`) and lists the runs whose score in the
+file is another one. It shows that the scores follow the scorer, not that the answer key is right.
 
 ## Stable does not mean correct
 

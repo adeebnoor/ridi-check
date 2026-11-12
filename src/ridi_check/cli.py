@@ -19,6 +19,7 @@ from .contract import ContractError, read_results
 from .gate import evaluate
 from .report import read_judgments, text_summary, write_report
 from .runner import SERVICE_FAILURES, RunConfig, RunError, run, verify
+from .scoring import check_scores, load_scorer
 from .util import sha256_file
 
 CONFIG_NAME = "ridi-check.json"
@@ -62,6 +63,24 @@ def _add_analysis_options(p: argparse.ArgumentParser) -> None:
                         "nokey: ignore the correctness columns and compare answers.")
     p.add_argument("--judgments", metavar="FILE",
                    help="no-key mode: judgments.csv with case_id and judgment (worse|better|same_meaning|unsure)")
+    p.add_argument("--check-scores", action="store_true",
+                   help="answer-key mode: score every answer in the file again against its expected answer and say "
+                        "where the score in the file is another one. For a file made by hand, whose scores come "
+                        "from somewhere else. Uses exact match after normalisation unless --scorer is given.")
+    p.add_argument("--scorer", metavar="MODULE:FUNCTION",
+                   help="with --check-scores: scorer(answer, expected) -> true when correct, as in `run`")
+
+
+def _scorer_for_check(args: argparse.Namespace) -> tuple | None:
+    """(function, name) when --check-scores was given."""
+    if not args.check_scores:
+        if args.scorer:
+            raise ContractError("--scorer is used together with --check-scores.")
+        return None
+    try:
+        return load_scorer(args.scorer)
+    except ValueError as exc:
+        raise ContractError(str(exc)) from exc
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -336,7 +355,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
 def _cmd_report(args: argparse.Namespace) -> int:
     _print_report(args.results, args.similarity, args.open, out_dir=args.out, mode=args.mode,
                   judgments_path=args.judgments, current_label=args.current_label,
-                  proposed_label=args.proposed_label, lang=args.lang)
+                  proposed_label=args.proposed_label, lang=args.lang, scorer=_scorer_for_check(args))
     return 0
 
 
@@ -372,7 +391,11 @@ def _cmd_gate(args: argparse.Namespace) -> int:
         raise ContractError("--strict cannot be used with --similarity below 1. Word overlap can count an answer with "
                             "an added condition as the same answer, and the strict gate would let it pass. Use "
                             "--strict with exact match, or the limits one by one without --strict.")
+    scorer = _scorer_for_check(args)
     cases, mode = read_results(args.results, args.mode)
+    if scorer and mode != "key":
+        raise ContractError("--check-scores is for answer-key mode: without correctness columns there are no scores to check.")
+    score_check = check_scores(cases, *scorer) if scorer else None
     analysis = analyse(cases, mode, args.similarity)
     judgments = {}
     if args.judgments:
@@ -391,6 +414,7 @@ def _cmd_gate(args: argparse.Namespace) -> int:
         max_unjudged_changes=args.max_unjudged_changes, max_incomplete=args.max_incomplete,
         max_unstable=args.max_unstable, max_answer_changes=args.max_answer_changes,
         max_unconfirmed=args.max_unconfirmed, min_runs=args.min_runs, max_case_only=args.max_case_only,
+        score_check=score_check,
     )
     print(f"ridi-check gate: {args.results}, {len(cases)} case{'' if len(cases) == 1 else 's'}, "
           f"{'answer-key mode' if mode == 'key' else 'no answer key'}")

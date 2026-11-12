@@ -151,6 +151,11 @@ and the browser version make no network request.
 **Does it use a model to judge answers?** No. A judge adds its own error. Scoring is exact match after
 normalisation, or a function you write.
 
+**I scored the answers myself. Does the tool check my scores?** Not unless you ask. `report` and `gate`
+use the 0 and 1 in your file as they are. `--check-scores` scores every answer again against its `expected`
+answer, by exact match or by your function with `--scorer`, and lists the runs whose score in the file is
+another one. A case where the same answer text is scored both correct and wrong is always named.
+
 **How many questions and runs?** 30 to 100 real user questions is a good first set. Two runs per version is
 the minimum for the stable label; use more when the decision is expensive. Calls = questions × 2 × runs.
 
@@ -220,9 +225,9 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 - Agents that use tools or keep state have a documented pattern and a stand-in example, but the tool has
   not been tried on a production agent. Not in this version: model-based judging, statistical tests.
 - Size was measured on Linux with Python 3.13 and Chromium only, not on Windows or macOS. There, 100,000
-  cases with three runs of each version take about 7 seconds and 318 MB in `report`; the HTML report for
-  them is 17.9 MB and opens in under a second, fifty cards at a time; the browser version reads the same
-  file in about 6 seconds and uses about 1.4 GB; and a cell above 64 MB is refused with a message. The
+  cases with three runs of each version take about 9 seconds and 354 MB in `report`; the HTML report for
+  them is 18.5 MB and opens in under a second, fifty cards at a time; the browser version reads the same
+  file in about 3 seconds and uses about 270 MB; and a cell above 64 MB is refused with a message. The
   [measured limits](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#measured-limits)
   have the full table.
 

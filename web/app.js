@@ -272,6 +272,21 @@
         : '<span class="cell open ' + state.D.classes[s] + '" role="listitem" title="' + label + '"></span>';
     }).join("") + '</div><p class="small muted">' + esc(t("stripNote")) + "</p>";
   }
+  /* Answer-key mode: what the score did (rows) against what the answer text did (columns), in cases. */
+  function crossHTML() {
+    const D = state.D, T = D.summary.score_and_answer_text, mixed = D.summary.same_text_scored_differently || [];
+    if (!T && !mixed.length) return "";
+    let h = "<section><h2>" + esc(t("crossTitle")) + '</h2><div class="panel">';
+    if (T) {
+      const rows = Object.keys(T), cols = Object.keys(L().answerCol).filter((c) => c !== "no_answer_text" || rows.some((r) => T[r][c]));
+      h += '<div class="cross"><table><thead><tr><th scope="col">' + esc(t("crossHead")) + "</th>" + cols.map((c) => '<th scope="col">' + esc(L().answerCol[c]) + "</th>").join("") +
+        "</tr></thead><tbody>" + rows.map((r) => '<tr><th scope="row"><span class="dot ' + D.classes[r] + '"></span>' + esc(L().state[r]) + "</th>" +
+          cols.map((c) => '<td class="' + (T[r][c] ? "" : "zero") + '">' + T[r][c] + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
+        '<p class="small muted">' + esc(t("crossNote")) + "</p>";
+    }
+    if (mixed.length) h += '<p class="small warn">' + esc(t("sameTextScored", { n: mixed.length, ids: mixed.slice(0, 20).join(", ") + (mixed.length > 20 ? ", …" : "") })) + "</p>";
+    return h + "</div></section>";
+  }
   function reportHTML() {
     const D = state.D, S = D.summary, KEYM = state.mode === "key";
     let h = "";
@@ -314,6 +329,7 @@
       h += '<p class="small muted">' + esc(t("bySimilarity", { n: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })) + "</p>"; }
     h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2
       ? " " + esc(t("anyRun", { b: S.any_run_disagreement.current, u: S.any_run_disagreement.proposed })) : "") + "</p></div></section>";
+    h += crossHTML();
 
     h += "<section><h2>" + esc(t("review")) + ' <span class="num muted">' + D.cards.length + '</span></h2><div class="filters">' +
       [["all", "fAll"], ["stable", "fStable"], ["uns", "fUns"]].map((f) => '<button type="button" data-filter="' + f[0] + '">' + esc(t(f[1])) + "</button>").join("") +

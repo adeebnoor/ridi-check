@@ -3,6 +3,34 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Added
+- With an answer key and answer text in the file, one table counts the cases by what the score did (the
+  rows) and by what the answer text did (the columns): printed by `report`, drawn in the report and in the
+  browser version, and written to `summary.json` (`score_and_answer_text`). `review_cases.csv` has a new
+  column `answer_state`, the label the answer text of a case has without the key. No state and no count
+  changes.
+- A case whose runs hold the same answer text scored both 1 and 0 is named in the printed summary, in the
+  report, in `summary.json` (`same_text_scored_differently`) and on standard error by `gate`.
+- `report --check-scores` and `gate --check-scores`, with `--scorer MODULE:FUNCTION`: score every answer of
+  a results file again against its `expected` answer and say where the score in the file is another one.
+  `report` lists the runs that disagree; `gate` counts them against a limit of zero. For a file made by
+  hand, whose scores come from somewhere else. `--strict` does not turn it on.
+
+### Changed
+- The browser version cuts each cell out of the text of the file and reads one row at a time. On the
+  100,000-case file it now takes about 3 s and 270 MB where it took 13 s and 1.4 GB on the same machine and
+  day. What it reads is unchanged: it was compared with the earlier reader on 400,000 random texts and with
+  the Python reader on 60,000.
+
+### Fixed
+- In the browser version at phone width, the example selector no longer makes the page wider than the
+  screen.
+- The measured limits in the reference and on the front page were made again for this version. The memory
+  figures printed there for `report` and `gate` (318 MB and 207 MB) were measured before passage scores and
+  hashes were added in 0.8.0; they are 354 MB and 235 MB.
+
 ## 0.9.1
 
 ### Changed
