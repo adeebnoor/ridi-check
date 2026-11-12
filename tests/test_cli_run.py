@@ -84,3 +84,65 @@ def test_a_damaged_manifest_is_not_built_on(run_args, tmp_path, capsys):
     assert main(run_args) == 2
     assert "run_manifest.json exists but cannot be read" in capsys.readouterr().err
     assert len(fake_systems.calls) == 12          # nothing was called again
+
+
+def test_verify_agrees_with_an_untouched_run_and_finds_a_cell_edited_by_hand(run_args, tmp_path, capsys):
+    """results.csv can be edited; raw_outputs.jsonl is the record. `verify` builds the table again and compares."""
+    assert main(run_args) == 0
+    out_dir = str(tmp_path / "out")
+    capsys.readouterr()
+    assert main(["verify", out_dir]) == 0
+    assert "verify: results.csv agrees with raw_outputs.jsonl (3 cases, " in capsys.readouterr().out
+
+    results = tmp_path / "out" / "results.csv"
+    original = results.read_text(encoding="utf-8")
+    # a score turned from wrong to right by hand
+    lines = original.splitlines()
+    assert lines[3].startswith("3,question three,") and lines[3].endswith(",1,1,0,0,doc 1 | doc 2,doc 2 | doc 3")
+    results.write_text("\n".join(lines[:3] + [lines[3].replace(",1,1,0,0,", ",1,1,1,1,")]) + "\n", encoding="utf-8")
+    assert main(["verify", out_dir]) == 1
+    out = capsys.readouterr().out
+    assert "case 3, updated_correct: the file has '1', the record gives '0'" in out and "verify: 2 difference(s)" in out
+    assert main(["gate", str(results)]) == 0            # the edited table passes the gate; verify is what catches it
+    capsys.readouterr()
+
+    # an answer reworded by hand, and a case removed
+    results.write_text(original.replace("new answer to question three", "old answer to question three", 1)
+                       .replace("2,question two,", "9,question two,", 1), encoding="utf-8")
+    assert main(["verify", out_dir]) == 1
+    out = capsys.readouterr().out
+    assert "case 3, updated_answer: the file has 'old answer to question three', the record gives 'new answer to question three'" in out
+    assert "case 9: it is in results.csv and no call for it is on record" in out
+    assert "case 2: calls for it are on record and it is not in results.csv" in out
+
+    results.write_text(original, encoding="utf-8")
+    assert main(["verify", out_dir]) == 0
+    capsys.readouterr()
+
+
+def test_verify_says_what_it_could_not_check(run_args, tmp_path, capsys):
+    assert main(run_args) == 0
+    os.remove(run_args[run_args.index("--questions") + 1])           # the questions file is gone
+    capsys.readouterr()
+    assert main(["verify", str(tmp_path / "out")]) == 0
+    assert "questions and expected answers were taken from results.csv and are not themselves checked" in capsys.readouterr().err
+    assert main(["verify", str(tmp_path / "nothing_here")]) == 2
+    assert "`verify` needs the folder that `run` wrote" in capsys.readouterr().err
+
+
+def test_verify_scores_again_with_the_runs_own_scorer_and_says_when_the_version_differs(run_args, tmp_path, capsys):
+    import json
+    assert main(run_args + ["--scorer", "fake_systems:scorer_contains"]) == 0
+    out_dir = tmp_path / "out"
+    capsys.readouterr()
+    assert main(["verify", str(out_dir)]) == 0                      # scored again with the same function
+    manifest = json.loads((out_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["scorer"] == "fake_systems:scorer_contains"
+    manifest["scorer"], manifest["tool_version"] = "no_such_module:function", "0.1.0"
+    (out_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    capsys.readouterr()
+    assert main(["verify", str(out_dir)]) == 0                      # the answers still agree; the scores are not checked
+    err = capsys.readouterr().err
+    assert "could not be loaded" in err and "so the scores are not checked" in err
+    assert "This run was written by ridi-check 0.1.0" in err
+

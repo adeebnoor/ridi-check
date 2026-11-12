@@ -26,7 +26,7 @@ from . import __version__
 from .adapters import build_adapter, literal_secret_headers
 from .analysis import duplicate_note, duplicate_questions
 from .contract import read_records, run_column, to_csv
-from .scoring import load_scorer
+from .scoring import EXACT_MATCH, load_scorer
 from .util import atomic_write_text, now_iso, read_text, redact, sha256_file
 
 RAW_OUTPUTS = "raw_outputs.jsonl"
@@ -537,3 +537,89 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
     outcome.results_path = results_path
     save_manifest()
     return outcome
+
+
+# ---------- verify ----------
+
+@dataclass
+class VerifyOutcome:
+    cases: int = 0
+    cells: int = 0
+    differences: list[str] = field(default_factory=list)   # "case 7, updated_answer: the file has ..., the record has ..."
+    notes: list[str] = field(default_factory=list)
+
+
+def verify(out_dir: str) -> VerifyOutcome:
+    """Is results.csv what raw_outputs.jsonl says it should be?
+
+    The table is built again from the recorded calls, the way `run` builds it, and compared with the file
+    cell by cell: answers, scores, passages and errors. A cell edited by hand shows up as a difference.
+    It does not say that the recorded answers are right, only that the table still agrees with the record.
+    """
+    paths = {name: os.path.join(out_dir, name) for name in (RAW_OUTPUTS, MANIFEST, RESULTS)}
+    for name, path in paths.items():
+        if not os.path.isfile(path):
+            raise RunError(f"{path} is not there. `verify` needs the folder that `run` wrote: {RAW_OUTPUTS}, {MANIFEST} and {RESULTS}.")
+    try:
+        with open(paths[MANIFEST], encoding="utf-8") as f:
+            manifest = json.load(f)
+    except (OSError, ValueError) as exc:
+        raise RunError(f"{paths[MANIFEST]} cannot be read ({exc}).") from exc
+    outcome = VerifyOutcome()
+    try:
+        file_records = read_records(read_text(paths[RESULTS]))
+    except ValueError as exc:
+        raise RunError(str(exc)) from exc
+    if len(file_records) < 2:
+        raise RunError(f"{paths[RESULTS]} holds no cases.")
+    file_header = [h.strip().lower() for h in file_records[0][1]]
+    if "case_id" not in file_header:
+        raise RunError(f"{paths[RESULTS]} has no case_id column.")
+    in_file = {}
+    for _, record in file_records[1:]:
+        row = {name: (record[i].strip() if i < len(record) else "") for i, name in enumerate(file_header)}
+        in_file[row["case_id"]] = row
+
+    # The questions: from the file the run used when it is still there and unchanged, else from results.csv.
+    questions_path, questions = manifest.get("questions_file"), None
+    if questions_path and os.path.isfile(questions_path) and sha256_file(questions_path) == manifest.get("questions_sha256"):
+        questions, _ = read_questions(questions_path)
+    else:
+        outcome.notes.append("The questions file of this run was not found unchanged, so the questions and expected "
+                             f"answers were taken from {RESULTS} and are not themselves checked.")
+        questions = [Question(case_id, row.get("question", ""), row.get("expected", "")) for case_id, row in in_file.items()]
+
+    scorer = None
+    if manifest.get("mode") == "key":
+        try:
+            scorer, _ = load_scorer(None if manifest.get("scorer") in (None, EXACT_MATCH) else manifest["scorer"])
+        except ValueError as exc:
+            outcome.notes.append(f"The scorer of this run could not be loaded ({exc}), so the scores are not checked.")
+    if manifest.get("tool_version") != __version__:
+        outcome.notes.append(f"This run was written by ridi-check {manifest.get('tool_version')}; this is {__version__}. "
+                             "Where the rules changed between the two, a cell can differ for that reason.")
+
+    ok, failed, unreadable = load_raw(paths[RAW_OUTPUTS])
+    if unreadable:
+        outcome.notes.append(f"{unreadable} unreadable line(s) in {RAW_OUTPUTS} were not counted.")
+    header, rows = build_results(questions, ok, failed, int(manifest.get("runs") or 1), scorer)
+    rebuilt = {cells[0]: dict(zip(header, cells)) for _, cells in read_records(to_csv(header, rows))[1:]}
+
+    outcome.cases = len(in_file)
+    for case_id in sorted(set(in_file) | set(rebuilt)):
+        if case_id not in rebuilt:
+            outcome.differences.append(f"case {case_id}: it is in {RESULTS} and no call for it is on record")
+            continue
+        if case_id not in in_file:
+            outcome.differences.append(f"case {case_id}: calls for it are on record and it is not in {RESULTS}")
+            continue
+        for name, recorded in rebuilt[case_id].items():
+            if name not in file_header:
+                outcome.differences.append(f"case {case_id}: column {name} is missing from {RESULTS}")
+                continue
+            outcome.cells += 1
+            found = in_file[case_id][name]
+            if found != recorded.strip():
+                outcome.differences.append(f"case {case_id}, {name}: the file has {found[:80]!r}, the record gives {recorded.strip()[:80]!r}")
+    return outcome
+

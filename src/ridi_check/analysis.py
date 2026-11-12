@@ -60,7 +60,8 @@ NEGATIONS = frozenset(
 def _kind(ch: str) -> str:
     """'w' for a letter or a number, 'd' for a decimal digit (also a 'w'), 'm' for a mathematical symbol, '' otherwise."""
     category = unicodedata.category(ch) if ch else "Zs"
-    return "d" if category == "Nd" else "w" if category[0] in "LN" else "m" if category == "Sm" else ""
+    # Mathematical symbols, currency signs and other symbols (a tick, a cross, a degree sign) carry meaning.
+    return "d" if category == "Nd" else "w" if category[0] in "LN" else "m" if category in ("Sm", "Sc", "So") else ""
 
 
 def _in_word(ch: str) -> bool:
@@ -76,10 +77,12 @@ def normalise(text: str) -> str:
     """Lower-case, punctuation to spaces, whitespace collapsed, as the prototype's `norm` does, except that
     the signs that carry meaning are kept, each as a word of its own: "< 5 mg" is not "> 5 mg".
 
-    Kept: every mathematical symbol (< > = + ± × ÷ ≤ ≥ ≠ ∈ ~ ...); a percent sign after a digit; "/" and
+    Kept: every mathematical symbol (< > = + ± × ÷ ≤ ≥ ≠ ∈ ~ ...), currency sign and other symbol (a tick, a
+    cross, a degree sign); a percent sign after a digit; "/" and
     "*" between two letters or digits (mg/kg); "!" before "="; and a hyphen that is a sign: before a
     digit when no letter or digit stands in front of it (-5), or right after a letter or digit when none
-    follows (HIV-). A hyphen inside a word (x-ray, 5-10) and all other punctuation become a space.
+    follows (HIV-). A point or a comma between two digits stays inside the number (2.5, 1,000). A hyphen
+    inside a word (x-ray, 5-10) and all other punctuation become a space.
     """
     s = str(text).lower()
     last = len(s) - 1
@@ -89,10 +92,13 @@ def normalise(text: str) -> str:
         if kind in ("w", "d"):
             out.append(ch)
             continue
-        if not kind and ch not in "%\u066a/*-!":      # ordinary punctuation and spaces: nothing to look at
+        if not kind and ch not in "%\u066a/*-!.,\u066b\u066c":      # ordinary punctuation and spaces: nothing to look at
             out.append(" ")
             continue
         before, after = (s[i - 1] if i else ""), (s[i + 1] if i < last else "")
+        if ch in ".,\u066b\u066c" and _is_digit(before) and _is_digit(after):
+            out.append(ch)      # a decimal or thousands mark stays inside its number: 2.5 is not 25, 1.000 is not 1,000
+            continue
         keep = (
             kind == "m"
             or (ch in "%\u066a" and _is_digit(before))
@@ -127,6 +133,8 @@ def same_answer(a: str, b: str, threshold: float = 1.0) -> bool:
         return False  # "is effective" and "is not effective" share most of their words
     if NUMBERS.findall(x) != NUMBERS.findall(y):
         return False  # so do "within 30 days" and "within 45 days", and "5mg" and "50mg"
+    if [w for w in list_x if w and not _in_word(w[0])] != [w for w in list_y if w and not _in_word(w[0])]:
+        return False  # the signs that were kept (< > + - % / $ and the like) must be the same, in the same order
     if _number_contexts(list_x) != _number_contexts(list_y):
         return False  # and "5 mg" and "5 g", "5mg" and "5g", "30 days" and "30 weeks"
     if len(list_x) == len(list_y):

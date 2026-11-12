@@ -137,7 +137,7 @@ an invocation finishes. You can also write it yourself and use `report` and `gat
 
 **`summary.json`**: `mode`, `cases`, `cases_compared`, `runs_per_version`, `states` (count per state),
 `case_ids`, `first_run` (`change_between_versions`, `rerun_variation_current`,
-`rerun_variation_proposed`, each as `{count, n, rate}`; in answer-key mode also the accuracies,
+`rerun_variation_proposed`, each as `{count, n, rate, interval_95}`; in answer-key mode also the accuracies,
 `regressions`, `improvements`, `changes_visible_in_mean_accuracy`,
 `changes_cancelled_in_mean_accuracy`), `any_run_disagreement`, `judgments` or
 `wrong_both_answer_changed` and `correct_both_answer_changed` (case ids whose score is equal and whose

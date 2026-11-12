@@ -149,7 +149,8 @@ const RidiCore = (function () {
       const ch = s[i];
       if (inWord(ch)) { out += ch; continue; }
       const before = s[i - 1], after = s[i + 1];
-      const keep = /\p{Sm}/u.test(ch) || ((ch === "%" || ch === "\u066a") && isDigit(before)) ||
+      if ((ch === "." || ch === "," || ch === "\u066b" || ch === "\u066c") && isDigit(before) && isDigit(after)) { out += ch; continue; }
+      const keep = /[\p{Sm}\p{Sc}\p{So}]/u.test(ch) || ((ch === "%" || ch === "\u066a") && isDigit(before)) ||
         ((ch === "/" || ch === "*") && inWord(before) && inWord(after)) ||
         (ch === "-" && ((isDigit(after) && !inWord(before)) || (inWord(before) && !inWord(after)))) || (ch === "!" && after === "=");
       out += keep ? " " + (ch === "\u2212" ? "-" : ch) + " " : " ";
@@ -166,6 +167,9 @@ const RidiCore = (function () {
     if (neg(A) !== neg(B)) return false;
     const nums = (s) => (s.match(/\p{Nd}+/gu) || []).join(" ");   /* the digit runs, in order: "5mg" and "50mg" differ */
     if (nums(x) !== nums(y)) return false;
+    /* the signs that were kept must be the same, in the same order */
+    const signs = (ws) => ws.filter((w) => w !== "" && !/[\p{L}\p{N}]/u.test(Array.from(w)[0])).join(" ");
+    if (signs(xs) !== signs(ys)) return false;
     /* every word that holds a digit; a bare number is taken together with the word after it (its unit) */
     const contexts = (ws) => ws.map((w, i) => (/\p{Nd}/u.test(w) ? w + " " + (/^\p{Nd}+$/u.test(w) && i + 1 < ws.length ? ws[i + 1] : "") : null)).filter((c) => c !== null).join("|");
     if (contexts(xs) !== contexts(ys)) return false;

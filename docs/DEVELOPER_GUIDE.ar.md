@@ -135,7 +135,7 @@ def scorer(answer: str, expected: str) -> bool:
 
 **`summary.json`**: `mode` و`cases` و`cases_compared` و`runs_per_version` و`states` (عدد كل حالة)
 و`case_ids` و`first_run` (وفيه `change_between_versions` و`rerun_variation_current`
-و`rerun_variation_proposed`، كلٌّ بصيغة `{count, n, rate}`؛ وفي وضع مفتاح الإجابات أيضاً الدقتان
+و`rerun_variation_proposed`، كلٌّ بصيغة `{count, n, rate, interval_95}`؛ وفي وضع مفتاح الإجابات أيضاً الدقتان
 و`regressions` و`improvements` و`changes_visible_in_mean_accuracy`
 و`changes_cancelled_in_mean_accuracy`) و`any_run_disagreement` و`judgments` أو
 `wrong_both_answer_changed` و`correct_both_answer_changed` (معرّفات الحالات التي تساوت درجتها واختلفت

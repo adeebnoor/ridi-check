@@ -422,6 +422,10 @@ SIGNS = [   # (one answer, another, the same after normalisation?)
     ("الخطر ١٠٪.", "الخطر ١٠.", False),
     ("Group A ∈ high risk.", "Group A ∉ high risk.", False),
     ("About ~5 mg.", "About 5 mg.", False),
+    ("The fee is $5.", "The fee is €5.", False), ("Marked ✓.", "Marked ✗.", False), ("Keep at 5 °C.", "Keep at 5 °F.", False),
+    ("The dose is 2.5 mg.", "The dose is 25 mg.", False), ("The total is 1.000.", "The total is 1,000.", False),
+    ("The total is 12.500.", "The total is 12 500.", False), ("الجرعة ٢٫٥ ملغ.", "الجرعة ٢٥ ملغ.", False),
+    ("It ends in 2020.", "It ends in 2020", True), ("1, 2 and 3.", "1 2 and 3", True),
     # ordinary punctuation, hyphens inside words and list dashes still make no difference
     ("Yes.", "yes", True), ("Paris, France!", "paris france", True), ("an x-ray", "an x ray", True),
     ("- first item", "first item", True), ("5-10 mg", "5 10 mg", True), ("(well) done; thanks", "well done thanks", True),
@@ -445,4 +449,57 @@ def test_browser_normalises_signs_as_python_does():
     done = subprocess.run([NODE, "-e", script, os.path.join(ROOT, "web", "core.js"), json.dumps(texts)],
                           capture_output=True, text=True, encoding="utf-8", check=True)
     assert json.loads(done.stdout) == [normalise(t) for t in texts]
+
+
+BENCH = os.path.join(ROOT, "benchmarks", "transitions")
+
+
+def _load(name):
+    spec = importlib.util.spec_from_file_location(name, os.path.join(BENCH, name + ".py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_the_transition_set_and_its_measured_table_are_up_to_date():
+    import csv
+    generate, measure = _load("generate"), _load("measure")
+    with open(os.path.join(BENCH, "transitions.csv"), encoding="utf-8", newline="") as f:
+        on_disk = list(csv.reader(f))
+    assert on_disk[1:] == generate.rows(), "run: python benchmarks/transitions/generate.py"
+    assert len(on_disk) - 1 > 1000 and {row[3] for row in on_disk[1:]} == {"en", "ar"}
+    with open(os.path.join(BENCH, "RESULTS.md"), encoding="utf-8") as f:
+        assert f.read() == measure.render(measure.load()), "run: python benchmarks/transitions/measure.py"
+    table = measure.measure(measure.load())
+    # what the default rule must never miss, and the two limits that are stated in the documents
+    for kind in ("comparison sign", "plus or minus sign", "percent, per, times", "other symbol", "number", "unit", "negation",
+                 "opposite word", "who and what swapped", "decimal or thousands mark"):
+        pairs, exact, at_90, at_75 = table[("different", kind)]
+        assert exact == at_90 == at_75 == pairs, kind
+    assert table[("different", "added condition")][1] == table[("different", "added condition")][0]     # exact match sees it
+    assert table[("different", "added condition")][2] < table[("different", "added condition")][0]      # word overlap can miss it
+    assert table[("different", "letter case that matters")][1] == 0                                     # lower-casing hides it
+    # the figures quoted in the README and the reference are these
+    different = [sum(cell[i] for (gold, _), cell in table.items() if gold == "different") for i in range(4)]
+    same = [sum(cell[i] for (gold, _), cell in table.items() if gold == "same") for i in range(4)]
+    quoted = (f"saw {different[1]} of the {different[0]} pairs that say something else",
+              f"called a change {same[0] - same[1]} of the {same[0]} pairs")
+    for name in ("README.md", os.path.join("docs", "REFERENCE.md")):
+        with open(os.path.join(ROOT, name), encoding="utf-8") as f:
+            text = " ".join(f.read().split())
+        for sentence in quoted:
+            assert sentence in text, (name, sentence)
+
+
+@needs_node
+def test_browser_agrees_with_python_on_every_pair_of_the_transition_set(tmp_path):
+    from ridi_check.analysis import same_answer
+    rows = _load("measure").load()
+    pairs = [[r["answer_a"], r["answer_b"]] for r in rows]
+    (tmp_path / "pairs.json").write_text(json.dumps(pairs), encoding="utf-8")
+    script = ("const core=require(process.argv[1]),fs=require('fs');const p=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));"
+              "console.log(JSON.stringify(p.map((x)=>[1,0.9,0.75].map((t)=>core.sameAnswer(x[0],x[1],t)))));")
+    done = subprocess.run([NODE, "-e", script, os.path.join(ROOT, "web", "core.js"), str(tmp_path / "pairs.json")],
+                          capture_output=True, text=True, encoding="utf-8", check=True)
+    assert json.loads(done.stdout) == [[same_answer(a, b, t) for t in (1.0, 0.9, 0.75)] for a, b in pairs]
 

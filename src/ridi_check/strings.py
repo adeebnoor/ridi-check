@@ -57,6 +57,10 @@ COMMON = {
         "rateNone": "This file has no second run of both versions, so re-run variation is unknown and "
                     "no change is confirmed. Add a second run of each version.",
         "rateFirst": "These rates use the first run of each version and the first two runs for re-run variation.",
+        "interval95": "; 95% interval {a}% to {b}%",
+        "intervalNote": "The intervals are Wilson intervals. They treat the cases as a random sample of what users "
+                        "ask, which a hand-picked set is not, and they say nothing about one case's own re-run "
+                        "variation. No test is applied and nothing here is decided by them.",
         "anyRun": "With more than two runs a case can be unstable because of a later run. "
                   "Cases where any run differed from the first: current {b}, proposed {u}.",
         "review": "Cases to review", "fAll": "All", "fStable": "Stable", "fUns": "Unstable",
@@ -123,6 +127,10 @@ COMMON = {
         "rateNone": "لا يوجد في هذا الملف تشغيل ثانٍ للنسختين، فتقلب التشغيل مجهول ولا يُؤكَّد أي تغيّر. "
                     "أضف تشغيلًا ثانيًا لكل نسخة.",
         "rateFirst": "هذه النسب تعتمد على التشغيل الأول لكل نسخة، وعلى أول تشغيلين لتقلب إعادة التشغيل.",
+        "interval95": "؛ فترة 95%: من {a}% إلى {b}%",
+        "intervalNote": "الفترات هي فترات Wilson. تفترض أن الحالات عينة عشوائية مما يسأله المستخدمون، والمجموعة "
+                        "المنتقاة يدوياً ليست كذلك، ولا تقول شيئاً عن تقلب الحالة الواحدة عند إعادة التشغيل. لا يُطبَّق "
+                        "أي اختبار ولا يُبنى عليها أي قرار هنا.",
         "anyRun": "مع أكثر من تشغيلين قد تكون الحالة متقلبة بسبب تشغيل لاحق. "
                   "الحالات التي خالف فيها أي تشغيل التشغيلَ الأول: الحالية {b}، المقترحة {u}.",
         "review": "حالات للمراجعة", "fAll": "الكل", "fStable": "الثابتة", "fUns": "المتقلبة",

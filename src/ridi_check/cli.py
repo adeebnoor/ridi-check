@@ -18,7 +18,7 @@ from .analysis import analyse
 from .contract import ContractError, read_results
 from .gate import evaluate
 from .report import read_judgments, text_summary, write_report
-from .runner import SERVICE_FAILURES, RunConfig, RunError, run
+from .runner import SERVICE_FAILURES, RunConfig, RunError, run, verify
 
 CONFIG_NAME = "ridi-check.json"
 # `run` settings: name -> (type, default). The same names are the keys of ridi-check.json.
@@ -129,6 +129,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--lang", choices=("en", "ar"), default=None, help="language the report opens in")
     p.add_argument("--open", action="store_true", help="open the report in your browser")
     p.set_defaults(handler=_cmd_report)
+
+    p = sub.add_parser("verify", help="check that results.csv still agrees with the recorded calls",
+                       description="Build results.csv again from raw_outputs.jsonl and compare it with the file, cell "
+                                   "by cell. Exit 1 when a cell differs, for example after an edit by hand.")
+    p.add_argument("out", metavar="DIR", help="the output folder that `run` wrote")
+    p.set_defaults(handler=_cmd_verify)
 
     p = sub.add_parser("gate", help="exit non-zero when stable regressions exceed a limit",
                        description="Print counts and one line per offending case. Exit 1 when a limit is exceeded.")
@@ -319,6 +325,21 @@ def _cmd_report(args: argparse.Namespace) -> int:
     _print_report(args.results, args.similarity, args.open, out_dir=args.out, mode=args.mode,
                   judgments_path=args.judgments, current_label=args.current_label,
                   proposed_label=args.proposed_label, lang=args.lang)
+    return 0
+
+
+def _cmd_verify(args: argparse.Namespace) -> int:
+    outcome = verify(args.out)
+    for note in outcome.notes:
+        print(f"note: {note}", file=sys.stderr)
+    for difference in outcome.differences[:50]:
+        print(difference)
+    if len(outcome.differences) > 50:
+        print(f"... and {len(outcome.differences) - 50} more")
+    if outcome.differences:
+        print(f"verify: {len(outcome.differences)} difference(s) between results.csv and what raw_outputs.jsonl records.")
+        return 1
+    print(f"verify: results.csv agrees with raw_outputs.jsonl ({outcome.cases} cases, {outcome.cells} cells compared).")
     return 0
 
 

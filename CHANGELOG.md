@@ -3,19 +3,25 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
-## Unreleased
+## 0.7.0
 
 ### Changed
 - Normalisation keeps the signs that carry meaning, each as a word of its own: every mathematical symbol
-  (`<`, `>`, `=`, `+`, `≤`, `≥`, `≠`, `~` ...), a percent sign after a digit, `/` and `*` between two
-  letters or digits, `!` before `=`, and a hyphen that is a sign (`-5`, `HIV-`). Before, all of them
-  became a space, so "< 5 mg" and "> 5 mg" were the same answer under the default exact match. Other
-  punctuation and hyphens inside words still make no difference. This also changes exact-match scoring
-  against `expected`, and it is a deliberate difference from the prototype's normalisation.
-- Under `--similarity`, the same words in another order are no longer the same answer: two answers with
-  the same number of words are the same only when they are the same text.
+  (`<`, `>`, `=`, `+`, `≤`, `≥`, `≠`, `~` ...), currency sign and other symbol (`$`, `✓`, `°`), a percent
+  sign after a digit, `/` and `*` between two letters or digits, `!` before `=`, and a hyphen that is a
+  sign (`-5`, `HIV-`). A point or a comma between two digits stays inside its number (`2.5`, `1,000`).
+  Before, all of them became a space, so "< 5 mg" and "> 5 mg" were the same answer under the default
+  exact match. Other punctuation and hyphens inside words still make no difference. This also changes
+  exact-match scoring against `expected`, and it is a deliberate difference from the prototype.
+- Under `--similarity`, two answers with the same number of words are the same only when they are the
+  same text, so the same words in another order are a change; and the signs that normalisation keeps
+  must be the same, in the same order.
 
 ### Added
+- A 95% Wilson interval for each of the three rates, in `summary.json` (`interval_95`), in the printed
+  summary and in the report. No test is applied and no label or gate decision depends on it.
+- `ridi-check verify DIR`: builds `results.csv` again from `raw_outputs.jsonl` and prints every cell that
+  differs, for example a score edited by hand.
 - `gate --strict`: every limit at zero unless a value is given for it.
 - `gate --max-unconfirmed N`: an optional limit on regressions (without an answer key: changes) seen in a
   single run. By default these are still reported on standard error and not counted.
@@ -23,6 +29,10 @@ library API may change between minor versions.
   a changed answer cannot be seen in them.
 - Cases where the same passages come in another order or another number of times are counted
   (`passages.reordered` in `summary.json`) and marked on their cards.
+- `benchmarks/transitions`: 1,131 constructed pairs of answers in English and Arabic, labelled by how they
+  were built, with the measured behaviour of the comparison rules for each kind of change. A test fails
+  when the measured table is out of date, and the browser version is checked against Python on every pair.
+- The tests also run on Python 3.14.
 
 ## 0.6.0
 

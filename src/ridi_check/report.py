@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 from importlib import resources
 
@@ -61,10 +62,20 @@ def read_judgments(path: str, case_ids: set[str]) -> dict[str, str]:
     return out
 
 
+def wilson(count: int, n: int, z: float = 1.959964) -> tuple[float, float]:
+    """The Wilson score interval for count out of n, 95% by default. It treats the cases as a random
+    sample; it is not a test and nothing in the tool is decided by it."""
+    p = count / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
 def _rate(count: int, n: int) -> dict | None:
     if not n:
         return None
-    return {"count": count, "n": n, "rate": round(count / n, 6)}
+    low, high = wilson(count, n)
+    return {"count": count, "n": n, "rate": round(count / n, 6), "interval_95": [round(low, 6), round(high, 6)]}
 
 
 def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
@@ -413,6 +424,14 @@ def text_summary(summary: dict) -> str:
     lines.append(
         f"First run: change between versions {show(f['change_between_versions'])}; re-run variation: "
         f"current {show(f['rerun_variation_current'])}, proposed {show(f['rerun_variation_proposed'])}."
+    )
+    def span(r: dict | None) -> str:
+        return "none" if r is None else f"{100 * r['interval_95'][0]:.1f}% to {100 * r['interval_95'][1]:.1f}%"
+
+    lines.append(
+        f"95% intervals (Wilson): change {span(f['change_between_versions'])}; re-run variation: current "
+        f"{span(f['rerun_variation_current'])}, proposed {span(f['rerun_variation_proposed'])}. They treat the cases "
+        "as a random sample of what users ask, which a hand-picked set is not."
     )
     if key:
         acc_b, acc_u = f["accuracy_current"], f["accuracy_proposed"]

@@ -12,6 +12,7 @@ Every command, file and rule in one place. New here? Start with the
 - [Exit status](#exit-status)
 - [Input files: what is read and what is refused](#input-files-what-is-read-and-what-is-refused)
 - [Measured limits](#measured-limits)
+- [How the comparison rules behave](#how-the-comparison-rules-behave)
 
 ## Commands
 
@@ -105,6 +106,19 @@ Prints the counts and one line per offending case. It prints no verdict about th
 | `--max-incomplete N` | 0 | cases that could not be compared because a call failed |
 | `--mode`, `--similarity`, `--judgments` | as for `report` | |
 
+### `ridi-check verify DIR`
+
+Builds `results.csv` again from `raw_outputs.jsonl`, the way `run` builds it, and compares it with the
+file cell by cell: answers, scores, passages and errors. It prints each cell that differs, for example a
+score or an answer edited by hand, and a case that was added or removed. Exit status 0 when the table
+agrees with the record, 1 when a cell differs, 2 when the folder does not hold what `run` wrote.
+
+It checks the table against the record, not the record against the assistant: it cannot tell whether a
+recorded answer is right, or whether `raw_outputs.jsonl` itself was replaced. When the questions file of
+the run is no longer there unchanged, the questions and expected answers are taken from `results.csv`
+and are not themselves checked; when the run's own scorer cannot be loaded, the scores are not checked.
+Both are said on standard error.
+
 ## Settings file
 
 `ridi-check run` reads `ridi-check.json` from the current folder, or the file given with `--config`. Its keys
@@ -165,7 +179,8 @@ With an answer key two runs are equal when their correctness is equal; without o
 after lower-casing, removing punctuation and collapsing spaces (or under `--similarity`).
 
 The signs that carry meaning are not removed: every mathematical symbol (`<`, `>`, `=`, `+`, `±`, `≤`,
-`≥`, `≠`, `~` and the like), a percent sign after a digit, `/` and `*` between two letters or digits
+`≥`, `≠`, `~` and the like), currency sign and other symbol (`$`, `€`, `✓`, `✗`, `°`), a point or a comma
+between two digits, which stays inside its number (`2.5`, `1,000`), a percent sign after a digit, `/` and `*` between two letters or digits
 (`mg/kg`), `!` before `=`, and a hyphen that is a sign: before a digit when nothing stands in front of it
 (`-5`), or right after a letter or digit when none follows (`HIV-`). So "< 5 mg" and "> 5 mg" are two
 answers, and so are "10%" and "10". A hyphen inside a word (`x-ray`, `5-10`) and all other punctuation
@@ -201,6 +216,7 @@ passage has a new name.
 Under `--similarity`, two answers are never counted as the same when they differ
 
 - in a negation word;
+- in the signs that normalisation keeps: the same signs, in the same order;
 - in their numbers: the runs of digits in order, so `5mg` and `50mg` differ, and so do "2 tablets of 5 mg"
   and "5 tablets of 2 mg"; and each number with its unit, so `5 mg` and `5 g` differ, and "30 days" and
   "30 weeks";
@@ -216,7 +232,10 @@ named in the printed summary, in the report and in `summary.json` (`labelled_by_
 can be read.
 
 The rates use first runs: the change between versions, and the re-run variation of each version (run 1
-against run 2). Both variations are always shown and neither is subtracted from the change. With an answer
+against run 2). Both variations are always shown and neither is subtracted from the change. Each rate
+comes with a 95% Wilson interval (`interval_95` in `summary.json`). The interval treats the cases as a
+random sample of what users ask, which a hand-picked set of questions is not, and it says nothing about
+one case's own re-run variation. No test is applied, and no label or gate decision depends on it. With an answer
 key the change equals regressions plus improvements, mean accuracy moves by their difference, and
 `2 × min(regressions, improvements)` changes cancel out in the mean.
 
@@ -329,3 +348,23 @@ characters is checked without being copied into the text box and is not kept acr
 once, so the time is the tool's own: 120,000 calls recorded and reported in 9.4 s with a peak of 260 MB.
 `raw_outputs.jsonl` was 34.9 MB. Running the same command again, with nothing left to call, took 1.3 s
 and 138 MB. With a real assistant the calls themselves take nearly all of the time.
+
+## How the comparison rules behave
+
+[`benchmarks/transitions`](https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions) holds
+1,131 constructed pairs of answers, in English and in Arabic, each labelled by how it was built: the second
+answer either says something else, or says the same thing in another surface form. The measured table is
+in [RESULTS.md](https://github.com/adeebnoor/ridi-check/blob/main/benchmarks/transitions/RESULTS.md), and a
+test fails when it is out of date. In short:
+
+- Exact match, the default, saw 738 of the 782 pairs that say something else. The 44 it missed are all of
+  one kind: a letter case that matters, such as `mg` and `Mg`, which lower-casing hides.
+- Exact match also called a change 167 of the 349 pairs that a reader would call the same answer: an added
+  courtesy, a list in another order, another word for the same thing. These are what the owner judges.
+- Word overlap at 0.9 accepted 24 of the 58 added courtesies, and missed 16 of the 69 pairs where a
+  condition was added to the answer.
+
+The labels follow from the construction and were not judged by independent raters. The rates say how the
+rules behave on each kind of change, not how often such changes happen in use, and they are not a
+comparison with any other tool.
+

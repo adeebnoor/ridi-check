@@ -273,12 +273,15 @@
     const F = S.first_run, ch = F.change_between_versions, rb = F.rerun_variation_current, ru = F.rerun_variation_proposed;
     const pT = pct(ch.count, ch.n), pB = rb ? pct(rb.count, rb.n) : null, pU = ru ? pct(ru.count, ru.n) : null;
     const top = Math.max(5, Math.ceil(Math.max(pT, pB || 0, pU || 0) / 5) * 5);
+  /* The Wilson score interval, 95%: it treats the cases as a random sample. Nothing is decided by it. */
+  const wilson = (k, n) => { const z = 1.959964, q = k / n, d = 1 + z * z / n, c = (q + z * z / (2 * n)) / d,
+    w = z * Math.sqrt(q * (1 - q) / n + z * z / (4 * n * n)) / d; return { a: fmt(100 * Math.max(0, c - w)), b: fmt(100 * Math.min(1, c + w)) }; };
     const bar = (label, p, k, m, main) => '<span class="lab">' + esc(label) + '</span><span class="track"><span class="fill' + (main ? " main" : "") + '" style="width:' + (100 * p / top) +
-      '%"></span></span><span class="val num">' + fmt(p) + '% <span class="muted">(' + esc(t("of", { k, n: m })) + ")</span></span>";
+      '%"></span></span><span class="val num">' + fmt(p) + '% <span class="muted">(' + esc(t("of", { k, n: m }) + t("interval95", wilson(k, m))) + ")</span></span>";
     h += "<section><h2>" + esc(t("rates")) + '</h2><div class="panel"><div class="bars">' + bar(t("barMain"), pT, ch.count, ch.n, true);
     if (pB !== null) h += bar(t("barB"), pB, rb.count, rb.n, false);
     if (pU !== null) h += bar(t("barU"), pU, ru.count, ru.n, false);
-    h += "</div><p>";
+    h += '</div><p class="small muted">' + esc(t("intervalNote")) + "</p><p>";
     if (pB === null || pU === null) h += esc(t("rateNone"));
     else if (pT <= Math.max(pB, pU)) h += esc(t("rateWithin"));
     else h += esc(t("rateAbove", { t: fmt(pT), b: fmt(pB), u: fmt(pU) }));

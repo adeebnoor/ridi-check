@@ -174,6 +174,17 @@ with `Retry-After`, and 48 calls all finished, five of them on a second attempt 
 seconds. That is one service on one day; yours may behave differently.
 [Details](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#ridi-check-run).
 
+**How do I know the comparison rules can be trusted?** Read what they miss.
+[benchmarks/transitions](https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions) holds 1,131
+constructed pairs of answers in English and Arabic, with the measured result for each kind of change. Exact
+match, the default, saw 738 of the 782 pairs that say something else; the 44 it missed differ only in a
+letter case that matters, such as `mg` and `Mg`. It also called a change 167 of the 349 pairs that a reader
+would call the same answer, which is why the owner judges. The pairs are constructed and their labels were
+not judged by independent raters, so this shows how the rules behave, not how often such changes happen.
+
+**Can someone edit `results.csv` and pass the gate?** They can edit it; `ridi-check verify ridi-out`
+builds the table again from the recorded calls and prints every cell that differs.
+
 **Can I open the CSV files in Excel?** Yes. A cell that starts with `=`, `+`, `-` or `@` is written with an
 apostrophe in front (`'=1+1`), so a spreadsheet does not run answer text as a formula. The tool takes the
 apostrophe off again when it reads the file, and `raw_outputs.jsonl` keeps every answer as it was given.
@@ -185,10 +196,11 @@ encodings are refused with a message that says how to save the file.
 No dates and no promises; this is what is planned and what is not.
 
 - **Done:** a release on [PyPI](https://pypi.org/project/ridi-check/), a hosted browser version, adapter
-  examples for common APIs.
+  examples for common APIs, intervals for the rates, a strict gate, a check of the results against the
+  recorded calls, and an open set of constructed answer pairs with the measured behaviour of the rules.
 - **Next:** fixes and examples that real use asks for. Nothing else is scheduled.
-- **Being considered:** intervals for the rates, multi-turn conversations, tool-using agents, more report
-  languages.
+- **Being considered:** ranks and scores of retrieved passages, multi-turn conversations, tool-using
+  agents, more report languages.
 - **Not planned:** model-based judging, or any hosted service that receives your data.
 
 Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issues).
@@ -217,6 +229,7 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 - [Use cases](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.md): thirteen situations and how to set each one up
 - [Developer guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.md): adapters, files, CI, library use
 - [Reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md): every command and option, `results.csv`, the labelling rules
+- [Transition set](https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions): constructed answer pairs and what the comparison rules see and miss
 - بالعربية: [دليل الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.ar.md) · [حالات الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.ar.md) ·
   [دليل المطورين](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.ar.md)
 

@@ -57,9 +57,13 @@ def test_a_changed_wrong_answer_stays_wrong_in_both_but_is_recorded(fixture_text
 def test_summary_rates(fixture_text):
     summary = build_summary(analyse(*parse_results(fixture_text)))
     first = summary["first_run"]
-    assert first["change_between_versions"] == {"count": 7, "n": 40, "rate": 0.175}
-    assert first["rerun_variation_current"] == {"count": 2, "n": 40, "rate": 0.05}
-    assert first["rerun_variation_proposed"] == {"count": 3, "n": 40, "rate": 0.075}
+    bare = lambda r: {k: v for k, v in r.items() if k != "interval_95"}  # noqa: E731
+    assert bare(first["change_between_versions"]) == {"count": 7, "n": 40, "rate": 0.175}
+    assert bare(first["rerun_variation_current"]) == {"count": 2, "n": 40, "rate": 0.05}
+    assert bare(first["rerun_variation_proposed"]) == {"count": 3, "n": 40, "rate": 0.075}
+    # Wilson 95% intervals, checked against the formula by hand: 7/40 is 8.7% to 31.9%
+    low, high = first["change_between_versions"]["interval_95"]
+    assert (round(100 * low, 1), round(100 * high, 1)) == (8.7, 31.9)
     assert first["change_exceeds_both_rerun_variations"] is True
     assert first["accuracy_current"]["count"] == 30 and first["accuracy_proposed"]["count"] == 29
     assert not any("not larger" in note for note in summary["notes"])
@@ -144,3 +148,15 @@ def test_word_overlap_threshold():
 ])
 def test_a_threshold_never_merges_answers_that_differ_in_negation_or_numbers(a, b):
     assert not same_answer(a, b, 0.75)
+
+
+def test_wilson_intervals_at_the_edges_and_against_known_values():
+    from ridi_check.report import wilson
+    pct = lambda pair: tuple(round(100 * x, 1) for x in pair)  # noqa: E731
+    assert pct(wilson(4, 24)) == (6.7, 35.9)
+    assert pct(wilson(0, 24)) == (0.0, 13.8)          # nothing seen is not the same as nothing there
+    assert pct(wilson(24, 24)) == (86.2, 100.0)
+    assert pct(wilson(1, 1)) == (20.7, 100.0)         # one case says very little
+    low, high = wilson(500, 1000)
+    assert 0.469 < low < 0.47 and 0.53 < high < 0.531
+
