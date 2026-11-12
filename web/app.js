@@ -7,7 +7,7 @@
       tagline: "Compare the current and the proposed version of an assistant on the same questions. See which answers changed, and which changes hold when each version is run again.",
       sampleKey: "Example with answer key", sampleNoKey: "Example without answer key",
       own: "Check your own results", choose: "Choose a CSV file", paste: "Or paste here: CSV text, or cells copied from a spreadsheet",
-      run: "Check", privacy: "Your file is read in this browser tab only. Nothing is uploaded or stored on a server. What you paste stays until you close the tab, and your judgments are kept in this browser so that a refresh does not lose them.",
+      drop: "or drop the file here", run: "Check", privacy: "Your file is read in this browser tab only. Nothing is uploaded or stored on a server. What you paste stays until you close the tab, and your judgments are kept in this browser so that a refresh does not lose them.",
       forget: "Clear my judgments",
       tooBig: "This file is too large to show here ({n} characters). It was read and checked all the same.",
       format: "Columns", colsNote: "One row per question. The first row holds the column names.",
@@ -61,7 +61,7 @@
       tagline: "قارن النسخة الحالية والنسخة المقترحة من مساعدك على الأسئلة نفسها. اعرف أي الإجابات تغيّرت، وأي تغيّر يثبت عند إعادة تشغيل كل نسخة.",
       sampleKey: "مثال مع مفتاح إجابات", sampleNoKey: "مثال بدون مفتاح إجابات",
       own: "افحص نتائجك", choose: "اختر ملف CSV", paste: "أو الصق هنا: نص CSV، أو خلايا منسوخة من جدول",
-      run: "افحص", privacy: "ملفك يُقرأ داخل هذا التبويب فقط. لا يُرفع شيء ولا يُحفظ على خادم. ما تلصقه يبقى حتى تغلق التبويب، وأحكامك تُحفظ في هذا المتصفح حتى لا تضيع عند تحديث الصفحة.",
+      drop: "أو أفلت الملف هنا", run: "افحص", privacy: "ملفك يُقرأ داخل هذا التبويب فقط. لا يُرفع شيء ولا يُحفظ على خادم. ما تلصقه يبقى حتى تغلق التبويب، وأحكامك تُحفظ في هذا المتصفح حتى لا تضيع عند تحديث الصفحة.",
       forget: "امسح أحكامي",
       tooBig: "هذا الملف أكبر من أن يُعرض هنا ({n} حرفاً). قُرئ وفُحص على أي حال.",
       format: "الأعمدة", colsNote: "صف واحد لكل سؤال، والصف الأول فيه أسماء الأعمدة.",
@@ -187,12 +187,36 @@
     return '<div class="tile ' + D.classes[s] + '"><span class="n">' + (D.summary.states[s] || 0) + '</span><span class="k"><span class="dot"></span>' + esc(L().state[s]) +
       '</span><span class="small muted">' + esc(sub) + "</span></div>";
   }
-  function sideHTML(label, runs) {
+  /* The first-run answer of one version with the words marked that are not part of the longest run of words,
+     in order, that it shares with the other version's answer. For the eye only: nothing is counted from it. */
+  function diffHTML(a, b) {
+    if (!b || a === b) return esc(a);
+    const A = a.split(/(\s+)/), B = b.split(/\s+/).filter(Boolean), at = [];
+    A.forEach((w, i) => { if (i % 2 === 0 && w) at.push(i); });
+    const n = at.length, m = B.length;
+    if (n > 400 || m > 400) return esc(a);
+    const L = []; for (let i = 0; i <= n; i++) L.push(new Uint16Array(m + 1));
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[at[i]] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+    const shared = new Set();
+    for (let i = 0, j = 0; i < n && j < m;) { if (A[at[i]] === B[j]) { shared.add(at[i]); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++; }
+    let h = "", open = false, gap = "";
+    A.forEach((w, i) => {
+      if (i % 2) { gap = w; return; }
+      if (!w) return;
+      const marked = !shared.has(i);
+      if (open && !marked) { h += "</mark>"; open = false; }
+      h += esc(gap); gap = "";
+      if (marked && !open) { h += "<mark>"; open = true; }
+      h += esc(w);
+    });
+    return h + (open ? "</mark>" : "") + esc(gap);
+  }
+  function sideHTML(label, runs, other) {
     const KEYM = state.mode === "key";
     let h = '<div class="side"><span class="lbl">' + esc(label) + "</span>";
     if (!runs.length) return h + "</div>";
     const r = runs[0];
-    h += '<span class="ans" dir="auto">' + esc(r.ans || (r.cor === 1 ? "1" : r.cor === 0 ? "0" : "")) + "</span>";
+    h += '<span class="ans" dir="auto">' + (r.ans ? diffHTML(r.ans, other) : esc(r.cor === 1 ? "1" : r.cor === 0 ? "0" : "")) + "</span>";
     if (KEYM && r.ans && r.cor != null) h += '<span class="score">' + esc(t(r.cor ? "scored1" : "scored0")) + "</span>";
     runs.slice(1).forEach((x, i) => {
       h += x.same ? '<span class="rerun">' + esc(t("runSame", { k: i + 2 })) + "</span>"
@@ -222,7 +246,7 @@
     if (c.q) h += '<p class="q" dir="auto">' + esc(c.q) + "</p>";
     if (c.state === "correct_both") h += '<p class="small muted">' + esc(t("correctChangedNote")) + "</p>";
     if (KEYM && c.expected) h += '<p class="small muted">' + esc(t("expected")) + '<span class="num" dir="auto">' + esc(c.expected) + "</span></p>";
-    h += '<div class="pair">' + sideHTML(t("current"), c.b) + sideHTML(t("proposed"), c.u) + "</div>";
+    h += '<div class="pair">' + sideHTML(t("current"), c.b, c.u.length ? c.u[0].ans : "") + sideHTML(t("proposed"), c.u, c.b.length ? c.b[0].ans : "") + "</div>";
     if (c.err) h += '<p class="errs">' + esc(t("runErrors")) + '<span class="num" dir="ltr">' + esc(c.err) + "</span></p>";
     h += ctxHTML(c, i);
     if (!KEYM && c.state === "stable_change") {
@@ -272,7 +296,10 @@
         : '<span class="cell open ' + state.D.classes[s] + '" role="listitem" title="' + label + '"></span>';
     }).join("") + '</div><p class="small muted">' + esc(t("stripNote")) + "</p>";
   }
-  /* Answer-key mode: what the score did (rows) against what the answer text did (columns), in cases. */
+  /* Answer-key mode: what the score did (rows) against what the answer text did (columns), in cases. The cells
+     where one of the two changed and the other did not are set apart. */
+  const sameScore = (row) => row === "wrong_both" || row === "correct_both";
+  const worthReading = (row, col) => (sameScore(row) ? col !== "same" && col !== "no_answer_text" : row !== "unstable" && col === "same");
   function crossHTML() {
     const D = state.D, T = D.summary.score_and_answer_text, mixed = D.summary.same_text_scored_differently || [];
     if (!T && !mixed.length) return "";
@@ -281,7 +308,7 @@
       const rows = Object.keys(T), cols = Object.keys(L().answerCol).filter((c) => c !== "no_answer_text" || rows.some((r) => T[r][c]));
       h += '<div class="cross"><table><thead><tr><th scope="col">' + esc(t("crossHead")) + "</th>" + cols.map((c) => '<th scope="col">' + esc(L().answerCol[c]) + "</th>").join("") +
         "</tr></thead><tbody>" + rows.map((r) => '<tr><th scope="row"><span class="dot ' + D.classes[r] + '"></span>' + esc(L().state[r]) + "</th>" +
-          cols.map((c) => '<td class="' + (T[r][c] ? "" : "zero") + '">' + T[r][c] + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
+          cols.map((c) => '<td class="' + (!T[r][c] ? "zero" : worthReading(r, c) ? "read" : "") + '"><span>' + T[r][c] + "</span></td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
         '<p class="small muted">' + esc(t("crossNote")) + "</p>";
     }
     if (mixed.length) h += '<p class="small warn">' + esc(t("sameTextScored", { n: mixed.length, ids: mixed.slice(0, 20).join(", ") + (mixed.length > 20 ? ", …" : "") })) + "</p>";
@@ -290,23 +317,26 @@
   function reportHTML() {
     const D = state.D, S = D.summary, KEYM = state.mode === "key";
     let h = "";
-    h += "<section><h2>" + esc(t("ledger")) + '</h2><div class="ledger">' + D.tiles.map((s) => tile(s, L().sub[s] || t("unconfSub"))).join("");
-    h += "</div>" + stripHTML();
+    h += "<section><h2>" + esc(t("ledger")) + '</h2><div class="board"><div class="ledger">' + D.tiles.map((s) => tile(s, L().sub[s] || t("unconfSub"))).join("");
+    h += '</div><div class="map">' + stripHTML() + "</div></div>";
     h += '<p class="small muted">' + esc(t("stableNote", { b: S.runs_per_version.current, u: S.runs_per_version.proposed })) + "</p>";
     if (!KEYM && D.stable_change_ids.length) h += '<p class="small" id="judged">' + esc(judgedText()) + "</p>";
     h += "</section>";
 
     const F = S.first_run, ch = F.change_between_versions, rb = F.rerun_variation_current, ru = F.rerun_variation_proposed;
     const pT = pct(ch.count, ch.n), pB = rb ? pct(rb.count, rb.n) : null, pU = ru ? pct(ru.count, ru.n) : null;
-    const top = Math.max(5, Math.ceil(Math.max(pT, pB || 0, pU || 0) / 5) * 5);
-  /* The Wilson score interval, 95%: it treats the cases as a random sample. Nothing is decided by it. */
-  const wilson = (k, n) => { const z = 1.959964, q = k / n, d = 1 + z * z / n, c = (q + z * z / (2 * n)) / d,
-    w = z * Math.sqrt(q * (1 - q) / n + z * z / (4 * n * n)) / d; return { a: fmt(100 * Math.max(0, c - w)), b: fmt(100 * Math.min(1, c + w)) }; };
-    const bar = (label, p, k, m, main) => '<span class="lab">' + esc(label) + '</span><span class="track"><span class="fill' + (main ? " main" : "") + '" style="width:' + (100 * p / top) +
-      '%"></span></span><span class="val num">' + fmt(p) + '% <span class="muted">(' + esc(t("of", { k, n: m }) + t("interval95", wilson(k, m))) + ")</span></span>";
-    h += "<section><h2>" + esc(t("rates")) + '</h2><div class="panel"><div class="bars">' + bar(t("barMain"), pT, ch.count, ch.n, true);
-    if (pB !== null) h += bar(t("barB"), pB, rb.count, rb.n, false);
-    if (pU !== null) h += bar(t("barU"), pU, ru.count, ru.n, false);
+    /* The Wilson score interval, 95%, in percent: it treats the cases as a random sample. Nothing is decided by it. */
+    const wilson = (k, n) => { if (!n) return null; const z = 1.959964, q = k / n, d = 1 + z * z / n, c = (q + z * z / (2 * n)) / d,
+      w = z * Math.sqrt(q * (1 - q) / n + z * z / (4 * n * n)) / d; return { lo: 100 * Math.max(0, c - w), hi: 100 * Math.min(1, c + w) }; };
+    const rates = [[t("barMain"), ch, true]].concat(rb ? [[t("barB"), rb, false]] : [], ru ? [[t("barU"), ru, false]] : []).map((x) => ({ label: x[0], r: x[1], main: x[2], w: wilson(x[1].count, x[1].n) }));
+    /* one scale for the three rates, wide enough for the widest interval */
+    const top = Math.min(100, Math.max(5, Math.ceil(Math.max.apply(null, rates.map((x) => Math.max(pct(x.r.count, x.r.n), x.w ? x.w.hi : 0))) / 5) * 5));
+    const bar = (x) => { const p = pct(x.r.count, x.r.n);
+      return '<span class="lab">' + esc(x.label) + '</span><span class="plot"><span class="track"><span class="fill' + (x.main ? " main" : "") + '" style="width:' + (100 * p / top) +
+        '%"></span></span><span class="lane">' + (x.w ? '<span class="ci" style="inset-inline-start:' + (100 * x.w.lo / top) + "%;width:" + (100 * (x.w.hi - x.w.lo) / top) + '%"></span>' : "") +
+        '</span></span><span class="val num">' + fmt(p) + '% <span class="muted">(' + esc(t("of", { k: x.r.count, n: x.r.n }) + (x.w ? t("interval95", { a: fmt(x.w.lo), b: fmt(x.w.hi) }) : "")) + ")</span></span>"; };
+    h += "<section><h2>" + esc(t("rates")) + '</h2><div class="panel"><div class="bars">' + rates.map(bar).join("") +
+      '<span class="axis num" aria-hidden="true"><span>0%</span><span>' + fmt(top / 2) + "%</span><span>" + top + "%</span></span>";
     h += '</div><p class="small muted">' + esc(t("intervalNote")) + "</p><p>";
     if (pB === null || pU === null) h += esc(t("rateNone"));
     else if (pT <= Math.max(pB, pU)) h += esc(t("rateWithin"));
@@ -331,9 +361,11 @@
       ? " " + esc(t("anyRun", { b: S.any_run_disagreement.current, u: S.any_run_disagreement.proposed })) : "") + "</p></div></section>";
     h += crossHTML();
 
-    h += "<section><h2>" + esc(t("review")) + ' <span class="num muted">' + D.cards.length + '</span></h2><div class="filters">' +
-      [["all", "fAll"], ["stable", "fStable"], ["uns", "fUns"]].map((f) => '<button type="button" data-filter="' + f[0] + '">' + esc(t(f[1])) + "</button>").join("") +
-      '</div><div class="cards" id="cards"></div>';
+    const inView = { all: D.cards.length, stable: D.cards.filter(isStable).length, uns: D.cards.filter((c) => c.state === "unstable" || c.flag === "varied").length };
+    h += "<section><h2>" + esc(t("review")) + '</h2><div class="filters">' +
+      [["all", "fAll"], ["stable", "fStable"], ["uns", "fUns"]].map((f) => '<button type="button" data-filter="' + f[0] + '">' + esc(t(f[1])) + '<span class="count">' + inView[f[0]] + "</span></button>").join("") + "</div>" +
+      (D.cards.some((c) => c.b.length && c.u.length && c.b[0].ans && c.u[0].ans && c.b[0].ans !== c.u[0].ans) ? '<p class="small muted">' + esc(t("diffNote")) + "</p>" : "") +
+      '<div class="cards" id="cards"></div>';
     if (KEYM && D.wrong.length) {
       const flagged = D.wrong.filter((w) => w[2]).length;
       h += '<details class="wrongs panel" data-k="wrongs"><summary>' + esc(t("wrongList", { n: D.wrong.length })) + '</summary><p class="small muted" style="padding-top:8px">' + esc(t("wrongNote")) +
@@ -351,7 +383,7 @@
     const open = Array.from(document.querySelectorAll("details[open][data-k]")).map((d) => d.dataset.k);
     const app = $("app");
     document.documentElement.lang = state.lang; app.dir = state.lang === "ar" ? "rtl" : "ltr";
-    $("t-name").textContent = u("name"); $("lang").textContent = u("langBtn"); $("lang").lang = state.lang === "ar" ? "en" : "ar"; $("t-tagline").textContent = u("tagline");
+    $("t-name").textContent = u("name"); $("t-headline").textContent = t("headline"); $("t-drop").textContent = u("drop"); $("lang").textContent = u("langBtn"); $("lang").lang = state.lang === "ar" ? "en" : "ar"; $("t-tagline").textContent = u("tagline");
     $("btn-sample-key").textContent = u("sampleKey"); $("btn-sample-nokey").textContent = u("sampleNoKey");
     $("t-set-label").textContent = u("setLabel"); $("opt-set-library").textContent = u("setLibrary"); $("opt-set-medicines").textContent = u("setMedicines");
     $("sample-set").value = state.set;
@@ -397,8 +429,7 @@
     load(state.source === "sample-nokey" ? "sample-nokey" : "sample-key", SAMPLES[state.set]);
   });
   $("btn-run").addEventListener("click", () => { state.errorCode = null; load("file", $("paste").value); });
-  $("file").addEventListener("change", (ev) => {
-    const f = ev.target.files && ev.target.files[0]; if (!f) return;
+  function readFile(f) {
     const rd = new FileReader();
     rd.onload = () => {
       const bytes = new Uint8Array(rd.result); let text = null;
@@ -412,6 +443,14 @@
     };
     rd.onerror = () => { state.errorCode = { code: "read", info: {} }; render(); };
     rd.readAsArrayBuffer(f);
+  }
+  $("file").addEventListener("change", (ev) => { const f = ev.target.files && ev.target.files[0]; if (f) readFile(f); });
+  /* the same file can be dropped on the box around the button */
+  ["dragenter", "dragover"].forEach((kind) => $("drop").addEventListener(kind, (ev) => { ev.preventDefault(); $("drop").classList.add("over"); }));
+  ["dragleave", "dragend"].forEach((kind) => $("drop").addEventListener(kind, () => $("drop").classList.remove("over")));
+  $("drop").addEventListener("drop", (ev) => {
+    ev.preventDefault(); $("drop").classList.remove("over");
+    const f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]; if (f) readFile(f);
   });
   $("mode").addEventListener("change", (ev) => { state.modePref = ev.target.value; if (state.source === "file") { state.errorCode = null; load("file", state.text); } });
   $("sim").addEventListener("change", (ev) => { state.sim = parseFloat(ev.target.value); state.errorCode = null; load(state.source, state.text); });

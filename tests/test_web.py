@@ -393,6 +393,41 @@ def test_both_pages_run_their_own_script_in_english_and_in_arabic(tmp_path):
         assert seen["first"] == "العربية" and seen["second"] == "English" and seen["drawn"], (page, seen)
 
 
+DIFF_RUNNER = PAGE_STUB + r"""
+for (const s of scripts) vm.runInContext(s, sandbox);
+const pairs = JSON.parse(process.argv[3]);
+console.log(JSON.stringify(pairs.map((p) => vm.runInContext('diffHTML(' + JSON.stringify(p[0]) + ',' + JSON.stringify(p[1]) + ')', sandbox))));
+"""
+
+
+@needs_node
+def test_the_words_that_differ_between_two_answers_are_marked_and_nothing_else(tmp_path):
+    from ridi_check.cli import main
+    assert main(["report", FIXTURE, "--out", str(tmp_path)]) == 0
+    long_a, long_b = " ".join(["word"] * 401), " ".join(["word"] * 400 + ["other"])
+    pairs = [
+        ("Membership must be renewed every three years.", "Membership must be", "Membership must be <mark>renewed every three years.</mark>"),
+        ("Membership must be", "Membership must be renewed every three years.", "Membership must be"),
+        ("The fee is ten pounds.", "The fee is twenty pounds.", "The fee is <mark>ten</mark> pounds."),
+        ("A loan can be renewed", "loan can be renewed", "<mark>A</mark> loan can be renewed"),
+        ("same answer", "same answer", "same answer"),                       # nothing differs: nothing is marked
+        ("only this side", "", "only this side"),                            # nothing to compare with
+        ("one\n  two three", "one three", "one\n  <mark>two</mark> three"),    # the spacing of the answer is kept as it is
+        ("x <b>bold</b> & y", "x y", "x <mark>&lt;b&gt;bold&lt;/b&gt; &amp;</mark> y"),     # an answer cannot write markup
+        ("لا يُسمح بالطعام", "يُسمح بالطعام", "<mark>لا</mark> يُسمح بالطعام"),
+        (long_a, long_b, long_a),                                            # too long to compare word by word: shown plain
+    ]
+    (tmp_path / "diff.js").write_text(DIFF_RUNNER, encoding="utf-8")
+    done = subprocess.run([NODE, str(tmp_path / "diff.js"), str(tmp_path / "report.html"), json.dumps([p[:2] for p in pairs])],
+                          capture_output=True, text=True, encoding="utf-8")
+    assert done.returncode == 0, done.stderr[-1500:]
+    assert json.loads(done.stdout) == [p[2] for p in pairs]
+    # the browser version draws with the same function, word for word
+    pages = _pages()
+    body = lambda page: " ".join(re.search(r"function diffHTML\(a, b\) \{.*?\n\s*\}\n", page, re.S).group(0).split())  # noqa: E731
+    assert body(pages["browser version"]) == body(pages["report"])
+
+
 PAGING_RUNNER = PAGE_STUB + r"""
 for (const s of scripts) vm.runInContext(s, sandbox);
 const cards = () => (elements.cards.innerHTML.match(/<article class="card /g) || []).length;

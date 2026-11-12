@@ -1,23 +1,40 @@
 /* Inputs of the browser version. The report itself uses the stylesheet of report_template.html. */
-.inputs { display: flex; flex-direction: column; gap: 12px; }
-.filebtn { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; cursor: pointer;
+.inputs { display: flex; flex-direction: column; gap: 14px; }
+.source { gap: 10px 16px; }
+.source > label { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; max-width: 100%; color: var(--band-muted); }
+.source > label select { min-width: 0; }
+.seg { display: inline-flex; flex-wrap: wrap; }
+.seg button { border-radius: 0; }
+.seg button + button { margin-inline-start: -1px; }
+.seg button:first-child { border-start-start-radius: 8px; border-end-start-radius: 8px; }
+.seg button:last-child { border-start-end-radius: 8px; border-end-end-radius: 8px; }
+.seg button[aria-pressed="true"] { position: relative; }
+select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; max-width: 100%; }
+select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* two disclosures that sit side by side as buttons while closed; an open one takes the whole row as a sheet */
+.panels { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+details.own { border: 1px solid var(--band-line); border-radius: 10px; background: var(--band-control); color: var(--band-ink); min-width: 0; max-width: 100%; }
+details.own > summary { cursor: pointer; padding: 8px 14px; font-weight: 500; list-style: none; display: flex; align-items: center; gap: 10px; border-radius: 9px; }
+details.own > summary::-webkit-details-marker { display: none; }
+details.own > summary::after { content: ""; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg); flex: none; opacity: 0.8; }
+details.own[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+details#own:not([open]) { background: var(--band-ink); color: var(--band); border-color: var(--band-ink); }
+details.own[open] { flex-basis: 100%; background: var(--surface); color: var(--ink); border-color: var(--line); }
+details.own[open] > summary { font-weight: 600; padding-block: 14px 8px; padding-inline: 18px; }
+details.own .body { padding: 4px 18px 18px; display: flex; flex-direction: column; gap: 14px; }
+details.own ol { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 78ch; }
+.drop { border: 1.5px dashed var(--line); border-radius: 10px; background: var(--sunken); padding: 16px; display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.drop.over { border-color: var(--accent); background: var(--accent-bg); }
+.filebtn { font: inherit; font-weight: 500; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 13px; cursor: pointer;
   position: relative; display: inline-block; }
 .filebtn:hover { border-color: var(--accent); }
 .filebtn:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .filebtn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-details.own { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
-details.own > summary { cursor: pointer; padding: 10px 14px; font-weight: 500; }
-details.own .body { padding: 4px 14px 14px; display: flex; flex-direction: column; gap: 12px; }
-select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; max-width: 100%; }
-.row > label { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; max-width: 100%; }
-.row > label select { min-width: 0; }
-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cols { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 4px; }
 .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 16px; }
 .opts label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.msg { border: 1px solid var(--reg); background: var(--reg-bg); color: var(--ink); border-radius: 6px; padding: 10px 12px; overflow-wrap: anywhere; }
+.msg { border: 1px solid var(--reg); background: var(--reg-bg); color: var(--ink); border-radius: 8px; padding: 10px 12px; overflow-wrap: anywhere; }
 .warn { color: var(--uns); }
-button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.get ul { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 6px; max-width: 70ch; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); padding-inline: 20px; }
 button.done { border-color: var(--accent); font-weight: 600; }
-details.own ol { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; }

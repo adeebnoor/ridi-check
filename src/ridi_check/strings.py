@@ -30,6 +30,8 @@ COMMON = {
         "langBtn": "العربية",
         "tagline": "The current and the proposed version of an assistant, run on the same questions. "
                    "Which answers changed, and which changes hold when each version is run again.",
+        "headline": "What did the update change, and which changes hold on re-run?",
+        "diffNote": "Highlighting shows where the first-run answers of the two versions differ, word by word.",
         "source": "{n} cases from {file}. Report written {when} by ridi-check {version}.",
         "sourceOne": "1 case from {file}. Report written {when} by ridi-check {version}.",
         "versions": "Current version: {a}. Proposed version: {b}.",
@@ -106,6 +108,8 @@ COMMON = {
         "langBtn": "English",
         "tagline": "النسخة الحالية والنسخة المقترحة من المساعد على الأسئلة نفسها. "
                    "أي الإجابات تغيّرت، وأي تغيّر يثبت عند إعادة تشغيل كل نسخة.",
+        "headline": "ماذا غيّر التحديث، وأي تغيّر يثبت عند إعادة التشغيل؟",
+        "diffNote": "التظليل يبيّن مواضع اختلاف إجابتَي التشغيل الأول للنسختين، كلمة بكلمة.",
         "source": "{n} حالة من {file}. كُتب التقرير {when} بواسطة ridi-check {version}.",
         "sourceOne": "حالة واحدة من {file}. كُتب التقرير {when} بواسطة ridi-check {version}.",
         "versions": "النسخة الحالية: {a}. النسخة المقترحة: {b}.",

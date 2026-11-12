@@ -14,67 +14,77 @@ __STYLE__
 </head>
 <body>
 <!--page-->
-<div class="wrap" id="app">
-  <header class="top">
+<div id="app">
+  <div class="band"><div class="wrap">
+    <header class="top">
+      <div class="brand"><svg class="logo" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="12.5" y="1" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="1" y="12.5" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="12.5" y="12.5" width="8.5" height="8.5" rx="2.2" fill="var(--signal)"/></svg><h1 id="t-name">RIDI Update Check</h1></div>
+      <button type="button" id="lang" lang="ar">العربية</button>
+    </header>
     <div class="lead">
-      <h1 id="t-name">RIDI Update Check</h1>
-      <p class="muted" id="t-tagline"></p>
+      <p class="headline" id="t-headline"></p>
+      <p class="tagline" id="t-tagline"></p>
     </div>
-    <button type="button" id="lang" lang="ar">العربية</button>
-  </header>
-
-  <div class="inputs">
-    <div class="row">
-      <label for="sample-set" class="small"><span id="t-set-label"></span>
-        <select id="sample-set"><option value="library" id="opt-set-library"></option><option value="medicines" id="opt-set-medicines"></option></select></label>
-      <button type="button" id="btn-sample-key" aria-pressed="true"></button>
-      <button type="button" id="btn-sample-nokey" aria-pressed="false"></button>
-    </div>
-    <details class="own" id="why" data-k="why">
-      <summary id="t-why"></summary>
-      <div class="body"><ol class="small" id="t-why-list"></ol></div>
-    </details>
-    <details class="own" id="own" data-k="own">
-      <summary id="t-own"></summary>
-      <div class="body">
-        <p class="small muted" id="t-privacy"></p>
-        <div class="row">
-          <label class="filebtn" for="file"><span id="t-choose"></span><input type="file" id="file" accept=".csv,.tsv,.txt,text/csv,text/plain,text/tab-separated-values"></label>
-        </div>
-        <label for="paste" class="small" id="t-paste"></label>
-        <textarea id="paste" spellcheck="false" dir="ltr"></textarea>
-        <div>
-          <p class="small" id="t-opts" style="font-weight:600"></p>
-          <div class="opts small">
-            <label for="mode"><span id="t-mode-label"></span>
-              <select id="mode"><option value="auto" id="opt-auto"></option><option value="nokey" id="opt-nokey"></option></select></label>
-            <label for="sim"><span id="t-sim-label"></span>
-              <select id="sim"><option value="1" id="opt-sim1"></option><option value="0.9" id="opt-sim90"></option><option value="0.75" id="opt-sim75"></option></select></label>
-          </div>
-        </div>
-        <div class="row"><button type="button" class="primary" id="btn-run"></button></div>
-        <div>
-          <p class="small" id="t-format" style="font-weight:600"></p>
-          <p class="small muted" id="t-cols-note"></p>
-          <ul class="cols small" id="t-cols"></ul>
+    <div class="inputs">
+      <div class="row source">
+        <label for="sample-set" class="small"><span id="t-set-label"></span>
+          <select id="sample-set"><option value="library" id="opt-set-library"></option><option value="medicines" id="opt-set-medicines"></option></select></label>
+        <div class="seg">
+          <button type="button" id="btn-sample-key" aria-pressed="true"></button>
+          <button type="button" id="btn-sample-nokey" aria-pressed="false"></button>
         </div>
       </div>
-    </details>
-    <p class="msg" id="err" role="alert" hidden></p>
+      <div class="panels">
+        <details class="own" id="own" data-k="own">
+          <summary id="t-own"></summary>
+          <div class="body">
+            <p class="small muted" id="t-privacy"></p>
+            <div class="drop" id="drop">
+              <label class="filebtn" for="file"><span id="t-choose"></span><input type="file" id="file" accept=".csv,.tsv,.txt,text/csv,text/plain,text/tab-separated-values"></label>
+              <span class="small muted" id="t-drop"></span>
+            </div>
+            <label for="paste" class="small" id="t-paste"></label>
+            <textarea id="paste" spellcheck="false" dir="ltr"></textarea>
+            <div>
+              <p class="small" id="t-opts" style="font-weight:600"></p>
+              <div class="opts small">
+                <label for="mode"><span id="t-mode-label"></span>
+                  <select id="mode"><option value="auto" id="opt-auto"></option><option value="nokey" id="opt-nokey"></option></select></label>
+                <label for="sim"><span id="t-sim-label"></span>
+                  <select id="sim"><option value="1" id="opt-sim1"></option><option value="0.9" id="opt-sim90"></option><option value="0.75" id="opt-sim75"></option></select></label>
+              </div>
+            </div>
+            <div class="row"><button type="button" class="primary" id="btn-run"></button></div>
+            <div>
+              <p class="small" id="t-format" style="font-weight:600"></p>
+              <p class="small muted" id="t-cols-note"></p>
+              <ul class="cols small" id="t-cols"></ul>
+            </div>
+          </div>
+        </details>
+        <details class="own" id="why" data-k="why">
+          <summary id="t-why"></summary>
+          <div class="body"><ol class="small" id="t-why-list"></ol></div>
+        </details>
+      </div>
+      <p class="msg" id="err" role="alert" hidden></p>
+    </div>
+  </div></div>
+
+  <div class="wrap page">
     <div class="small muted note" id="source-note"></div>
+    <main id="report"></main>
+    <div class="closing">
+      <section class="get">
+        <h2 id="t-get"></h2>
+        <ul class="muted" id="t-get-list"></ul>
+      </section>
+      <section class="limits">
+        <h2 id="t-limits"></h2>
+        <ul class="muted" id="t-limit-list"></ul>
+      </section>
+    </div>
+    <p class="small muted foot">ridi-check __VERSION__ · the RIDI method</p>
   </div>
-
-  <main id="report"></main>
-
-  <section class="get">
-    <h2 id="t-get"></h2>
-    <ul class="muted" id="t-get-list"></ul>
-  </section>
-  <section class="limits">
-    <h2 id="t-limits"></h2>
-    <ul class="muted" id="t-limit-list"></ul>
-  </section>
-  <p class="small muted">ridi-check __VERSION__ · the RIDI method</p>
 </div>
 <script id="ridi-strings" type="application/json">__STRINGS__</script>
 <script id="ridi-sample" type="application/json">__SAMPLE__</script>

@@ -19,6 +19,13 @@ library API may change between minor versions.
   hand, whose scores come from somewhere else. `--strict` does not turn it on.
 
 ### Changed
+- The report and the browser version have a new look, with the same content and the same numbers: a band
+  that names the page and holds its controls, the ledger and the case strip in one board, each rate drawn
+  with its 95% interval on one scale, the cells of the score and answer-text table that are worth reading
+  set apart, and filters that show how many cases each holds.
+- On a case card, the words where the first-run answers of the two versions differ are highlighted. It is a
+  word-by-word comparison for the eye; nothing is counted from it.
+- In the browser version a file can be dropped on the page as well as chosen.
 - The browser version cuts each cell out of the text of the file and reads one row at a time. On the
   100,000-case file it now takes about 3 s and 270 MB where it took 13 s and 1.4 GB on the same machine and
   day. What it reads is unchanged: it was compared with the earlier reader on 400,000 random texts and with

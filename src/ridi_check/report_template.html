@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RIDI Update Check</title>
 <style>
-/* One working column: a ledger of case states with a one-cell-per-case strip, then change against
-   re-run variation on one scale, then the cases to review. No network: fonts are the reader's own. */
+/* Layout: an ink band names the page and holds what the reader sets. Under it, one working column: the
+   ledger of case states with its one-cell-per-case strip, change against re-run variation on one scale,
+   then the cases to review. No network: fonts are the reader's own. */
 :root {
-  --bg: #F2F5F7; --surface: #FFFFFF; --ink: #15212B; --muted: #566876; --line: #D3DCE3;
-  --accent: #0C5FA8; --accent-ink: #FFFFFF;
+  --bg: #F4F6F9; --surface: #FFFFFF; --sunken: #EEF2F6; --ink: #101C28; --muted: #55667A; --line: #D5DDE6;
+  --accent: #1A56C4; --accent-ink: #FFFFFF; --accent-bg: #E6EEFB; --mark: #DCE8FC;
+  --band: #0E2036; --band-ink: #F2F6FA; --band-muted: #A8BACD; --band-line: #2C4561; --band-control: #172F4A;
+  --signal: #F2B544;
   --reg: #B3362B; --reg-bg: #FBE9E6; --imp: #1C774A; --imp-bg: #E2F3EA;
   --uns: #8F5E00; --uns-bg: #FBEFD3; --wrong: #5F4F8C; --wrong-bg: #ECE8F5;
   --ok: #8FA3B1; --ok-bg: #E7EDF1; --inc: #4B5A66; --inc-bg: #E1E6EA;
@@ -18,16 +21,20 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0E151B; --surface: #17212A; --ink: #E4ECF2; --muted: #94A5B3; --line: #2C3A46;
-    --accent: #6DB3F2; --accent-ink: #08131C;
+    --bg: #0B1219; --surface: #131D27; --sunken: #0F1820; --ink: #E6EDF4; --muted: #93A4B5; --line: #263443;
+    --accent: #7DB4F5; --accent-ink: #07121D; --accent-bg: #16283F; --mark: #1F3A60;
+    --band: #101B28; --band-ink: #F2F6FA; --band-muted: #A8BACD; --band-line: #24364A; --band-control: #18273A;
+    --signal: #F2B544;
     --reg: #F08A7E; --reg-bg: #3A1C19; --imp: #6FD19B; --imp-bg: #15301F;
     --uns: #E9B955; --uns-bg: #36290E; --wrong: #B5A6E0; --wrong-bg: #262038;
     --ok: #50626F; --ok-bg: #1D2831; --inc: #A9B6C0; --inc-bg: #25313B; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0E151B; --surface: #17212A; --ink: #E4ECF2; --muted: #94A5B3; --line: #2C3A46;
-  --accent: #6DB3F2; --accent-ink: #08131C;
+  --bg: #0B1219; --surface: #131D27; --sunken: #0F1820; --ink: #E6EDF4; --muted: #93A4B5; --line: #263443;
+  --accent: #7DB4F5; --accent-ink: #07121D; --accent-bg: #16283F; --mark: #1F3A60;
+  --band: #101B28; --band-ink: #F2F6FA; --band-muted: #A8BACD; --band-line: #24364A; --band-control: #18273A;
+  --signal: #F2B544;
   --reg: #F08A7E; --reg-bg: #3A1C19; --imp: #6FD19B; --imp-bg: #15301F;
   --uns: #E9B955; --uns-bg: #36290E; --wrong: #B5A6E0; --wrong-bg: #262038;
   --ok: #50626F; --ok-bg: #1D2831; --inc: #A9B6C0; --inc-bg: #25313B; color-scheme: dark;
@@ -35,19 +42,30 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 15px; line-height: 1.55; }
-.wrap { max-width: 940px; margin-inline: auto; padding-block: 28px 56px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: flex; flex-direction: column; gap: 28px; }
+.wrap { max-width: 1040px; margin-inline: auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.page { padding-block: 28px 64px; display: flex; flex-direction: column; gap: 40px; }
 h1, h2, h3, p { margin: 0; }
-h1 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
-h2 { font-size: 1.05rem; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.22rem; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+[dir="rtl"] h2, [dir="rtl"] .headline { letter-spacing: 0; }
 .muted { color: var(--muted); }
 .small { font-size: 0.86rem; }
 .num { font-family: var(--data); font-variant-numeric: tabular-nums; }
-header.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; justify-content: space-between; }
-header.top .lead { max-width: 62ch; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
-  border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+
+/* the band */
+.band { background: var(--band); color: var(--band-ink); border-bottom: 1px solid var(--band-line); }
+.band .wrap { padding-block: 22px 30px; display: flex; flex-direction: column; gap: 26px; }
+header.top { display: flex; gap: 12px 24px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand .logo { flex: none; color: var(--band-muted); }
+.brand h1 { font-size: 0.98rem; font-weight: 600; letter-spacing: 0.01em; }
+.lead { display: flex; flex-direction: column; gap: 12px; max-width: 46rem; min-width: 0; }
+.headline { font-size: clamp(1.65rem, 1.15rem + 2.4vw, 2.6rem); line-height: 1.14; font-weight: 600; letter-spacing: -0.022em; text-wrap: balance; }
+.band .tagline { color: var(--band-muted); font-size: 1.02rem; max-width: 40rem; }
+.band .meta { color: var(--band-muted); display: flex; flex-direction: column; gap: 3px; overflow-wrap: anywhere; }
+
+button { font: inherit; font-weight: 500; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 13px; cursor: pointer; transition: border-color 0.12s, background-color 0.12s, color 0.12s; }
 button:hover { border-color: var(--accent); }
 /* The language button shows the name of the other language. When that name is Arabic, its own stack names
    the Arabic fonts that systems ship; with none of them the browser still uses any font that has the letters. */
@@ -55,99 +73,140 @@ button:hover { border-color: var(--accent); }
 button:focus-visible, textarea:focus-visible, summary:focus-visible, .cell:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px; }
 button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+/* controls that sit on the band itself */
+.band header button, .band .source button, .band .source select { color: var(--band-ink); background: var(--band-control); border-color: var(--band-line); }
+.band header button:hover, .band .source button:hover, .band .source select:hover { border-color: var(--band-muted); }
+.band header button:focus-visible, .band .source button:focus-visible, .band .source select:focus-visible, .band details:not([open]) > summary:focus-visible { outline-color: var(--band-ink); }
+.band .source button[aria-pressed="true"] { background: var(--band-ink); color: var(--band); border-color: var(--band-ink); }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 textarea { font-family: var(--data); font-size: 0.82rem; width: 100%; min-height: 110px; padding: 10px; color: var(--ink);
-  background: var(--bg); border: 1px solid var(--line); border-radius: 6px; resize: vertical; }
-code { font-family: var(--data); font-size: 0.86em; background: var(--ok-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  background: var(--sunken); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+code { font-family: var(--data); font-size: 0.86em; background: var(--sunken); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
 .note { border-inline-start: 3px solid var(--line); padding-inline-start: 12px; display: flex; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
-main { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+main { display: flex; flex-direction: column; gap: 40px; min-width: 0; }
 section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; border: 1px solid var(--line);
-  border-radius: 8px; background: var(--surface); overflow: hidden; }
-.tile { padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; border-inline-end: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -1px -1px 0; min-width: 0; }
-.tile .n { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 2rem; font-weight: 500; line-height: 1.1; }
+.panel { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+
+/* the ledger: one tile for each state, and one cell for each case */
+.board { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
+.ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; overflow: hidden; }
+.tile { padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 3px; border-inline-end: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -1px -1px 0; min-width: 0; }
+[dir="rtl"] .tile { margin: 0 0 -1px -1px; }
+.tile .n { font-variant-numeric: tabular-nums; font-size: 2.7rem; font-weight: 600; line-height: 1.05; letter-spacing: -0.03em; }
 .tile .k { font-weight: 600; display: flex; align-items: center; gap: 7px; }
-.dot { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .s-reg { --c: var(--reg); --cb: var(--reg-bg); } .s-imp { --c: var(--imp); --cb: var(--imp-bg); }
 .s-uns { --c: var(--uns); --cb: var(--uns-bg); } .s-wrong { --c: var(--wrong); --cb: var(--wrong-bg); }
-.s-ok { --c: var(--ok); --cb: var(--ok-bg); } .s-chg { --c: var(--accent); --cb: var(--ok-bg); }
+.s-ok { --c: var(--ok); --cb: var(--ok-bg); } .s-chg { --c: var(--accent); --cb: var(--accent-bg); }
 .s-inc { --c: var(--inc); --cb: var(--inc-bg); }
 .dot, .cell { background: var(--c); }
 .tile .n { color: var(--c); } .tile.s-ok .n { color: var(--muted); }
+.map { border-top: 1px solid var(--line); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
 .strip { display: flex; flex-wrap: wrap; gap: 3px; }
-.cell { width: 18px; height: 18px; border-radius: 3px; border: 0; padding: 0; cursor: default; }
-button.cell { cursor: pointer; } button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
-.cell.open { opacity: 0.55; }
+.cell { width: 18px; height: 18px; border-radius: 4px; border: 0; padding: 0; cursor: default; }
+button.cell { cursor: pointer; transition: transform 0.12s; } button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; transform: scale(1.15); }
+.cell.open { opacity: 0.5; }
 .bar { display: flex; height: 18px; border-radius: 4px; overflow: hidden; gap: 2px; }
 .bar .seg { background: var(--c); min-width: 3px; }
 .more { margin-top: 4px; }
-.bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 10px 12px; align-items: center; }
-.bars .track { height: 14px; background: var(--ok-bg); border-radius: 3px; position: relative; min-width: 40px; }
-.bars .fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 3px; background: var(--ok); min-width: 2px; }
+
+/* change against re-run variation: one scale, each rate with its interval under it */
+.bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 14px 14px; align-items: center; }
+.bars .lab { min-width: 0; font-weight: 500; }
+.bars .plot { display: flex; flex-direction: column; gap: 4px; min-width: 40px; }
+.bars .track { height: 16px; background: var(--sunken); border-radius: 4px; position: relative; }
+.bars .fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-start-end-radius: 4px; border-end-end-radius: 4px; background: var(--ok); min-width: 2px; }
 .bars .fill.main { background: var(--accent); }
-.bars .lab { min-width: 0; }
-.panel { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-.filters { display: flex; flex-wrap: wrap; gap: 6px; }
-.filters button { padding: 4px 10px; font-size: 0.88rem; }
-.cards { display: flex; flex-direction: column; gap: 12px; }
-.card { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 16px; display: flex; flex-direction: column; gap: 12px;
-  border-top: 3px solid var(--c); scroll-margin-top: 16px; }
+.bars .lane { height: 8px; position: relative; }
+.bars .ci { position: absolute; inset-block: 0; border-inline: 2px solid var(--muted); min-width: 4px;
+  background: linear-gradient(var(--muted), var(--muted)) center / 100% 2px no-repeat; }
+.bars .axis { grid-column: 2; display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted); margin-top: -8px; }
+.bars .val .muted { font-size: 0.86em; }
+
+.filters { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); align-self: flex-start; }
+.filters button { padding: 4px 12px; font-size: 0.88rem; border-color: transparent; background: none; border-radius: 7px; }
+.filters button:hover { background: var(--sunken); }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.filters .count { font-family: var(--data); font-size: 0.86em; opacity: 0.7; margin-inline-start: 6px; }
+.cards { display: flex; flex-direction: column; gap: 14px; }
+.card { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 18px; display: flex; flex-direction: column; gap: 12px;
+  scroll-margin-top: 16px; }
 .card[hidden] { display: none; }
-.card .head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
-.pill { font-size: 0.8rem; font-weight: 600; color: var(--c); background: var(--cb); border-radius: 4px; padding: 2px 8px; }
-.card .q { font-weight: 500; overflow-wrap: anywhere; }
-.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.side { background: var(--bg); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.side .lbl { font-size: 0.76rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.card .head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.pill { font-size: 0.8rem; font-weight: 600; color: var(--c); background: var(--cb); border-radius: 999px; padding: 3px 11px 3px 9px; display: inline-flex; align-items: center; gap: 7px; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex: none; }
+.card .q { font-size: 1.06rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.side { background: var(--sunken); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.side .lbl { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
 [dir="rtl"] .side .lbl { letter-spacing: 0; }
 .side .ver { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
-.side .ans { font-family: var(--data); font-size: 0.92rem; overflow-wrap: anywhere; white-space: pre-wrap; max-height: 18em; overflow-y: auto; }
+.side .ans { font-size: 0.97rem; line-height: 1.6; overflow-wrap: anywhere; white-space: pre-wrap; max-height: 18em; overflow-y: auto; }
+mark { background: var(--mark); color: inherit; border-radius: 3px; padding: 1px 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .side .rerun { font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
 .side .rerun.diff { color: var(--uns); }
-.score { font-size: 0.72rem; border: 1px solid var(--line); color: var(--muted); border-radius: 3px; padding: 0 4px; white-space: nowrap; align-self: flex-start; }
+.side .rerun .num { font-family: var(--text); }
+.score { font-size: 0.72rem; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 0 8px; white-space: nowrap; align-self: flex-start; }
 .errs { font-size: 0.84rem; color: var(--muted); overflow-wrap: anywhere; }
 details.ctx > summary { cursor: pointer; font-size: 0.9rem; font-weight: 500; }
 .ctxgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; padding-top: 10px; }
 .ctxgrid ul { margin: 0; padding-inline-start: 16px; font-size: 0.84rem; display: flex; flex-direction: column; gap: 3px; }
 .ctxgrid li { overflow-wrap: anywhere; }
-.tag { font-size: 0.72rem; border: 1px solid var(--wrong); color: var(--wrong); border-radius: 3px; padding: 0 4px; }
-.judge { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.judge button { padding: 4px 10px; font-size: 0.88rem; }
+.tag { font-size: 0.72rem; border: 1px solid var(--wrong); color: var(--wrong); border-radius: 999px; padding: 0 8px; }
+.judge { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; }
+.judge button { padding: 4px 12px; font-size: 0.88rem; }
 details.wrongs > summary { cursor: pointer; font-weight: 500; }
 details.wrongs ul { margin: 10px 0 0; padding-inline-start: 18px; font-size: 0.9rem; display: flex; flex-direction: column; gap: 4px; }
 details.wrongs li { overflow-wrap: anywhere; }
 .cross { overflow-x: auto; }
 .cross table { border-collapse: collapse; font-size: 0.9rem; min-width: 100%; }
-.cross th, .cross td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: end; vertical-align: bottom; }
+.cross th, .cross td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: end; vertical-align: bottom; }
 .cross th { font-weight: 500; color: var(--muted); font-size: 0.82rem; }
 .cross th[scope="row"], .cross thead th:first-child { text-align: start; }
 .cross th[scope="row"] { color: var(--ink); font-size: 0.9rem; white-space: nowrap; }
 .cross td { font-family: var(--data); font-variant-numeric: tabular-nums; }
 .cross .dot { display: inline-block; margin-inline-end: 7px; }
-.cross td.zero { color: var(--muted); opacity: 0.6; }
+.cross td.zero { color: var(--muted); opacity: 0.55; }
+.cross td.read span { background: var(--accent-bg); color: var(--ink); font-weight: 600; border-radius: 6px; padding: 2px 8px; margin-inline-end: -8px; }
 .cross tr:last-child th, .cross tr:last-child td { border-bottom: 0; }
-.limits ul { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 6px; max-width: 70ch; }
+.closing { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.closing section { border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.closing h2 { font-size: 1.02rem; }
+.limits ul, .get ul { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 8px; }
+.foot { border-top: 1px solid var(--line); padding-top: 16px; }
 .out { display: flex; flex-direction: column; gap: 8px; }
-@media (max-width: 520px) { .bars { grid-template-columns: minmax(0, 1fr); gap: 4px 0; } .bars .val { margin-bottom: 8px; } h1 { font-size: 1.35rem; } }
+@media (max-width: 560px) {
+  .bars { grid-template-columns: minmax(0, 1fr); gap: 4px 0; } .bars .val { margin-bottom: 10px; } .bars .axis { grid-column: 1; margin-top: -4px; }
+  .tile .n { font-size: 2.2rem; } .page { gap: 32px; } main { gap: 32px; }
+}
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
-@media print { button, .filters, .out { display: none !important; } body { background: #fff; } }
+@media (prefers-reduced-motion: reduce) { button, button.cell { transition: none; } button.cell:hover { transform: none; } }
+@media print { button, .filters, .out { display: none !important; } body { background: #fff; } .band { background: none; color: #000; border-bottom: 1px solid #999; }
+  .band .tagline, .band .meta, .brand .logo { color: #333; } }
 </style>
 </head>
 <body>
-<div class="wrap" id="app">
-  <header class="top">
+<div id="app">
+  <div class="band"><div class="wrap">
+    <header class="top">
+      <div class="brand"><svg class="logo" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="12.5" y="1" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="1" y="12.5" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="12.5" y="12.5" width="8.5" height="8.5" rx="2.2" fill="var(--signal)"/></svg><h1 id="t-name">RIDI Update Check</h1></div>
+      <button type="button" id="lang" lang="ar">العربية</button>
+    </header>
     <div class="lead">
-      <h1 id="t-name">RIDI Update Check</h1>
-      <p class="muted" id="t-tagline"></p>
+      <p class="headline" id="t-headline"></p>
+      <p class="tagline" id="t-tagline"></p>
     </div>
-    <button type="button" id="lang" lang="ar">العربية</button>
-  </header>
-  <div class="small muted note" id="source-note"></div>
-  <main id="report"></main>
-  <section class="limits">
-    <h2 id="t-limits"></h2>
-    <ul class="muted" id="t-limit-list"></ul>
-  </section>
+    <div class="small meta" id="source-note"></div>
+  </div></div>
+  <div class="wrap page">
+    <main id="report"></main>
+    <div class="closing">
+      <section class="limits">
+        <h2 id="t-limits"></h2>
+        <ul class="muted" id="t-limit-list"></ul>
+      </section>
+    </div>
+  </div>
 </div>
 <noscript><p style="padding:16px">This report needs JavaScript to draw. The same numbers are in summary.json and review_cases.csv.</p></noscript>
 <script id="ridi-data" type="application/json">__RIDI_DATA__</script>
@@ -187,12 +246,36 @@ function tile(s, sub) {
   return '<div class="tile ' + CLS[s] + '"><span class="n">' + by(s) + '</span><span class="k"><span class="dot"></span>' + esc(L().state[s]) +
     '</span><span class="small muted">' + esc(sub) + "</span></div>";
 }
-function sideHTML(label, version, runs) {
+/* The first-run answer of one version with the words marked that are not part of the longest run of words,
+   in order, that it shares with the other version's answer. For the eye only: nothing is counted from it. */
+function diffHTML(a, b) {
+  if (!b || a === b) return esc(a);
+  const A = a.split(/(\s+)/), B = b.split(/\s+/).filter(Boolean), at = [];
+  A.forEach((w, i) => { if (i % 2 === 0 && w) at.push(i); });
+  const n = at.length, m = B.length;
+  if (n > 400 || m > 400) return esc(a);
+  const L = []; for (let i = 0; i <= n; i++) L.push(new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[at[i]] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const shared = new Set();
+  for (let i = 0, j = 0; i < n && j < m;) { if (A[at[i]] === B[j]) { shared.add(at[i]); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++; }
+  let h = "", open = false, gap = "";
+  A.forEach((w, i) => {
+    if (i % 2) { gap = w; return; }
+    if (!w) return;
+    const marked = !shared.has(i);
+    if (open && !marked) { h += "</mark>"; open = false; }
+    h += esc(gap); gap = "";
+    if (marked && !open) { h += "<mark>"; open = true; }
+    h += esc(w);
+  });
+  return h + (open ? "</mark>" : "") + esc(gap);
+}
+function sideHTML(label, version, runs, other) {
   let h = '<div class="side"><span class="lbl">' + esc(label) + "</span>";
   if (version) h += '<span class="ver" dir="auto">' + esc(version) + "</span>";
   if (!runs.length) return h + "</div>";
   const r = runs[0];
-  h += '<span class="ans" dir="auto">' + esc(r.ans || (r.cor === 1 ? "1" : r.cor === 0 ? "0" : "")) + "</span>";
+  h += '<span class="ans" dir="auto">' + (r.ans ? diffHTML(r.ans, other) : esc(r.cor === 1 ? "1" : r.cor === 0 ? "0" : "")) + "</span>";
   if (KEY && r.ans && r.cor != null) h += '<span class="score">' + esc(t(r.cor ? "scored1" : "scored0")) + "</span>";
   runs.slice(1).forEach((x, i) => {
     h += x.same ? '<span class="rerun">' + esc(t("runSame", { k: i + 2 })) + "</span>"
@@ -221,7 +304,7 @@ function cardHTML(c, i) {
   if (c.q) h += '<p class="q" dir="auto">' + esc(c.q) + "</p>";
   if (c.state === "correct_both") h += '<p class="small muted">' + esc(t("correctChangedNote")) + "</p>";
   if (KEY && c.expected) h += '<p class="small muted">' + esc(t("expected")) + '<span class="num" dir="auto">' + esc(c.expected) + "</span></p>";
-  h += '<div class="pair">' + sideHTML(t("current"), M.labels.current, c.b) + sideHTML(t("proposed"), M.labels.proposed, c.u) + "</div>";
+  h += '<div class="pair">' + sideHTML(t("current"), M.labels.current, c.b, c.u.length ? c.u[0].ans : "") + sideHTML(t("proposed"), M.labels.proposed, c.u, c.b.length ? c.b[0].ans : "") + "</div>";
   if (c.err) h += '<p class="errs">' + esc(t("runErrors")) + '<span class="num" dir="ltr">' + esc(c.err) + "</span></p>";
   h += ctxHTML(c, i);
   if (!KEY && c.state === "stable_change") {
@@ -270,7 +353,10 @@ function stripHTML() {
       : '<span class="cell open ' + CLS[s] + '" role="listitem" title="' + label + '"></span>';
   }).join("") + '</div><p class="small muted">' + esc(t("stripNote")) + "</p>";
 }
-/* Answer-key mode: what the score did (rows) against what the answer text did (columns), in cases. */
+/* Answer-key mode: what the score did (rows) against what the answer text did (columns), in cases. The cells
+   where one of the two changed and the other did not are set apart. */
+const sameScore = (row) => row === "wrong_both" || row === "correct_both";
+const worthReading = (row, col) => (sameScore(row) ? col !== "same" && col !== "no_answer_text" : row !== "unstable" && col === "same");
 function crossHTML() {
   const T = D.summary.score_and_answer_text, mixed = D.summary.same_text_scored_differently || [], C = D.summary.score_check;
   if (!T && !mixed.length && !C) return "";
@@ -279,7 +365,7 @@ function crossHTML() {
     const rows = Object.keys(T), cols = Object.keys(L().answerCol).filter((c) => c !== "no_answer_text" || rows.some((r) => T[r][c]));
     h += '<div class="cross"><table><thead><tr><th scope="col">' + esc(t("crossHead")) + "</th>" + cols.map((c) => '<th scope="col">' + esc(L().answerCol[c]) + "</th>").join("") +
       "</tr></thead><tbody>" + rows.map((r) => '<tr><th scope="row"><span class="dot ' + CLS[r] + '"></span>' + esc(L().state[r]) + "</th>" +
-        cols.map((c) => '<td class="' + (T[r][c] ? "" : "zero") + '">' + T[r][c] + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
+        cols.map((c) => '<td class="' + (!T[r][c] ? "zero" : worthReading(r, c) ? "read" : "") + '"><span>' + T[r][c] + "</span></td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
       '<p class="small muted">' + esc(t("crossNote")) + "</p>";
   }
   if (mixed.length) h += '<p class="small" style="color:var(--uns)">' + esc(t("sameTextScored", { n: mixed.length, ids: mixed.slice(0, 20).join(", ") + (mixed.length > 20 ? ", …" : "") })) + "</p>";
@@ -295,7 +381,7 @@ function render() {
   document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr";
   app.dir = state.lang === "ar" ? "rtl" : "ltr";
   document.title = t("name");
-  $("t-name").textContent = t("name"); $("lang").textContent = t("langBtn"); $("lang").lang = state.lang === "ar" ? "en" : "ar"; $("t-tagline").textContent = t("tagline");
+  $("t-name").textContent = t("name"); $("t-headline").textContent = t("headline"); $("lang").textContent = t("langBtn"); $("lang").lang = state.lang === "ar" ? "en" : "ar"; $("t-tagline").textContent = t("tagline");
   $("t-limits").textContent = t("limits"); $("t-limit-list").innerHTML = L().limitList.map((x) => "<li>" + esc(x) + "</li>").join("");
   let note = "<span>" + esc(t(M.n === 1 ? "sourceOne" : "source", { n: M.n, file: M.file, when: M.generated, version: M.tool_version })) + "</span>";
   if (M.labels.current || M.labels.proposed) note += '<span dir="auto">' + esc(t("versions", { a: M.labels.current || "—", b: M.labels.proposed || "—" })) + "</span>";
@@ -304,24 +390,27 @@ function render() {
 
   let h = "";
   /* ledger */
-  h += "<section><h2>" + esc(t("ledger")) + '</h2><div class="ledger">';
+  h += "<section><h2>" + esc(t("ledger")) + '</h2><div class="board"><div class="ledger">';
   h += D.tiles.map((s) => tile(s, L().sub[s] || t("unconfSub"))).join("");
-  h += "</div>" + stripHTML();
+  h += '</div><div class="map">' + stripHTML() + "</div></div>";
   h += '<p class="small muted">' + esc(t("stableNote", { b: S.runs_per_version.current, u: S.runs_per_version.proposed })) + "</p>";
   if (!KEY && D.stable_change_ids.length) h += '<p class="small" id="judged">' + esc(judgedText()) + "</p>";
   h += "</section>";
   /* rates */
   const F = S.first_run, ch = F.change_between_versions, rb = F.rerun_variation_current, ru = F.rerun_variation_proposed;
   const pT = pct(ch.count, ch.n), pB = rb ? pct(rb.count, rb.n) : null, pU = ru ? pct(ru.count, ru.n) : null;
-  const top = Math.max(5, Math.ceil(Math.max(pT, pB || 0, pU || 0) / 5) * 5);
-  /* The Wilson score interval, 95%: it treats the cases as a random sample. Nothing is decided by it. */
-  const wilson = (k, n) => { const z = 1.959964, q = k / n, d = 1 + z * z / n, c = (q + z * z / (2 * n)) / d,
-    w = z * Math.sqrt(q * (1 - q) / n + z * z / (4 * n * n)) / d; return { a: fmt(100 * Math.max(0, c - w)), b: fmt(100 * Math.min(1, c + w)) }; };
-  const bar = (label, p, k, m, main) => '<span class="lab">' + esc(label) + '</span><span class="track"><span class="fill' + (main ? " main" : "") + '" style="width:' + (100 * p / top) +
-    '%"></span></span><span class="val num">' + fmt(p) + '% <span class="muted">(' + esc(t("of", { k, n: m }) + t("interval95", wilson(k, m))) + ")</span></span>";
-  h += "<section><h2>" + esc(t("rates")) + '</h2><div class="panel"><div class="bars">' + bar(t("barMain"), pT, ch.count, ch.n, true);
-  if (pB !== null) h += bar(t("barB"), pB, rb.count, rb.n, false);
-  if (pU !== null) h += bar(t("barU"), pU, ru.count, ru.n, false);
+  /* The Wilson score interval, 95%, in percent: it treats the cases as a random sample. Nothing is decided by it. */
+  const wilson = (k, n) => { if (!n) return null; const z = 1.959964, q = k / n, d = 1 + z * z / n, c = (q + z * z / (2 * n)) / d,
+    w = z * Math.sqrt(q * (1 - q) / n + z * z / (4 * n * n)) / d; return { lo: 100 * Math.max(0, c - w), hi: 100 * Math.min(1, c + w) }; };
+  const rates = [[t("barMain"), ch, true]].concat(rb ? [[t("barB"), rb, false]] : [], ru ? [[t("barU"), ru, false]] : []).map((x) => ({ label: x[0], r: x[1], main: x[2], w: wilson(x[1].count, x[1].n) }));
+  /* one scale for the three rates, wide enough for the widest interval */
+  const top = Math.min(100, Math.max(5, Math.ceil(Math.max.apply(null, rates.map((x) => Math.max(pct(x.r.count, x.r.n), x.w ? x.w.hi : 0))) / 5) * 5));
+  const bar = (x) => { const p = pct(x.r.count, x.r.n);
+    return '<span class="lab">' + esc(x.label) + '</span><span class="plot"><span class="track"><span class="fill' + (x.main ? " main" : "") + '" style="width:' + (100 * p / top) +
+      '%"></span></span><span class="lane">' + (x.w ? '<span class="ci" style="inset-inline-start:' + (100 * x.w.lo / top) + "%;width:" + (100 * (x.w.hi - x.w.lo) / top) + '%"></span>' : "") +
+      '</span></span><span class="val num">' + fmt(p) + '% <span class="muted">(' + esc(t("of", { k: x.r.count, n: x.r.n }) + (x.w ? t("interval95", { a: fmt(x.w.lo), b: fmt(x.w.hi) }) : "")) + ")</span></span>"; };
+  h += "<section><h2>" + esc(t("rates")) + '</h2><div class="panel"><div class="bars">' + rates.map(bar).join("") +
+    '<span class="axis num" aria-hidden="true"><span>0%</span><span>' + fmt(top / 2) + "%</span><span>" + top + "%</span></span>";
   h += '</div><p class="small muted">' + esc(t("intervalNote")) + "</p><p>";
   if (pB === null || pU === null) h += esc(t("rateNone"));
   else if (pT <= Math.max(pB, pU)) h += esc(t("rateWithin"));
@@ -345,9 +434,11 @@ function render() {
   h += "</div></section>";
   h += crossHTML();
   /* review */
-  h += "<section><h2>" + esc(t("review")) + ' <span class="num muted">' + D.cards.length + '</span></h2><div class="filters">' +
-    [["all", "fAll"], ["stable", "fStable"], ["uns", "fUns"]].map((f) => '<button type="button" data-filter="' + f[0] + '">' + esc(t(f[1])) + "</button>").join("") +
-    '</div><div class="cards" id="cards"></div>';
+  const inView = { all: D.cards.length, stable: D.cards.filter(isStable).length, uns: D.cards.filter((c) => c.state === "unstable" || c.flag === "varied").length };
+  h += "<section><h2>" + esc(t("review")) + '</h2><div class="filters">' +
+    [["all", "fAll"], ["stable", "fStable"], ["uns", "fUns"]].map((f) => '<button type="button" data-filter="' + f[0] + '">' + esc(t(f[1])) + '<span class="count">' + inView[f[0]] + "</span></button>").join("") + "</div>" +
+    (D.cards.some((c) => c.b.length && c.u.length && c.b[0].ans && c.u[0].ans && c.b[0].ans !== c.u[0].ans) ? '<p class="small muted">' + esc(t("diffNote")) + "</p>" : "") +
+    '<div class="cards" id="cards"></div>';
   if (KEY && D.wrong.length) {
     const flagged = D.wrong.filter((w) => w[2]).length;
     h += '<details class="wrongs panel" data-k="wrongs"><summary>' + esc(t("wrongList", { n: D.wrong.length })) + '</summary><p class="small muted" style="padding-top:8px">' + esc(t("wrongNote")) +
