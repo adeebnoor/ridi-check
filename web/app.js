@@ -19,7 +19,7 @@
         "Optional: <code>question</code>, <code>expected</code>, <code>baseline_context</code>, <code>updated_context</code> (passage names separated by <code>|</code>)."
       ],
       opts: "How to compare", modeLabel: "If the file has correctness columns", modeAuto: "use them", modeNoKey: "ignore them and compare the answers",
-      sameWhen: "Count two answers as the same when", simExact: "they match (ignoring case and punctuation)", sim90: "they share 90% of their words", sim75: "they share 75% of their words",
+      sameWhen: "Count two answers as the same when", simExact: "they match (ignoring case and punctuation; signs such as < > + - % count)", sim90: "they share 90% of their words", sim75: "they share 75% of their words",
       noteKey: "Synthetic example data, not yours: 30 questions about a made-up library handbook. The proposed version splits the handbook into smaller pieces, and each version was run twice.",
       noteNoKey: "Synthetic example data, not yours: the same 30 questions with the answer key hidden, so the changes are yours to judge.",
       noteFile: "{n} cases from your file.", noteFileOne: "1 case from your file.",
@@ -71,7 +71,7 @@
         "اختياري: <code>question</code> و<code>expected</code> و<code>baseline_context</code> و<code>updated_context</code> (أسماء المقاطع مفصولة بعلامة <code>|</code>)."
       ],
       opts: "طريقة المقارنة", modeLabel: "إذا كان في الملف أعمدة صحة", modeAuto: "استخدمها", modeNoKey: "تجاهلها وقارن الإجابات",
-      sameWhen: "تُعدّ الإجابتان متطابقتين عندما", simExact: "تتطابقان (مع تجاهل حالة الأحرف والترقيم)", sim90: "تشتركان في 90% من الكلمات", sim75: "تشتركان في 75% من الكلمات",
+      sameWhen: "تُعدّ الإجابتان متطابقتين عندما", simExact: "تتطابقان (مع تجاهل حالة الأحرف والترقيم؛ والرموز مثل < > + - % تُحتسب)", sim90: "تشتركان في 90% من الكلمات", sim75: "تشتركان في 75% من الكلمات",
       noteKey: "بيانات مثال اصطناعية وليست بياناتك: 30 سؤالاً عن دليل مكتبة مختلَق. النسخة المقترحة تقطّع الدليل إلى قطع أصغر، وشُغّلت كل نسخة مرتين.",
       noteNoKey: "بيانات مثال اصطناعية وليست بياناتك: الأسئلة الثلاثون نفسها مع إخفاء مفتاح الإجابات، فالحكم على التغيّرات لك.",
       noteFile: "{n} حالة من ملفك.", noteFileOne: "حالة واحدة من ملفك.",
@@ -198,7 +198,7 @@
     return h + "</div>";
   }
   function ctxHTML(c, i) {
-    if (!c.rem.length && !c.add.length) return "";
+    if (!c.rem.length && !c.add.length) return c.ord ? '<p class="small muted">' + esc(t("ctxOrder")) + "</p>" : "";
     const li = (x) => '<li><span dir="auto">' + esc(x) + "</span></li>";
     return '<details class="ctx" data-k="ctx-' + esc(c.id) + '"><summary>' + esc(t("ctx", { n: c.rem.length + c.add.length })) + '</summary><div class="ctxgrid"><div><p class="small muted">' +
       esc(t("removed")) + "</p><ul>" + c.rem.map(li).join("") + '</ul></div><div><p class="small muted">' + esc(t("added")) + "</p><ul>" + c.add.map(li).join("") +
@@ -291,9 +291,9 @@
       if (c) h += '<p class="small muted">' + esc(t("masked", { m: D.acc.r + D.acc.i, v: Math.abs(D.acc.i - D.acc.r), c })) + "</p>";
     }
     if (D.summary.passages) { const P = D.summary.passages, F = P.by_state[D.focus];
-      h += '<p class="small muted">' + esc(P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
+      h += '<p class="small muted">' + esc((P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
         : !P.differ ? t("passagesNone", { n: P.cases_with_passages })
-        : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + "</p>"; }
+        : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + (P.reordered ? t("passagesOrder", { r: P.reordered }) : "")) + "</p>"; }
     if ((D.summary.labelled_by_similarity || []).length) { const ids = D.summary.labelled_by_similarity;
       h += '<p class="small muted">' + esc(t("bySimilarity", { n: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })) + "</p>"; }
     h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2

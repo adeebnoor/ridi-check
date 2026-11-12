@@ -402,3 +402,61 @@ def test_cases_that_only_word_overlap_calls_the_same_are_named(tmp_path, write, 
     with open(tmp_path / "summary.json", encoding="utf-8") as f:
         assert "labelled_by_similarity" not in json.load(f)
 
+
+def test_a_change_seen_in_a_single_run_passes_by_default_and_not_under_strict(write, capsys):
+    """One run of each version confirms nothing. By default the gate says so and lets it through;
+    --max-unconfirmed 0, or --strict, stops on it."""
+    keyed = write("keyed.csv", "case_id,baseline_answer,baseline_correct,updated_answer,updated_correct\ns1,Major,1,Minor,0\n")
+    plain = write("plain.csv", "case_id,baseline_answer,updated_answer\ns2,it is fine,it must not be used\n")
+    for results, line in ((keyed, "regressions seen in a single run: 1 (limit 0) - over the limit"),
+                          (plain, "changes seen in a single run: 1 (limit 0) - over the limit")):
+        assert main(["gate", results]) == 0
+        printed = capsys.readouterr()
+        assert "unconfirmed" in printed.err and "--max-unconfirmed 0" in printed.err
+        assert main(["gate", results, "--max-unconfirmed", "0"]) == 1
+        assert line in capsys.readouterr().out
+        assert main(["gate", results, "--strict"]) == 1
+        assert line in capsys.readouterr().out
+        assert main(["gate", results, "--strict", "--max-unconfirmed", "1"]) == 0      # a value given stays
+        capsys.readouterr()
+
+
+def test_strict_turns_on_every_limit(write, capsys):
+    assert main(["gate", FIXTURE]) == 1                              # three stable regressions
+    assert "unstable cases" not in capsys.readouterr().out
+    assert main(["gate", FIXTURE, "--strict"]) == 1
+    out = capsys.readouterr().out
+    for line in ("stable regressions: 3 (limit 0) - over the limit", "unstable cases: 5 (limit 0) - over the limit",
+                 "regressions seen in a single run: 0 (limit 0)", "answers that changed while the score stayed the same: 2 (limit 0)"):
+        assert line in out, line
+    clean = write("clean.csv", "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+                  "baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\na,yes,yes,yes,yes,1,1,1,1\n")
+    assert main(["gate", clean, "--strict"]) == 0
+    assert "gate: every count is within its limit" in capsys.readouterr().out
+
+
+def test_scores_without_answers_cannot_show_a_changed_answer_and_the_gate_says_so(write, capsys):
+    scores = write("scores.csv", "case_id,baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\ns3,1,1,1,1\n")
+    assert main(["gate", scores]) == 0                               # by the scores alone nothing changed
+    capsys.readouterr()
+    for arguments in (["--max-answer-changes", "0"], ["--strict"]):
+        assert main(["gate", scores] + arguments) == 1
+        out = capsys.readouterr().out
+        assert "no answer text in the file\tcase s3" in out
+        assert "cases with no answer text, so a changed answer cannot be seen: 1 (limit 0) - over the limit" in out
+
+
+def test_the_same_passages_in_another_order_or_number_are_counted_apart(tmp_path, write, capsys):
+    results = write("results.csv", "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+                    "baseline_context,updated_context\n"
+                    "order,yes,yes,no,no,A | B,B | A\nnumber,yes,yes,no,no,A | A | B,A | B | B\n"
+                    "same,yes,yes,no,no,A | B,A | B\nother,yes,yes,no,no,A | B,A | C\n")
+    assert main(["report", results]) == 0
+    out = capsys.readouterr().out
+    assert "Retrieved passages differ between the versions in 1/4 cases that list passages: stable_change 1/4." in out
+    assert "In 2 case(s) the same passages come in another order or number." in out
+    html, data = page_data(tmp_path / "report.html")
+    assert data["summary"]["passages"] == {"cases_with_passages": 4, "differ": 1, "reordered": 2,
+                                           "by_state": {"stable_change": {"differ": 1, "n": 4}}}
+    assert {card["id"]: card["ord"] for card in data["cards"]} == {"order": True, "number": True, "same": False, "other": False}
+

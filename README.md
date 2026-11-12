@@ -110,8 +110,9 @@ latest release.
 
 A complete GitHub Actions workflow to copy: [examples/ci/ridi-check.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check.yml).
 `gate` prints counts and the offending cases; it never prints a verdict about your system. By default it
-does not count answers that did not hold on re-run; where a wrong answer is costly, add `--max-unstable 0`,
-and `--max-answer-changes 0` to count answers that changed while their score stayed the same.
+does not count answers that did not hold on re-run, changes seen in a single run, or answers that changed
+while their score stayed the same. Where a wrong answer is costly, use `ridi-check gate ... --strict`,
+which puts every limit at zero.
 Limits such as `--max-stable-regressions 2` are in the [reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#ridi-check-gate-resultscsv).
 
 ## Connect your assistant
@@ -204,7 +205,7 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 - Agents that use tools or keep state have a documented pattern and a stand-in example, but the tool has
   not been tried on a production agent. Not in this version: model-based judging, statistical tests.
 - Size was measured on Linux with Python 3.13 and Chromium only, not on Windows or macOS. There, 100,000
-  cases with three runs of each version take about 6 seconds and 318 MB in `report`; the HTML report for
+  cases with three runs of each version take about 7 seconds and 318 MB in `report`; the HTML report for
   them is 17.9 MB and opens in under a second, fifty cards at a time; the browser version reads the same
   file in about 6 seconds and uses about 1.4 GB; and a cell above 64 MB is refused with a message. The
   [measured limits](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md#measured-limits)

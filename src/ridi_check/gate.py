@@ -24,7 +24,7 @@ class GateResult:
 def evaluate(
     a: Analysis, judgments: dict[str, str] | None = None, *, max_stable_regressions: int = 0,
     max_unjudged_changes: int = 0, max_incomplete: int = 0, max_unstable: int | None = None,
-    max_answer_changes: int | None = None,
+    max_answer_changes: int | None = None, max_unconfirmed: int | None = None,
 ) -> GateResult:
     key = a.mode == KEY
     judgments = judgments or {}
@@ -53,9 +53,19 @@ def evaluate(
             state_of = {case.case_id: state for case, state in a.items}
             lines += [f"{state_of[i]}, {words[flag]}\tcase {i}" for i, flag in a.answer_change.items()]
             checks.append(("answers that changed while the score stayed the same", len(a.answer_change), max_answer_changes))
+            # Asked to count changed answers, and the file does not hold them: that cannot be checked, so it is
+            # counted against the same limit instead of being let through.
+            unseen = [c.case_id for c, s in a.items if s != INCOMPLETE and not all(r.answer for r in c.baseline + c.updated)]
+            if unseen:
+                lines += [f"no answer text in the file\tcase {i}" for i in unseen]
+                checks.append(("cases with no answer text, so a changed answer cannot be seen", len(unseen), max_answer_changes))
         else:
             notes.append("note: --max-answer-changes is for answer-key mode. Without a key every changed answer is "
                          "already counted: see --max-unjudged-changes.")
+    single = a.ids(REGRESSION_UNCONFIRMED if key else CHANGE_UNCONFIRMED)
+    if max_unconfirmed is not None:   # off unless asked for: with one run nothing is confirmed either way
+        lines += [f"{'regression' if key else 'change'} seen in a single run\tcase {i}" for i in single]
+        checks.append((f"{'regressions' if key else 'changes'} seen in a single run", len(single), max_unconfirmed))
     if max_unstable is not None:      # off unless asked for: re-run variation is not a regression
         unstable = a.ids(UNSTABLE)
         lines += [f"unstable\tcase {i}" for i in unstable]
@@ -77,10 +87,11 @@ def evaluate(
         notes.append("note: no answer was scored correct in either version, so the scoring probably does not fit "
                      "the answers and no regression can show. Check the expected answers or the scorer.")
     unconfirmed = a.counts.get(REGRESSION_UNCONFIRMED, 0) + a.counts.get(CHANGE_UNCONFIRMED, 0)
-    if unconfirmed:
+    if unconfirmed and max_unconfirmed is None:
         notes.append(
             f"note: {unconfirmed} change(s) have no second run of both versions. They are unconfirmed and are "
-            "not counted against any limit. Run each version at least twice."
+            "not counted against any limit. Run each version at least twice, or count them with "
+            "--max-unconfirmed 0."
         )
     elif a.n_compared and not a.confirmable:
         notes.append(

@@ -140,6 +140,14 @@ def build_parser() -> argparse.ArgumentParser:
                    help="no-key mode: stable changes allowed with no judgment, or judged unsure. Default 0.")
     p.add_argument("--max-unstable", type=_non_negative, default=None, metavar="N",
                    help="cases allowed whose answers did not hold on re-run. Not checked unless given.")
+    p.add_argument("--strict", action="store_true",
+                   help="every limit at zero unless you give it a value: stable regressions, changes not judged, "
+                        "cases not compared, unstable cases, changes seen in a single run and, with an answer "
+                        "key, answers that changed while the score stayed the same. For a release check where "
+                        "a wrong answer is costly.")
+    p.add_argument("--max-unconfirmed", type=_non_negative, default=None, metavar="N",
+                   help="regressions seen in a single run (without an answer key: changes seen in a single run). "
+                        "Not checked unless given: with one run nothing is confirmed.")
     p.add_argument("--max-answer-changes", type=_non_negative, default=None, metavar="N",
                    help="answer-key mode: cases allowed whose score stayed the same while the answer changed, "
                         "between the versions or from one run to the next. Not checked unless given.")
@@ -322,10 +330,16 @@ def _cmd_gate(args: argparse.Namespace) -> int:
         judgments = read_judgments(args.judgments, {c.case_id for c in cases})
         if mode == "key":
             print("note: --judgments is not used in answer-key mode; the answer key decides.", file=sys.stderr)
+    if args.strict:     # the limits that are off by default are on; a value given on the command line stays
+        args.max_unstable = 0 if args.max_unstable is None else args.max_unstable
+        args.max_unconfirmed = 0 if args.max_unconfirmed is None else args.max_unconfirmed
+        if mode == "key" and args.max_answer_changes is None:
+            args.max_answer_changes = 0
     result = evaluate(
         analysis, judgments, max_stable_regressions=args.max_stable_regressions,
         max_unjudged_changes=args.max_unjudged_changes, max_incomplete=args.max_incomplete,
         max_unstable=args.max_unstable, max_answer_changes=args.max_answer_changes,
+        max_unconfirmed=args.max_unconfirmed,
     )
     print(f"ridi-check gate: {args.results}, {len(cases)} case{'' if len(cases) == 1 else 's'}, "
           f"{'answer-key mode' if mode == 'key' else 'no answer key'}")

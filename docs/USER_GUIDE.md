@@ -141,12 +141,17 @@ regression. Where a wrong answer is costly, count them too: `ridi-check gate rid
 --max-unstable 0` also fails when any case is unstable, since such a case is neither confirmed right nor
 confirmed wrong.
 
-With an answer key, a score can stay the same while the answer says something else. Where the wording
-itself matters, the strictest check is:
+With an answer key, a score can stay the same while the answer says something else; and with one run of
+each version nothing is confirmed, so by default a change seen once is reported and not counted. Where a
+wrong answer is costly, the strictest check is:
 
 ```bash
-ridi-check gate ridi-out/results.csv --max-stable-regressions 0 --max-unstable 0 --max-incomplete 0 --max-answer-changes 0
+ridi-check gate ridi-out/results.csv --strict
 ```
+
+It puts every limit at zero: stable regressions, changes you have not judged, cases not compared, unstable
+cases, changes seen in a single run and, with an answer key, answers that changed while the score stayed
+the same. A limit you give yourself, such as `--max-unstable 2`, stays as you gave it.
 
 ## Practical advice
 

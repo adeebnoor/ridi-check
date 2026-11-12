@@ -232,7 +232,10 @@ DOSES = [
     ("The combination is forbidden" + TAIL, "The combination is acceptable" + TAIL, False),
     ("Increase the dose" + TAIL, "Decrease the dose" + TAIL, False),
     ("الجمع بينهما ممنوع" + ARABIC_TAIL, "الجمع بينهما مسموح" + ARABIC_TAIL, False),
-    ("red, green and blue are allowed" + TAIL, "blue, green and red are allowed" + TAIL, True),
+    # the same words in another order: who is allowed and who is not has changed places
+    ("Drug A must not be given with Drug B, Drug C is fine with Drug D" + TAIL,
+     "Drug C must not be given with Drug D, Drug A is fine with Drug B" + TAIL, False),
+    ("الدواء أ ممنوع مع ب والدواء ج مسموح مع د" + ARABIC_TAIL, "الدواء ج ممنوع مع د والدواء أ مسموح مع ب" + ARABIC_TAIL, False),
 ]
 
 
@@ -402,4 +405,44 @@ def test_cards_are_drawn_a_page_at_a_time_and_a_long_strip_becomes_one_bar(tmp_p
     assert seen["all"] == to_review
     # up to 2,000 cases every case has its cell; above that the strip is one bar
     assert seen["bar"] is bar and seen["cells"] == (0 if bar else n)
+
+
+SIGNS = [   # (one answer, another, the same after normalisation?)
+    ("Dose must be < 5 mg.", "Dose must be > 5 mg.", False),
+    ("Dose <= 5 mg.", "Dose >= 5 mg.", False),
+    ("Dose ≤ 5 mg.", "Dose ≥ 5 mg.", False),
+    ("Result HIV+.", "Result HIV-.", False),
+    ("Na+ is 140.", "Na- is 140.", False),
+    ("Adjustment +5.", "Adjustment -5.", False),
+    ("Adjustment −5.", "Adjustment -5.", True),          # the minus sign and the hyphen are one sign
+    ("Flag A == B.", "Flag A != B.", False),
+    ("Dose 5 mg/kg/day.", "Dose 5 mg*kg*day.", False),
+    ("Dose 5 mg/kg.", "Dose 5 mg kg.", False),
+    ("Risk of event 10%.", "Risk of event 10.", False),
+    ("الخطر ١٠٪.", "الخطر ١٠.", False),
+    ("Group A ∈ high risk.", "Group A ∉ high risk.", False),
+    ("About ~5 mg.", "About 5 mg.", False),
+    # ordinary punctuation, hyphens inside words and list dashes still make no difference
+    ("Yes.", "yes", True), ("Paris, France!", "paris france", True), ("an x-ray", "an x ray", True),
+    ("- first item", "first item", True), ("5-10 mg", "5 10 mg", True), ("(well) done; thanks", "well done thanks", True),
+    ("Is it so?!", "is it so", True), ("**bold** text", "bold text", True), ("نعم.", "نعم", True),
+]
+
+
+def test_signs_that_carry_meaning_are_not_normalised_away():
+    from ridi_check.analysis import normalise, same_answer
+    for a, b, same in SIGNS:
+        assert same_answer(a, b) is same, (a, b, normalise(a), normalise(b))
+    assert normalise("Dose must be <= 5 mg/kg (HIV-), -5%!") == "dose must be < = 5 mg / kg hiv - - 5 %"
+
+
+@needs_node
+def test_browser_normalises_signs_as_python_does():
+    from ridi_check.analysis import normalise
+    texts = sorted({t for a, b, _ in SIGNS for t in (a, b)} | {"a*b*c", "*a*", "1/2", "and/or", "/start", "end/", "C++", "a|b", "!= =!", "x - y",
+                                                               "pre- and post-op", "- 5", "--5", "5-", "٥-", "😀+😀", "İ<i", ""})
+    script = "const core=require(process.argv[1]);console.log(JSON.stringify(JSON.parse(process.argv[2]).map((t)=>core.normalise(t))));"
+    done = subprocess.run([NODE, "-e", script, os.path.join(ROOT, "web", "core.js"), json.dumps(texts)],
+                          capture_output=True, text=True, encoding="utf-8", check=True)
+    assert json.loads(done.stdout) == [normalise(t) for t in texts]
 

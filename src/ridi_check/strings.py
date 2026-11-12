@@ -14,6 +14,8 @@ COMMON = {
     "en": {
         "passages": "The retrieved passages differ between the versions in {k} of the {n} cases that list passages.",
         "passagesNote": " This is a count, not a cause.",
+        "passagesOrder": " In {r} case(s) the same passages come in another order or number.",
+        "ctxOrder": "The same passages were retrieved, in another order or another number of times.",
         "passagesAll": "The retrieved passages differ between the versions in all {n} cases that list passages, so "
                        "this count does not set any group of cases apart. An update that changes how documents are "
                        "split, or how passages are named, gives this result.",
@@ -78,6 +80,8 @@ COMMON = {
     "ar": {
         "passages": "المقاطع المسترجعة تختلف بين النسختين في {k} من {n} حالة ذُكرت مقاطعها.",
         "passagesNote": " هذا عدّ وليس سبباً.",
+        "passagesOrder": " وفي {r} حالة جاءت المقاطع نفسها بترتيب أو عدد مختلف.",
+        "ctxOrder": "استُرجعت المقاطع نفسها، لكن بترتيب مختلف أو بعدد مرات مختلف.",
         "passagesAll": "المقاطع المسترجعة تختلف بين النسختين في كل الحالات التي ذُكرت مقاطعها وعددها {n}، فهذا العدّ "
                        "لا يميّز أي مجموعة من الحالات. يحدث ذلك حين يغيّر التحديث طريقة تقسيم المستندات أو تسمية "
                        "المقاطع.",
@@ -232,7 +236,7 @@ NOKEY_MODE = {
                         "where one word decides.",
         "modeNote": "No answer key: two answers count as the same when {rule}. "
                     "A different answer is a change. Whether it is better or worse is your call.",
-        "simExact": "they match after lower-casing and removing punctuation",
+        "simExact": "they match after lower-casing and removing punctuation (signs such as < > + - % are kept)",
         "simWords": "they share at least {p}% of their words",
         "state": {
             "stable_change": "Stable changes", "change_unconfirmed": "Changes, not re-run", "same": "Same answer",
@@ -253,7 +257,7 @@ NOKEY_MODE = {
                         "كلمة واحدة.",
         "modeNote": "بلا مفتاح إجابات: تُعدّ الإجابتان متطابقتين عندما {rule}. "
                     "الإجابة المختلفة تغيّر، والحكم بأنها أفضل أو أسوأ لك.",
-        "simExact": "تتطابقان بعد توحيد حالة الأحرف وحذف علامات الترقيم",
+        "simExact": "تتطابقان بعد توحيد حالة الأحرف وحذف علامات الترقيم (تبقى الرموز مثل < > + - %)",
         "simWords": "تشتركان في {p}% من الكلمات على الأقل",
         "state": {
             "stable_change": "تغيّرات ثابتة", "change_unconfirmed": "تغيّرات بلا إعادة تشغيل", "same": "الإجابة نفسها",

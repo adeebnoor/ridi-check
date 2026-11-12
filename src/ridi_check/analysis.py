@@ -10,8 +10,10 @@ Three things are added to the prototype's rules, none of which changes its state
 - `incomplete`, for a case whose first run of a version failed in `ridi-check run`. It is not
   compared and is left out of every rate.
 - Under a word-overlap threshold, two answers are never counted as the same when they differ in a
-  negation word, in their numbers (the digit runs in order, and each number with its unit), or by one
-  word put in the place of another. With the default (exact match) this has no effect.
+  negation word, in their numbers (the digit runs in order, and each number with its unit), by one word
+  put in the place of another, or in the order of the same words.
+- Normalisation keeps the signs that carry meaning (< > = + - % / and other mathematical symbols), where
+  the prototype turned every one of them into a space. With the default (exact match) this has no effect.
 - In answer-key mode, a case that is wrong in both versions, or correct in both, is also checked for
   a changed answer (`answer_change`). Its state stays as it is; correctness counting alone does not see it.
 """
@@ -54,16 +56,52 @@ NEGATIONS = frozenset(
 )
 
 
+@lru_cache(maxsize=None)    # one entry for each character ever seen: a text is mostly the same few dozen
+def _kind(ch: str) -> str:
+    """'w' for a letter or a number, 'd' for a decimal digit (also a 'w'), 'm' for a mathematical symbol, '' otherwise."""
+    category = unicodedata.category(ch) if ch else "Zs"
+    return "d" if category == "Nd" else "w" if category[0] in "LN" else "m" if category == "Sm" else ""
+
+
+def _in_word(ch: str) -> bool:
+    return _kind(ch) in ("w", "d")
+
+
+def _is_digit(ch: str) -> bool:
+    return _kind(ch) == "d"
+
+
 @lru_cache(maxsize=8192)   # the same answer is compared several times within a case
 def normalise(text: str) -> str:
-    """Lower-case, punctuation to spaces, whitespace collapsed (the prototype's `norm`)."""
-    kept = []
-    for ch in str(text).lower():
-        if ch.isspace() or ch == "\ufeff" or unicodedata.category(ch)[0] in "LN":
-            kept.append(ch)
-        else:
-            kept.append(" ")
-    return " ".join("".join(kept).replace("\ufeff", " ").split())
+    """Lower-case, punctuation to spaces, whitespace collapsed, as the prototype's `norm` does, except that
+    the signs that carry meaning are kept, each as a word of its own: "< 5 mg" is not "> 5 mg".
+
+    Kept: every mathematical symbol (< > = + ± × ÷ ≤ ≥ ≠ ∈ ~ ...); a percent sign after a digit; "/" and
+    "*" between two letters or digits (mg/kg); "!" before "="; and a hyphen that is a sign: before a
+    digit when no letter or digit stands in front of it (-5), or right after a letter or digit when none
+    follows (HIV-). A hyphen inside a word (x-ray, 5-10) and all other punctuation become a space.
+    """
+    s = str(text).lower()
+    last = len(s) - 1
+    out = []
+    for i, ch in enumerate(s):
+        kind = _kind(ch)
+        if kind in ("w", "d"):
+            out.append(ch)
+            continue
+        if not kind and ch not in "%\u066a/*-!":      # ordinary punctuation and spaces: nothing to look at
+            out.append(" ")
+            continue
+        before, after = (s[i - 1] if i else ""), (s[i + 1] if i < last else "")
+        keep = (
+            kind == "m"
+            or (ch in "%\u066a" and _is_digit(before))
+            or (ch in "/*" and _in_word(before) and _in_word(after))
+            or (ch == "-" and ((_is_digit(after) and not _in_word(before)) or (_in_word(before) and not _in_word(after))))
+            or (ch == "!" and after == "=")
+        )
+        out.append(f" {'-' if ch == chr(0x2212) else ch} " if keep else " ")
+    return " ".join("".join(out).split())
 
 
 def _number_contexts(words: list[str]) -> list[str]:
@@ -91,9 +129,10 @@ def same_answer(a: str, b: str, threshold: float = 1.0) -> bool:
         return False  # so do "within 30 days" and "within 45 days", and "5mg" and "50mg"
     if _number_contexts(list_x) != _number_contexts(list_y):
         return False  # and "5 mg" and "5 g", "5mg" and "5g", "30 days" and "30 weeks"
-    if len(list_x) == len(list_y) and sorted(list_x) != sorted(list_y):
-        # The same number of words, and not the same words: one word was put in the place of another
-        # ("major" for "minor", "increase" for "decrease"). Word overlap cannot tell whether it matters.
+    if len(list_x) == len(list_y):
+        # The same number of words and not the same text: one word was put in the place of another ("major"
+        # for "minor"), or the same words stand in another order ("A is allowed and B is not" against "B is
+        # allowed and A is not"). Word overlap sees a bag of words and cannot tell whether that matters.
         return False
     shared = len(words_x & words_y)
     union = len(words_x) + len(words_y) - shared

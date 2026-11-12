@@ -98,6 +98,8 @@ Prints the counts and one line per offending case. It prints no verdict about th
 |---|---|---|
 | `--max-stable-regressions N` | 0 | with an answer key: stable regressions allowed. Without one: stable changes you judged worse |
 | `--max-unjudged-changes N` | 0 | without an answer key: stable changes with no judgment, or judged unsure |
+| `--strict` | off | every limit at zero unless you give it a value: the three above that are zero already, `--max-unstable`, `--max-unconfirmed` and, with an answer key, `--max-answer-changes`. The setting for a release check where a wrong answer is costly |
+| `--max-unconfirmed N` | not checked | regressions seen in a single run (without an answer key: changes seen in a single run). With one run nothing is confirmed, so by default these are reported on standard error and not counted |
 | `--max-answer-changes N` | not checked | with an answer key: cases whose score stayed the same while the answer changed, between the versions or from one run to the next. `--max-answer-changes 0` belongs in a release check where the wording itself matters |
 | `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them; `--max-unstable 0` is the setting for a release check where a wrong answer is costly |
 | `--max-incomplete N` | 0 | cases that could not be compared because a call failed |
@@ -162,6 +164,13 @@ and compares the answers.
 With an answer key two runs are equal when their correctness is equal; without one, when the answers match
 after lower-casing, removing punctuation and collapsing spaces (or under `--similarity`).
 
+The signs that carry meaning are not removed: every mathematical symbol (`<`, `>`, `=`, `+`, `±`, `≤`,
+`≥`, `≠`, `~` and the like), a percent sign after a digit, `/` and `*` between two letters or digits
+(`mg/kg`), `!` before `=`, and a hyphen that is a sign: before a digit when nothing stands in front of it
+(`-5`), or right after a letter or digit when none follows (`HIV-`). So "< 5 mg" and "> 5 mg" are two
+answers, and so are "10%" and "10". A hyphen inside a word (`x-ray`, `5-10`) and all other punctuation
+still make no difference. The same rule is used when answers are scored against `expected` by exact match.
+
 1. Any run of a version differs from that version's first run: `unstable`.
 2. Else the first runs of the two versions are equal: `correct_both` / `wrong_both`, or `same`.
 3. Else `stable_regression` / `stable_improvement`, or `stable_change` without a key. With a single run of
@@ -181,7 +190,10 @@ three.
 
 When the file lists passages (`baseline_context`, `updated_context`), the report also counts the cases
 whose passages differ between the versions, in total and per state (`passages` in `summary.json`). It is a
-count of where retrieval changed. It does not say that the passages caused a change in the answer. When
+count of where retrieval changed. It does not say that the passages caused a change in the answer. The
+count compares which passages were retrieved; cases where the same passages come in another order or
+another number of times are counted apart (`reordered`) and marked on their cards. Passages are compared
+by the names given in the file: ranks, scores and the text of a passage are not in it. When
 the passages differ in every case, or in none, the report says that in one sentence instead of a count per
 state. The built-in demo is such a case: its proposed version splits the handbook differently, so every
 passage has a new name.
@@ -192,10 +204,11 @@ Under `--similarity`, two answers are never counted as the same when they differ
 - in their numbers: the runs of digits in order, so `5mg` and `50mg` differ, and so do "2 tablets of 5 mg"
   and "5 tablets of 2 mg"; and each number with its unit, so `5 mg` and `5 g` differ, and "30 days" and
   "30 weeks";
-- by one word put in the place of another: when both answers have the same number of words and not the
-  same words, as in "major interaction" and "minor interaction".
+- by one word put in the place of another, or in the order of the same words: two answers with the same
+  number of words are the same only when they are the same text, so "major interaction" is not "minor
+  interaction", and "A is allowed and B is not" is not "B is allowed and A is not".
 
-These guards catch a swapped word. They cannot catch an added clause that changes the meaning, such as
+These guards catch a swapped word and a swapped order. They cannot catch an added clause that changes the meaning, such as
 "allowed" against "allowed only under supervision". Word overlap does not know which word matters: where
 one word decides, as with a dose or a verdict, use exact match (the default), or an answer key with a
 scorer written for the subject. Every case that the threshold labels differently from exact match is
@@ -280,11 +293,13 @@ and passages (about 670 bytes a case):
 
 | Cases | File | Command | Time | Peak memory |
 |---|---|---|---|---|
-| 10,000 | 6.6 MB | `report` | 0.6 s | 54 MB |
-| 100,000 | 66.7 MB | `report` | 6.4 s | 318 MB |
-| 100,000 | 66.7 MB | `gate` | 4.2 s | 207 MB |
-| 100,000 | 66.7 MB | `report --mode nokey` | 6.2 s | 281 MB |
-| 100,000 | 66.7 MB | `report --mode nokey --similarity 0.9` | 6.5 s | 275 MB |
+| 10,000 | 6.6 MB | `report` | 0.7 s | 54 MB |
+| 100,000 | 66.7 MB | `report` | 7 s | 318 MB |
+| 100,000 | 66.7 MB | `gate` | 5 s | 207 MB |
+| 100,000 | 66.7 MB | `report --mode nokey` | 7 s | 313 MB |
+| 100,000 | 66.7 MB | `report --mode nokey --similarity 0.9` | 7.5 s | 307 MB |
+
+The times varied by about a second from one run to the next.
 
 The cases are held in memory: allow about five times the size of the file for `report` and three times for
 `gate`. Answers that repeat from run to run, and passage names that repeat from case to case, are kept once,

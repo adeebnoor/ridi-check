@@ -116,6 +116,7 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
         summary["passages"] = {
             "cases_with_passages": len(listed),
             "differ": sum(d for _, d in differs),
+            "reordered": sum(passages_reordered(c) for c, _ in listed),
             "by_state": {state: {"differ": sum(d for s, d in differs if s == state),
                                  "n": sum(1 for s, _ in differs if s == state)}
                          for state in a.counts if any(s == state for s, _ in differs)},
@@ -221,6 +222,12 @@ def passage_difference(case: Case) -> tuple[list[str], list[str], int]:
     return only_b, only_u, len(case.baseline_context) - len(only_b)
 
 
+def passages_reordered(case: Case) -> bool:
+    """The same passages in both versions, in another order or another number of times."""
+    return (set(case.baseline_context) == set(case.updated_context)
+            and case.baseline_context != case.updated_context)
+
+
 CSS_CLASS = {
     "stable_regression": "s-reg", "regression_unconfirmed": "s-reg",
     "stable_improvement": "s-imp", "improvement_unconfirmed": "s-imp",
@@ -277,7 +284,7 @@ def page_data(
                 "id": case.case_id, "state": state, "flag": flag, "q": case.question, "expected": case.expected,
                 "b": _runs_for_page(case.baseline, key, a.threshold),
                 "u": _runs_for_page(case.updated, key, a.threshold),
-                "rem": only_b, "add": only_u, "kept": kept, "err": case.run_errors,
+                "rem": only_b, "add": only_u, "kept": kept, "ord": passages_reordered(case), "err": case.run_errors,
             })
         strip.append([case.case_id, state, -1])
         if state == WRONG_BOTH:
@@ -468,5 +475,7 @@ def text_summary(summary: dict) -> str:
                 + ", ".join(f"{state} {v['differ']}/{v['n']}" for state, v in passages["by_state"].items())
                 + ". This is a count, not a cause."
             )
+    if passages and passages["reordered"]:
+        lines.append(f"In {passages['reordered']} case(s) the same passages come in another order or number.")
     lines += summary["notes"]
     return "\n".join(lines)

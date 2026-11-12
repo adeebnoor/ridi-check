@@ -138,8 +138,23 @@ const RidiCore = (function () {
   }
 
   /* ---------- analysis ---------- */
+  /* Lower-case, punctuation to spaces, whitespace collapsed, except that the signs that carry meaning are kept,
+     each as a word of its own: every mathematical symbol, a percent sign after a digit, "/" and "*" between two
+     letters or digits, "!" before "=", and a hyphen that is a sign (-5, HIV-). Same rules as analysis.py. */
   function normalise(text) {
-    return String(text).toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+    const s = Array.from(String(text).toLowerCase());
+    const inWord = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c), isDigit = (c) => c !== undefined && /\p{Nd}/u.test(c);
+    let out = "";
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (inWord(ch)) { out += ch; continue; }
+      const before = s[i - 1], after = s[i + 1];
+      const keep = /\p{Sm}/u.test(ch) || ((ch === "%" || ch === "\u066a") && isDigit(before)) ||
+        ((ch === "/" || ch === "*") && inWord(before) && inWord(after)) ||
+        (ch === "-" && ((isDigit(after) && !inWord(before)) || (inWord(before) && !inWord(after)))) || (ch === "!" && after === "=");
+      out += keep ? " " + (ch === "\u2212" ? "-" : ch) + " " : " ";
+    }
+    return out.replace(/\s+/g, " ").trim();
   }
   function sameAnswer(a, b, threshold) {
     const x = normalise(a), y = normalise(b);
@@ -154,8 +169,8 @@ const RidiCore = (function () {
     /* every word that holds a digit; a bare number is taken together with the word after it (its unit) */
     const contexts = (ws) => ws.map((w, i) => (/\p{Nd}/u.test(w) ? w + " " + (/^\p{Nd}+$/u.test(w) && i + 1 < ws.length ? ws[i + 1] : "") : null)).filter((c) => c !== null).join("|");
     if (contexts(xs) !== contexts(ys)) return false;
-    /* the same number of words and not the same words: one word was put in the place of another */
-    if (xs.length === ys.length && xs.slice().sort().join(" ") !== ys.slice().sort().join(" ")) return false;
+    /* the same number of words and not the same text: a word was replaced, or the same words stand in another order */
+    if (xs.length === ys.length) return false;
     let shared = 0; A.forEach((w) => { if (B.has(w)) shared++; });
     const union = A.size + B.size - shared;
     return union > 0 && shared / union >= threshold;
@@ -227,7 +242,8 @@ const RidiCore = (function () {
       const byState = {};
       Object.keys(a.counts).forEach((s) => { const mine = differs.filter((d) => d[0] === s);
         if (mine.length) byState[s] = { differ: mine.reduce((n, d) => n + d[1], 0), n: mine.length }; });
-      summary.passages = { cases_with_passages: listed.length, differ: differs.reduce((n, d) => n + d[1], 0), by_state: byState };
+      summary.passages = { cases_with_passages: listed.length, differ: differs.reduce((n, d) => n + d[1], 0),
+        reordered: listed.filter((it) => reordered(it.c)).length, by_state: byState };
     }
     if (key) {
       const flagged = (state, flag) => a.items.filter((it) => it.s === state && a.answerChange[it.c.id] === flag).map((it) => it.c.id);
@@ -238,6 +254,11 @@ const RidiCore = (function () {
       summary.labelled_by_similarity = a.bySimilarity.slice();
     }
     return summary;
+  }
+  /* the same passages in both versions, in another order or another number of times */
+  function reordered(c) {
+    const inB = new Set(c.bc), inU = new Set(c.uc);
+    return inB.size === inU.size && c.bc.every((p) => inU.has(p)) && (c.bc.length !== c.uc.length || c.bc.some((p, i) => p !== c.uc[i]));
   }
   function passageDifference(c) {
     const inB = new Set(c.bc), inU = new Set(c.uc);
@@ -302,7 +323,7 @@ const RidiCore = (function () {
       if ((!UNCHANGED.has(s) && (s !== "wrong_both" || flag)) || (s === "correct_both" && flag)) {
         const [onlyB, onlyU, kept] = passageDifference(c);
         (s === "correct_both" ? late : cards).push({ id: c.id, state: s, flag, q: c.q, expected: c.expected, b: runsForPage(c.b, key, a.threshold), u: runsForPage(c.u, key, a.threshold),
-          rem: onlyB, add: onlyU, kept, err: c.err });
+          rem: onlyB, add: onlyU, kept, ord: reordered(c), err: c.err });
       }
       stripCells.push([c.id, s, -1]);
       if (s === "wrong_both") wrong.push([c.id, c.q, flag]);

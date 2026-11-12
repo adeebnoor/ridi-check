@@ -3,6 +3,27 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Changed
+- Normalisation keeps the signs that carry meaning, each as a word of its own: every mathematical symbol
+  (`<`, `>`, `=`, `+`, `≤`, `≥`, `≠`, `~` ...), a percent sign after a digit, `/` and `*` between two
+  letters or digits, `!` before `=`, and a hyphen that is a sign (`-5`, `HIV-`). Before, all of them
+  became a space, so "< 5 mg" and "> 5 mg" were the same answer under the default exact match. Other
+  punctuation and hyphens inside words still make no difference. This also changes exact-match scoring
+  against `expected`, and it is a deliberate difference from the prototype's normalisation.
+- Under `--similarity`, the same words in another order are no longer the same answer: two answers with
+  the same number of words are the same only when they are the same text.
+
+### Added
+- `gate --strict`: every limit at zero unless a value is given for it.
+- `gate --max-unconfirmed N`: an optional limit on regressions (without an answer key: changes) seen in a
+  single run. By default these are still reported on standard error and not counted.
+- With `--max-answer-changes`, cases that hold scores and no answer text count against the limit, because
+  a changed answer cannot be seen in them.
+- Cases where the same passages come in another order or another number of times are counted
+  (`passages.reordered` in `summary.json`) and marked on their cards.
+
 ## 0.6.0
 
 ### Added

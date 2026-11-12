@@ -103,7 +103,8 @@ ridi-check changes into that folder before running.
 ## Scoring
 
 With `expected` in the questions file, each answer gets 0 or 1. Default: equal after lower-casing,
-replacing punctuation by spaces and collapsing whitespace. Your own:
+replacing punctuation by spaces and collapsing whitespace; signs that carry meaning, such as `<`, `>`,
+`+` and `%`, are kept (see the [reference](REFERENCE.md#how-cases-are-labelled)). Your own:
 
 ```python
 def scorer(answer: str, expected: str) -> bool:

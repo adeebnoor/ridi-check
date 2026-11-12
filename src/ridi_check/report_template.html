@@ -192,7 +192,7 @@ function sideHTML(label, version, runs) {
   return h + "</div>";
 }
 function ctxHTML(c, i) {
-  if (!c.rem.length && !c.add.length) return "";
+  if (!c.rem.length && !c.add.length) return c.ord ? '<p class="small muted">' + esc(t("ctxOrder")) + "</p>" : "";
   const li = (x) => '<li><span dir="auto">' + esc(x) + "</span></li>";
   return '<details class="ctx" data-k="ctx-' + i + '"><summary>' + esc(t("ctx", { n: c.rem.length + c.add.length })) + '</summary><div class="ctxgrid"><div><p class="small muted">' +
     esc(t("removed")) + "</p><ul>" + c.rem.map(li).join("") + '</ul></div><div><p class="small muted">' + esc(t("added")) + "</p><ul>" + c.add.map(li).join("") +
@@ -294,9 +294,9 @@ function render() {
     const c = 2 * Math.min(D.acc.r, D.acc.i);
     if (c) h += '<p class="small muted">' + esc(t("masked", { m: D.acc.r + D.acc.i, v: Math.abs(D.acc.i - D.acc.r), c })) + "</p>"; }
   if (D.summary.passages) { const P = D.summary.passages, F = P.by_state[D.focus];
-    h += '<p class="small muted">' + esc(P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
+    h += '<p class="small muted">' + esc((P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
         : !P.differ ? t("passagesNone", { n: P.cases_with_passages })
-        : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + "</p>"; }
+        : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + (P.reordered ? t("passagesOrder", { r: P.reordered }) : "")) + "</p>"; }
   if ((D.summary.labelled_by_similarity || []).length) { const ids = D.summary.labelled_by_similarity;
     h += '<p class="small muted">' + esc(t("bySimilarity", { n: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })) + "</p>"; }
   h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2

@@ -129,7 +129,8 @@ def test_word_overlap_threshold():
     assert not same_answer(a, b)            # exact by default
     assert same_answer(a, b, 0.75)          # 9 shared of 12 distinct words
     assert not same_answer(a, b, 0.9)
-    assert same_answer("red, green and blue", "blue, green and red", 0.9)       # the same words in another order
+    # the same words in another order are not the same answer either: order can be the whole point
+    assert not same_answer("A is allowed and B is forbidden", "B is allowed and A is forbidden", 0.5)
     # one word in the place of another is never the same answer, however long the rest: "all" is not "most"
     assert not same_answer(a, "the loan period is three weeks for most books", 0.5)
 
