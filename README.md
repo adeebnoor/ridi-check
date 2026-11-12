@@ -15,8 +15,7 @@ re-run. You need no test set, no answer key and no model judge.
 It explains the method, links to the signed model and BoolQ experiments (with their limitations),
 and launches the unchanged browser analyzer. **Direct access to the interactive tool:**
 [web/ridi-update-check.html](https://adeebnoor.github.io/ridi-check/web/ridi-update-check.html).
-The tool opens on synthetic examples: a fictional library handbook and invented drug names
-(illustrations only), where an aggregate improvement can coexist with per-case regressions.
+The tool opens on synthetic examples: a fictional library handbook and invented drug names (illustration only), where an aggregate improvement can coexist with per-case regressions.
 
 ![The report: where each case landed, and the change between versions against re-run variation](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/report.png)
 
