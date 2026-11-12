@@ -95,7 +95,8 @@ def test_verify_agrees_with_an_untouched_run_and_finds_a_cell_edited_by_hand(run
     assert "verify: results.csv agrees with raw_outputs.jsonl (3 cases, " in capsys.readouterr().out
 
     results = tmp_path / "out" / "results.csv"
-    original = results.read_text(encoding="utf-8")
+    as_written = results.read_bytes()
+    original = as_written.decode("utf-8")
     # a score turned from wrong to right by hand
     lines = original.splitlines()
     assert lines[3].startswith("3,question three,") and lines[3].endswith(",1,1,0,0,doc 1 | doc 2,doc 2 | doc 3")
@@ -117,9 +118,14 @@ def test_verify_agrees_with_an_untouched_run_and_finds_a_cell_edited_by_hand(run
     assert "case 9: it is in results.csv and no call for it is on record" in out
     assert "case 2: calls for it are on record and it is not in results.csv" in out
 
-    results.write_text(original, encoding="utf-8")
+    results.write_bytes(as_written)
     assert main(["verify", out_dir]) == 0
     capsys.readouterr()
+    # a fingerprint is of the bytes: the same table saved with other line ends is not the file the run left
+    results.write_bytes(as_written.replace(b"\n", b"\r\n"))
+    assert main(["verify", out_dir]) == 1
+    out = capsys.readouterr().out
+    assert "results.csv does not have the fingerprint that evidence.json recorded" in out and "verify: 1 difference(s)" in out
 
 
 def test_verify_says_what_it_could_not_check(run_args, tmp_path, capsys):

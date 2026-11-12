@@ -46,6 +46,11 @@ fingerprint. A run that is resumed writes `evidence.json` again when it ends.
 `verify` exits 0 when everything agrees, 1 when anything differs, 2 when the folder is not one that `run`
 wrote.
 
+A fingerprint is of the bytes of a file. A table that was opened and saved again, or checked out by a tool
+that converts line ends, is no longer the file the run left, even when every cell reads the same: `verify`
+reports it. Hand the folder over as an archive, or mark its files as binary for the version control
+system.
+
 ## The protocol
 
 1. **Before the run**, fix what will be asked: the questions file, the scorer, the two versions, the number
