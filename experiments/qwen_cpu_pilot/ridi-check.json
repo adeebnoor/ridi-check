@@ -1,0 +1,14 @@
+{
+  "questions": "questions.csv",
+  "current": "python:local_models:answer_current",
+  "proposed": "python:local_models:answer_proposed",
+  "current_label": "Qwen2.5-0.5B-Instruct Q4_K_M",
+  "proposed_label": "Qwen2.5-1.5B-Instruct Q4_K_M",
+  "runs": 2,
+  "concurrency": 2,
+  "retries": 1,
+  "retry_wait": 1,
+  "timeout": 70,
+  "out": "ridi-out",
+  "report": true
+}
