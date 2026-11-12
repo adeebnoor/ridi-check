@@ -1,0 +1,30 @@
+﻿{
+    "status":  "pre-run frozen setup; exploratory engineering test",
+    "experimental_unit":  "24 synthetic yes/no policy cases; balanced 12 YES/12 NO",
+    "not_real_clinical_data":  true,
+    "not_a_same_model_version_update":  "Two different Qwen2.5 parameter sizes, not two releases of identical weights.",
+    "not_independently_adjudicated":  true,
+    "not_a_fair_HEAD_TO_HEAD_with_HELM_Ragas_Inspect":  true,
+    "execution":  "offline on the user\u0027s Windows CPU, llama.cpp servers bound only to 127.0.0.1",
+    "frozen_at_utc":  "2026-11-12T21:23:44.913482+00:00",
+    "model_sources":  {
+                          "current":  "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+                          "proposed":  "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF"
+                      },
+    "model_files_sha256":  {
+                               "current":  "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+                               "proposed":  "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e"
+                           },
+    "llama_release":  "ggml-org/llama.cpp b12327",
+    "llama_zip_sha256":  "fbdd88f496102390d860e82014a78975a7112c785818ebc4eda1af4f7de58f5e",
+    "questions_sha256":  "9a16f8ddaa542e0bf08e27a7b173d1512742e8ac36a7c2e0edde995a6ed7e69a",
+    "config_sha256":  "b413605e8859e893a4c3b4bb21f4cb1a12905b76ab3b6ed1f9c019f610b9842c",
+    "decoding":  {
+                     "temperature":  0,
+                     "seed":  20261113,
+                     "max_tokens":  12
+                 },
+    "stopping_rule":  "Run exactly 2 replicates per model per case; no post-hoc question changes.",
+    "planned_calls":  96,
+    "adapter_sha256":  "716ef2147ed703ce1952778bac9e41698194a0c6b2da495e853dfacd75bb333d"
+}

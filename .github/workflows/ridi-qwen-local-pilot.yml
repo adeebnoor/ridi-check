@@ -1,0 +1,186 @@
+name: RIDI Qwen real-model CPU pilot (signed evidence)
+
+# Manual on main, or once when this workflow is introduced on its evaluation branch.
+# Downloads public Qwen GGUF weights and public llama.cpp binaries; no paid API.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - qa/qwen-real-model-attestation-20261113
+    paths:
+      - '.github/workflows/ridi-qwen-local-pilot.yml'
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  qwen-pilot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install RIDI source at this commit
+        run: python -m pip install -e .
+      - name: Download and SHA-256 verify official llama.cpp CPU release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ridi-llama" "$RUNNER_TEMP/ridi-models"
+          curl -fLsS --retry 4 --retry-delay 5 -o "$RUNNER_TEMP/llama.tar.gz" \
+            'https://github.com/ggml-org/llama.cpp/releases/download/b12327/llama-b12327-bin-ubuntu-x64.tar.gz'
+          echo 'a78e768c62bebc3e8de5e8a04d32b5d6ef3727efcc5f042efc271d03d893bd94  '"$RUNNER_TEMP/llama.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/llama.tar.gz" -C "$RUNNER_TEMP/ridi-llama"
+          chmod +x "$RUNNER_TEMP/ridi-llama/llama-b12327/llama-server"
+      - name: Download original, checksum-pinned Qwen model weights
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 4 --retry-delay 5 --max-time 1000 \
+            'https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf' \
+            -o "$RUNNER_TEMP/ridi-models/qwen05.gguf"
+          curl -fLsS --retry 4 --retry-delay 5 --max-time 1000 \
+            'https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf' \
+            -o "$RUNNER_TEMP/ridi-models/qwen15.gguf"
+          echo '74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db  '"$RUNNER_TEMP/ridi-models/qwen05.gguf" | sha256sum --check
+          echo '6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e  '"$RUNNER_TEMP/ridi-models/qwen15.gguf" | sha256sum --check
+      - name: Verify the exact frozen Windows pilot inputs before running
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd experiments/qwen_cpu_pilot
+          echo '9a16f8ddaa542e0bf08e27a7b173d1512742e8ac36a7c2e0edde995a6ed7e69a  questions.csv' | sha256sum --check
+          echo '716ef2147ed703ce1952778bac9e41698194a0c6b2da495e853dfacd75bb333d  local_models.py' | sha256sum --check
+          echo 'b413605e8859e893a4c3b4bb21f4cb1a12905b76ab3b6ed1f9c019f610b9842c  ridi-check.json' | sha256sum --check
+      - name: Start both local Qwen CPU inference servers
+        shell: bash
+        run: |
+          set -euo pipefail
+          LLAMA="$RUNNER_TEMP/ridi-llama/llama-b12327/llama-server"
+          nohup "$LLAMA" --model "$RUNNER_TEMP/ridi-models/qwen05.gguf" --host 127.0.0.1 \
+            --port 18121 --ctx-size 1024 --threads 2 --parallel 1 --n-gpu-layers 0 \
+            > "$RUNNER_TEMP/qwen05.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/qwen05.pid"
+          nohup "$LLAMA" --model "$RUNNER_TEMP/ridi-models/qwen15.gguf" --host 127.0.0.1 \
+            --port 18122 --ctx-size 1024 --threads 2 --parallel 1 --n-gpu-layers 0 \
+            > "$RUNNER_TEMP/qwen15.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/qwen15.pid"
+          for port in 18121 18122; do
+            ready=0
+            for attempt in $(seq 1 60); do
+              if curl -fsS "http://127.0.0.1:$port/health" | grep -q 'ok'; then ready=1; break; fi
+              sleep 2
+            done
+            if [ "$ready" != 1 ]; then
+              cat "$RUNNER_TEMP/qwen05.log" "$RUNNER_TEMP/qwen15.log"
+              exit 1
+            fi
+          done
+      - name: Run 96 actual CPU model calls (24 cases x two sizes x two repeats)
+        working-directory: experiments/qwen_cpu_pilot
+        run: ridi-check run --config ridi-check.json
+      - name: Independently rebuild all results and verify recorded evidence hashes
+        working-directory: experiments/qwen_cpu_pilot
+        run: ridi-check verify ridi-out
+      - name: Run strict gate and recheck the binary YES/NO scoring
+        working-directory: experiments/qwen_cpu_pilot
+        shell: bash
+        run: |
+          set +e
+          ridi-check gate ridi-out/results.csv --strict --check-scores > ridi-out/gate_execution.log 2>&1
+          status=$?
+          set -e
+          cat ridi-out/gate_execution.log
+          echo "STRICT_GATE_EXIT=$status"
+          # 0=all zero limits met; 1=changed/unsafe cases caught; 2=invalid run.
+          if [ "$status" -gt 1 ]; then exit "$status"; fi
+      - name: Sign this genuine-model run's evidence.json
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: experiments/qwen_cpu_pilot/ridi-out/evidence.json
+      - name: Verify the genuine-model run's signed attestation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if gh attestation verify experiments/qwen_cpu_pilot/ridi-out/evidence.json --repo "$GITHUB_REPOSITORY"; then
+              exit 0
+            fi
+            sleep 6
+          done
+          exit 1
+      - name: Download and verify original human-labelled BoolQ development data
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 4 --retry-delay 5 \
+            'https://raw.githubusercontent.com/svinkapeppa/boolq/master/dev.jsonl' \
+            -o "$RUNNER_TEMP/boolq-dev.jsonl"
+          echo 'ebc29ea3808c5c611672384b3de56e83349fe38fc1fe876fd29b674d81d0a80a  '"$RUNNER_TEMP/boolq-dev.jsonl" | sha256sum --check
+      - name: Independently rebuild identical 48-case BoolQ human-labelled sample
+        shell: bash
+        run: python experiments/qwen_cpu_pilot/boolq_builder.py "$RUNNER_TEMP/boolq-dev.jsonl"
+      - name: Run 192 true model requests on independent BoolQ labels
+        working-directory: experiments/qwen_cpu_pilot/boolq
+        run: ridi-check run --config ridi-check.json
+      - name: Verify BoolQ raw and derived results
+        working-directory: experiments/qwen_cpu_pilot/boolq
+        run: ridi-check verify ridi-out
+      - name: Apply strict release gate and evaluate scores on BoolQ
+        working-directory: experiments/qwen_cpu_pilot/boolq
+        shell: bash
+        run: |
+          set +e
+          ridi-check gate ridi-out/results.csv --strict --check-scores > ridi-out/gate_execution.log 2>&1
+          status=$?
+          set -e
+          cat ridi-out/gate_execution.log
+          echo "BOOLQ_STRICT_GATE_EXIT=$status"
+          if [ "$status" -gt 1 ]; then exit "$status"; fi
+      - name: Sign independent BoolQ live-model evidence
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: experiments/qwen_cpu_pilot/boolq/ridi-out/evidence.json
+      - name: Verify BoolQ signed provenance
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if gh attestation verify experiments/qwen_cpu_pilot/boolq/ridi-out/evidence.json --repo "$GITHUB_REPOSITORY"; then
+              exit 0
+            fi
+            sleep 6
+          done
+          exit 1
+      - name: Preserve labelled BoolQ pilot evidence (CC BY-SA 3.0 source)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ridi-boolq-qwen-cpu-evidence
+          path: |
+            experiments/qwen_cpu_pilot/boolq/ridi-out/
+            experiments/qwen_cpu_pilot/boolq/questions.csv
+            experiments/qwen_cpu_pilot/boolq/PRE_RUN_FREEZE.json
+            experiments/qwen_cpu_pilot/boolq/local_models.py
+            experiments/qwen_cpu_pilot/boolq/ridi-check.json
+            experiments/qwen_cpu_pilot/boolq_builder.py
+            experiments/qwen_cpu_pilot/README.md
+          if-no-files-found: error
+      - name: Keep full reproducibility evidence and bounded logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ridi-qwen-cpu-pilot-evidence
+          path: |
+            experiments/qwen_cpu_pilot/ridi-out/
+            experiments/qwen_cpu_pilot/questions.csv
+            experiments/qwen_cpu_pilot/local_models.py
+            experiments/qwen_cpu_pilot/ridi-check.json
+            experiments/qwen_cpu_pilot/PRE_RUN_FROZEN.json
+          if-no-files-found: error

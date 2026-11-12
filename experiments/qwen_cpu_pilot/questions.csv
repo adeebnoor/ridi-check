@@ -1,0 +1,73 @@
+case_id,question,expected
+p01,"POLICY [p01]: Anyone living in Harbour district may join the library free of charge.
+QUESTION: Can a Harbour district resident join without paying?
+Give exactly YES or NO, no other words.",YES
+p02,"POLICY [p02]: A lost library card is replaced for a fee of four pounds.
+QUESTION: Is replacement of a lost card free?
+Give exactly YES or NO, no other words.",NO
+p03,"POLICY [p03]: Members under sixteen need a parent or guardian's signature.
+QUESTION: Can a fifteen-year-old join without a guardian signature?
+Give exactly YES or NO, no other words.",NO
+p04,"POLICY [p04]: Membership must be renewed every three years.
+QUESTION: Must membership be renewed every three years?
+Give exactly YES or NO, no other words.",YES
+p05,"POLICY [p05]: Members may borrow up to twelve items at a time.
+QUESTION: May one member borrow twelve items at the same time?
+Give exactly YES or NO, no other words.",YES
+p06,"POLICY [p06]: Members may borrow up to twelve items at a time.
+QUESTION: May one member borrow twenty items at the same time?
+Give exactly YES or NO, no other words.",NO
+p07,"POLICY [p07]: Books are lent for twenty one days.
+QUESTION: Are books lent for twenty one days?
+Give exactly YES or NO, no other words.",YES
+p08,"POLICY [p08]: Films and music are lent for seven days.
+QUESTION: Are films lent for twenty one days?
+Give exactly YES or NO, no other words.",NO
+p09,"POLICY [p09]: Reference books cannot be borrowed and must remain in the reading room.
+QUESTION: May a reference book be taken home?
+Give exactly YES or NO, no other words.",NO
+p10,"POLICY [p10]: A loan can be renewed twice unless another member has reserved the item.
+QUESTION: May an unreserved loan be renewed twice?
+Give exactly YES or NO, no other words.",YES
+p11,"POLICY [p11]: No fine is charged on items borrowed with a child card.
+QUESTION: Are child-card borrowers charged overdue fines?
+Give exactly YES or NO, no other words.",NO
+p12,"POLICY [p12]: Borrowing is suspended when unpaid fines reach fifteen pounds.
+QUESTION: Is borrowing suspended when unpaid fines reach fifteen pounds?
+Give exactly YES or NO, no other words.",YES
+p13,"POLICY [p13]: A study room may be booked for up to two hours a day.
+QUESTION: Can a study room be booked for three hours in one day?
+Give exactly YES or NO, no other words.",NO
+p14,"POLICY [p14]: A study room is released if the group does not arrive within fifteen minutes.
+QUESTION: Does a room get released after fifteen minutes of nonarrival?
+Give exactly YES or NO, no other words.",YES
+p15,"POLICY [p15]: Food is not allowed in the study rooms, but covered drinks are.
+QUESTION: May someone eat a sandwich in the study room?
+Give exactly YES or NO, no other words.",NO
+p16,"POLICY [p16]: Food is not allowed in the study rooms, but covered drinks are.
+QUESTION: May someone bring a covered drink into a study room?
+Give exactly YES or NO, no other words.",YES
+p17,"POLICY [p17]: Black and white printing costs ten pence per page.
+QUESTION: Does black and white printing cost forty pence per page?
+Give exactly YES or NO, no other words.",NO
+p18,"POLICY [p18]: Colour printing costs forty pence per page.
+QUESTION: Does colour printing cost forty pence per page?
+Give exactly YES or NO, no other words.",YES
+p19,"POLICY [p19]: Scanning to email is free.
+QUESTION: Is scanning a page to email free?
+Give exactly YES or NO, no other words.",YES
+p20,"POLICY [p20]: The printers accept payment by card only.
+QUESTION: Can one pay the printers with cash?
+Give exactly YES or NO, no other words.",NO
+p21,"POLICY [p21]: The library is closed on Sunday and public holidays.
+QUESTION: Is the library open on Sunday?
+Give exactly YES or NO, no other words.",NO
+p22,"POLICY [p22]: The book drop at the side entrance is open at all hours.
+QUESTION: Can books be returned using the side drop at midnight?
+Give exactly YES or NO, no other words.",YES
+p23,"POLICY [p23]: An ebook is returned automatically after fourteen days.
+QUESTION: Does an ebook remain on loan for thirty days?
+Give exactly YES or NO, no other words.",NO
+p24,"POLICY [p24]: Places at the writing workshop must be booked.
+QUESTION: Must a place at the writing workshop be reserved?
+Give exactly YES or NO, no other words.",YES
