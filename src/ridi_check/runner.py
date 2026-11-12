@@ -26,7 +26,7 @@ from . import __version__
 from .adapters import build_adapter, literal_secret_headers
 from .analysis import duplicate_note, duplicate_questions
 from .contract import read_records, run_column, to_csv
-from .scoring import EXACT_MATCH, load_scorer
+from .scoring import EXACT_MATCH, load_scorer, scorer_fingerprint
 from .util import atomic_write_text, now_iso, read_text, redact, sha256_file
 
 RAW_OUTPUTS = "raw_outputs.jsonl"
@@ -426,6 +426,7 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
         "cases": len(questions),
         "mode": "key" if has_expected else "nokey",
         "scorer": scorer_name,
+        **({"scorer_source_sha256": scorer_fingerprint(scorer)} if scorer and scorer_fingerprint(scorer) else {}),
         "systems": systems,
         "runs": config.runs,
         "concurrency": config.concurrency,
@@ -624,6 +625,11 @@ def verify(out_dir: str) -> VerifyOutcome:
             scorer, _ = load_scorer(None if manifest.get("scorer") in (None, EXACT_MATCH) else manifest["scorer"])
         except ValueError as exc:
             outcome.notes.append(f"The scorer of this run could not be loaded ({exc}), so the scores are not checked.")
+        recorded = manifest.get("scorer_source_sha256")
+        if scorer and recorded and scorer_fingerprint(scorer) != recorded:
+            outcome.notes.append("The scorer's code is not the code this run was scored with (its file no longer has "
+                                 "the fingerprint in the manifest). Where it scores differently, a score differs for "
+                                 "that reason.")
     if manifest.get("tool_version") != __version__:
         outcome.notes.append(f"This run was written by ridi-check {manifest.get('tool_version')}; this is {__version__}. "
                              "Where the rules changed between the two, a cell can differ for that reason.")

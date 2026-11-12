@@ -141,7 +141,8 @@ error, and the tool would then measure the judge as well as the assistant.
 skipped and the rest are tried again. A line cut short by a kill is left in place and ignored.
 
 **`run_manifest.json`**: SHA-256 of the questions file, both definitions as given (and the hash of a
-definition file or of the Python source file), run count, concurrency, retries, scorer, tool version
+definition file or of the Python source file), run count, concurrency, retries, scorer (and, for a scorer
+of your own, the hash of the file it lives in), tool version
 and one entry per invocation with its timestamps and counts. A second run into the same folder with
 a different questions file or definition is refused; changed Python source is reported, not refused,
 because fixing a broken adapter and resuming is a normal thing to do.

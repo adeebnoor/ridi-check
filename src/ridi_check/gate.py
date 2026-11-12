@@ -74,10 +74,14 @@ def evaluate(
         lines += [f"score differs from the scorer\tcase {i}" for i in score_check["cases_that_disagree"]]
         checks.append((f"scored runs that do not have the score {score_check['scorer']} gives",
                        score_check["runs_that_disagree"], 0))
-        skipped = score_check["cases_without_expected"], score_check["runs_without_answer_text"]
-        if any(skipped):
-            notes.append(f"note: the score check left out {skipped[0]} case(s) with no expected answer and "
-                         f"{skipped[1]} run(s) with no answer text.")
+        # Asked to check the scores, and some cannot be checked: they are counted, not let through with a note.
+        unkeyed = [c.case_id for c, _ in a.items if not c.expected]
+        if unkeyed:
+            lines += [f"no expected answer, so the score was not checked\tcase {i}" for i in unkeyed]
+            checks.append(("cases with no expected answer, so their scores were not checked", len(unkeyed), 0))
+        if score_check["runs_without_answer_text"]:
+            checks.append(("scored runs with no answer text, so their scores were not checked",
+                           score_check["runs_without_answer_text"], 0))
     if key and a.same_text_scored:
         notes.append(f"note: {len(a.same_text_scored)} case(s) hold the same answer text scored both correct and wrong: "
                      + ", ".join(a.same_text_scored[:20]) + (f", and {len(a.same_text_scored) - 20} more" if len(a.same_text_scored) > 20 else "")

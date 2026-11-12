@@ -670,7 +670,9 @@ def test_the_scores_of_a_file_made_by_hand_can_be_checked_against_its_expected_a
     printed = capsys.readouterr()
     assert "score differs from the scorer\tcase mis-scored" in printed.out
     assert "scored runs that do not have the score normalised exact match gives: 4 (limit 0) - over the limit" in printed.out
-    assert "left out 1 case(s) with no expected answer and 0 run(s) with no answer text" in printed.err
+    # a case with no expected answer could not be checked: the gate counts it too, it does not let it through
+    assert "no expected answer, so the score was not checked\tcase no-expected" in printed.out
+    assert "cases with no expected answer, so their scores were not checked: 1 (limit 0) - over the limit" in printed.out
 
 
 def test_a_score_check_uses_the_scorer_that_is_named_and_says_when_all_agree(tmp_path, write, capsys):
@@ -722,3 +724,65 @@ def test_a_long_list_of_disagreeing_scores_is_cut_short_in_print_and_at_fifty_in
     with open(tmp_path / "summary.json", encoding="utf-8") as f:
         check = json.load(f)["score_check"]
     assert len(check["first_disagreements"]) == 50 and len(check["cases_that_disagree"]) == 30
+
+
+def test_a_gate_asked_to_check_scores_does_not_pass_what_it_could_not_check(write, capsys):
+    head = ("case_id,expected,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,"
+            "baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n")
+    keyed = "keyed,avoid it,Avoid it.,Avoid it.,Avoid it.,Avoid it.,1,1,1,1\n"
+    # every score that can be checked agrees, and one case has no expected answer to check against
+    unkeyed = write("unkeyed.csv", head + keyed + "unkeyed,,Use freely.,Use freely.,Use freely.,Use freely.,1,1,1,1\n")
+    assert main(["gate", unkeyed, "--strict"]) == 0
+    capsys.readouterr()
+    assert main(["gate", unkeyed, "--strict", "--check-scores"]) == 1
+    out = capsys.readouterr().out
+    assert "scored runs that do not have the score normalised exact match gives: 0 (limit 0)" in out
+    assert "no expected answer, so the score was not checked\tcase unkeyed" in out
+    assert "cases with no expected answer, so their scores were not checked: 1 (limit 0) - over the limit" in out
+    # a scored run whose answer text is not in the file cannot be checked either
+    no_text = write("no_text.csv", head + keyed + "partly,avoid it,Avoid it.,,Avoid it.,Avoid it.,1,1,1,1\n")
+    assert main(["gate", no_text, "--check-scores"]) == 1
+    assert "scored runs with no answer text, so their scores were not checked: 1 (limit 0) - over the limit" in capsys.readouterr().out
+    assert main(["report", no_text, "--check-scores"]) == 0             # `report` says it and does not fail
+    assert "Not checked: 1 run(s) have no answer text." in capsys.readouterr().out
+    complete = write("complete.csv", head + keyed)
+    assert main(["gate", complete, "--strict", "--check-scores"]) == 0
+    out = capsys.readouterr().out
+    assert "were not checked" not in out
+
+
+def test_the_strict_gate_says_when_the_scores_of_a_file_came_from_somewhere_else(tmp_path, write, capsys):
+    head = "case_id,expected,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer,baseline_correct,baseline_repeat_correct,updated_correct,updated_repeat_correct\n"
+    # scored wrong by hand: the strict gate takes the scores as they are, and says that it does
+    results = write("results.csv", head + "bad,avoid it,Use freely.,Use freely.,Use freely.,Use freely.,1,1,1,1\n")
+    assert main(["gate", results, "--strict"]) == 0
+    note = "note: --strict takes the scores in the file as they are. This file has no run_manifest.json beside it"
+    assert note in capsys.readouterr().err
+    assert main(["gate", results, "--strict", "--check-scores"]) == 1    # with the check, the wrong scores stop it
+    assert note not in capsys.readouterr().err
+    assert main(["gate", results]) == 0                                  # the note belongs to the strict gate
+    assert note not in capsys.readouterr().err
+    # a file that `run` wrote has its record beside it, and `verify` checks its scores: no note
+    (tmp_path / "run_manifest.json").write_text("{}", encoding="utf-8")
+    assert main(["gate", results, "--strict"]) == 0
+    assert note not in capsys.readouterr().err
+    # nor without an answer key, where there are no scores to speak of
+    nokey = write("nokey.csv", "case_id,baseline_answer,baseline_repeat_answer,updated_answer,updated_repeat_answer\na,x,x,x,x\n")
+    os.remove(tmp_path / "run_manifest.json")
+    assert main(["gate", nokey, "--strict"]) == 0
+    assert note not in capsys.readouterr().err
+
+
+def test_a_score_check_names_the_code_of_the_scorer_it_used(tmp_path, write):
+    import hashlib
+    import fake_systems
+    results = write("results.csv", "case_id,expected,baseline_answer,updated_answer,baseline_correct,updated_correct\n"
+                                   "a,21 days,The loan is 21 days.,It is 14 days.,1,0\n")
+    assert main(["report", results, "--check-scores", "--scorer", "fake_systems:scorer_contains"]) == 0
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        check = json.load(f)["score_check"]
+    with open(fake_systems.__file__, "rb") as f:
+        assert check["scorer_source_sha256"] == hashlib.sha256(f.read()).hexdigest()
+    assert main(["report", results, "--check-scores"]) == 0             # exact match is the tool's own: its version says which
+    with open(tmp_path / "summary.json", encoding="utf-8") as f:
+        assert "scorer_source_sha256" not in json.load(f)["score_check"]

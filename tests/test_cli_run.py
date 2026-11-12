@@ -138,6 +138,14 @@ def test_verify_scores_again_with_the_runs_own_scorer_and_says_when_the_version_
     assert main(["verify", str(out_dir)]) == 0                      # scored again with the same function
     manifest = json.loads((out_dir / "run_manifest.json").read_text(encoding="utf-8"))
     assert manifest["scorer"] == "fake_systems:scorer_contains"
+    # the manifest also says which code scored the run, and `verify` says when that code is no longer the same
+    import hashlib
+    with open(fake_systems.__file__, "rb") as f:
+        assert manifest["scorer_source_sha256"] == hashlib.sha256(f.read()).hexdigest()
+    manifest["scorer_source_sha256"] = "0" * 64
+    (out_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert main(["verify", str(out_dir)]) == 0
+    assert "The scorer's code is not the code this run was scored with" in capsys.readouterr().err
     manifest["scorer"], manifest["tool_version"] = "no_such_module:function", "0.1.0"
     (out_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     capsys.readouterr()

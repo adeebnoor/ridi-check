@@ -154,7 +154,8 @@ normalisation, or a function you write.
 **I scored the answers myself. Does the tool check my scores?** Not unless you ask. `report` and `gate`
 use the 0 and 1 in your file as they are. `--check-scores` scores every answer again against its `expected`
 answer, by exact match or by your function with `--scorer`, and lists the runs whose score in the file is
-another one. A case where the same answer text is scored both correct and wrong is always named.
+another one. A case where the same answer text is scored both correct and wrong is always named. In `gate`,
+a score that cannot be checked, for want of an expected answer or of the answer text, counts as well.
 
 **How many questions and runs?** 30 to 100 real user questions is a good first set. Two runs per version is
 the minimum for the stable label; use more when the decision is expensive. Calls = questions × 2 × runs.

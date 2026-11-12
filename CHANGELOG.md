@@ -3,6 +3,20 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Changed
+- `gate --check-scores` no longer passes what it could not check. A case with no expected answer and a
+  scored run with no answer text each count against a limit of zero; before, they were named in a note
+  and the gate could still pass. `report --check-scores` is unchanged: it counts them as not checked.
+
+### Added
+- `gate --strict` on a file with an answer key and no `run_manifest.json` beside it says on standard error
+  that it takes the scores as they are, and names `--check-scores`.
+- A run that uses a scorer of your own records the SHA-256 of the file the function lives in
+  (`scorer_source_sha256` in `run_manifest.json`), `verify` says when that file has changed since, and a
+  score check made with such a scorer records the same fingerprint in `summary.json`.
+
 ## 0.10.0
 
 ### Added

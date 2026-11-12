@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import Callable
 
 from .analysis import normalise
 from .contract import Case, ContractError, run_column
-from .util import load_callable
+from .util import load_callable, sha256_file
 
 EXACT_MATCH = "normalised exact match"
 
@@ -20,6 +21,17 @@ def load_scorer(spec: str | None) -> tuple[Callable[[str, str], object], str]:
     if not spec:
         return exact_match, EXACT_MATCH
     return load_callable(spec, "scorer"), spec
+
+
+def scorer_fingerprint(scorer: Callable[[str, str], object]) -> str | None:
+    """SHA-256 of the file a scorer of your own lives in, when it can be found. The built-in exact match has
+    none: it changes only with the tool, whose version is recorded."""
+    if scorer is exact_match:
+        return None
+    try:
+        return sha256_file(inspect.getsourcefile(scorer))
+    except (TypeError, OSError):
+        return None
 
 
 def check_scores(cases: list[Case], scorer: Callable[[str, str], object], name: str) -> dict:
@@ -62,11 +74,15 @@ def check_scores(cases: list[Case], scorer: Callable[[str, str], object], name: 
             "--check-scores found nothing to check. It needs answer-key mode, an expected column and the answer "
             "text of the runs in the file."
         )
-    return {
+    out = {
         "scorer": name, "runs_checked": checked, "runs_that_disagree": len(disagree),
         "cases_that_disagree": cases_that_disagree, "first_disagreements": disagree[:50],
         "cases_without_expected": len(without_expected), "runs_without_answer_text": without_answer,
     }
+    fingerprint = scorer_fingerprint(scorer)
+    if fingerprint:     # which code gave these scores: the name alone does not say that it is still the same
+        out["scorer_source_sha256"] = fingerprint
+    return out
 
 
 def score_check_lines(check: dict) -> list[str]:

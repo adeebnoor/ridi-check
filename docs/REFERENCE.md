@@ -108,7 +108,7 @@ Prints the counts and one line per offending case. It prints no verdict about th
 | `--max-answer-changes N` | not checked | with an answer key: cases whose score stayed the same while the answer changed, between the versions or from one run to the next. `--max-answer-changes 0` belongs in a release check where the wording itself matters |
 | `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them; `--max-unstable 0` is the setting for a release check where a wrong answer is costly |
 | `--max-incomplete N` | 0 | cases that could not be compared because a call failed |
-| `--check-scores`, `--scorer` | off | as for `report`; here every scored run that does not have the score the scorer gives counts against a limit of zero. `--strict` does not turn this on: scores given by a person need not follow a function |
+| `--check-scores`, `--scorer` | off | as for `report`; here every scored run that does not have the score the scorer gives counts against a limit of zero, and so does every score that could not be checked: a case with no expected answer, a scored run with no answer text. `--strict` does not turn this on, because scores given by a person need not follow a function; on a file with no `run_manifest.json` beside it, it says so on standard error |
 | `--mode`, `--similarity`, `--judgments` | as for `report` | |
 
 ### `ridi-check verify DIR`
@@ -126,7 +126,9 @@ CI log or a registered protocol, and give it back with `--raw-sha256 HEX` (its f
 enough): `verify` then exits 1 when the record no longer has that fingerprint. When the questions file of
 the run is no longer there unchanged, the questions and expected answers are taken from `results.csv`
 and are not themselves checked; when the run's own scorer cannot be loaded, the scores are not checked.
-Both are said on standard error.
+Both are said on standard error. A run that used a scorer of your own records the SHA-256 of the file the
+function lives in (`scorer_source_sha256` in `run_manifest.json`); when that file has changed since,
+`verify` says that the scores are being made again with other code.
 
 ## Settings file
 
@@ -197,9 +199,23 @@ together. Neither changes a label or a count.
   answer, is scored again, by exact match after normalisation or by the function given with `--scorer`,
   and compared with the score in the file. `report` prints how many runs disagree and the first ten, and
   writes the result to `summary.json` (`score_check`) and into the report; it still exits 0. `gate` counts
-  the runs that disagree against a limit of zero and exits 1 when there are any. Cases without an expected
-  answer and runs without answer text are left out and counted as that. When there is nothing to check,
-  the exit status is 2.
+  the runs that disagree against a limit of zero and exits 1 when there are any. A case without an expected
+  answer and a scored run without answer text cannot be checked: `report` counts them as not checked, and
+  `gate`, which was asked to check, counts them against a limit of zero as well, so a file with a gap in
+  its answer key does not pass. When there is nothing to check at all, the exit status is 2. With a scorer
+  of your own, `score_check` also holds the SHA-256 of the file the function lives in
+  (`scorer_source_sha256`), so that the result names the code that gave it and not only its name.
+
+For a release check on a file whose scores were given outside the tool, the strict gate and the score
+check go together, with the scorer named:
+
+```bash
+ridi-check gate results.csv --strict --check-scores --scorer my_scoring:is_correct
+```
+
+`--strict` alone takes the scores as they are. When the file has an `expected` column and no
+`run_manifest.json` beside it, so that its scores were not written by `run`, the gate says so on standard
+error.
 
 Agreement shows that the scores in the file are the ones this scorer gives. It does not show that the
 answer key is right, and scores given by a person need not agree with any function. For a folder that `run` wrote, `verify`

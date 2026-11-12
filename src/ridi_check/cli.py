@@ -66,7 +66,9 @@ def _add_analysis_options(p: argparse.ArgumentParser) -> None:
     p.add_argument("--check-scores", action="store_true",
                    help="answer-key mode: score every answer in the file again against its expected answer and say "
                         "where the score in the file is another one. For a file made by hand, whose scores come "
-                        "from somewhere else. Uses exact match after normalisation unless --scorer is given.")
+                        "from somewhere else. Uses exact match after normalisation unless --scorer is given. "
+                        "In `gate`, a case with no expected answer and a scored run with no answer text cannot "
+                        "be checked and count against a limit of zero as well.")
     p.add_argument("--scorer", metavar="MODULE:FUNCTION",
                    help="with --check-scores: scorer(answer, expected) -> true when correct, as in `run`")
 
@@ -396,6 +398,14 @@ def _cmd_gate(args: argparse.Namespace) -> int:
     if scorer and mode != "key":
         raise ContractError("--check-scores is for answer-key mode: without correctness columns there are no scores to check.")
     score_check = check_scores(cases, *scorer) if scorer else None
+    if (args.strict and mode == "key" and not scorer and any(c.expected for c in cases)
+            and not os.path.isfile(os.path.join(os.path.dirname(os.path.abspath(args.results)), "run_manifest.json"))):
+        # A file that `run` wrote has its scores from the run's scorer, and `verify` checks them. This one has
+        # no record of a run beside it, so its scores came from somewhere else and nothing here looks at them.
+        print("note: --strict takes the scores in the file as they are. This file has no run_manifest.json beside "
+              "it, so its scores were not written by `ridi-check run`: add --check-scores (and --scorer, if exact "
+              "match is not how they were given) to have each score checked against its expected answer.",
+              file=sys.stderr)
     analysis = analyse(cases, mode, args.similarity)
     judgments = {}
     if args.judgments:
