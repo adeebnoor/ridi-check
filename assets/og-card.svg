@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#08111e"/><stop offset=".6" stop-color="#132b3d"/><stop offset="1" stop-color="#0e2431"/></linearGradient>
+<linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#a6f5eb"/><stop offset="1" stop-color="#84b5ff"/></linearGradient>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#396577" stroke-width=".55" opacity=".42"/></pattern>
+</defs>
+<rect width="1200" height="630" fill="url(#bg)"/><rect x="640" width="560" height="630" fill="url(#grid)" opacity=".6"/>
+<rect x="60" y="56" width="58" height="58" rx="14" fill="#21575c" stroke="#75e6d8"/><g stroke="#8bebde" stroke-width="6" stroke-linecap="round"><path d="m77 97 6-26M91 97l6-19M105 97l6-31"/></g>
+<text x="136" y="100" font-family="Arial,sans-serif" font-size="37" font-weight="800" fill="#f5fdff">RIDI<tspan fill="#86e9df">Check</tspan></text>
+<text x="70" y="209" font-family="Arial,sans-serif" font-size="18" letter-spacing="4" font-weight="700" fill="#95c9c8">AI UPDATE ASSURANCE</text>
+<text x="65" y="315" font-family="Arial,sans-serif" font-size="65" font-weight="750" fill="#f8fcff">Decisions deserve</text>
+<text x="65" y="396" font-family="Arial,sans-serif" font-size="65" font-weight="750" fill="url(#g)">more than a score.</text>
+<text x="70" y="465" font-family="Arial,sans-serif" font-size="23" fill="#b4c8d9">Compare. Repeat. Review. Verify.</text>
+<rect x="69" y="512" width="335" height="49" rx="24" fill="#1b4146" stroke="#4b7d78"/><text x="92" y="543" font-family="Arial,sans-serif" font-size="18" fill="#b4f0e5">OPEN SOURCE  ·  SIGNED EVIDENCE</text>
+<g transform="translate(809,177)">
+<rect width="326" height="271" rx="16" fill="#112033" stroke="#3c6174"/>
+<text x="23" y="39" font-family="monospace" font-size="13" font-weight="700" fill="#a0c4c7">RIDI / UPDATE AUDIT</text><path d="M20 58H306" stroke="#335068"/>
+<text x="25" y="103" font-family="monospace" font-size="14" fill="#9db2cc">BEFORE</text><text x="196" y="103" font-family="monospace" font-size="14" fill="#9db2cc">AFTER</text>
+<text x="23" y="157" font-family="Arial,sans-serif" font-size="52" font-weight="750" fill="#f5fbff">34<tspan font-size="20" fill="#8da3b6">/48</tspan></text>
+<text x="154" y="154" font-family="Arial,sans-serif" font-size="29" fill="#8fd8d5">→</text>
+<text x="193" y="157" font-family="Arial,sans-serif" font-size="52" font-weight="750" fill="#f5fbff">32<tspan font-size="20" fill="#8da3b6">/48</tspan></text>
+<path d="M20 181H306" stroke="#335068"/>
+<text x="24" y="220" font-family="monospace" font-size="13" fill="#dcb1b0">04 STABLE REGRESSIONS</text>
+<text x="24" y="245" font-family="monospace" font-size="13" fill="#dfc18a">03 UNSTABLE CASES</text>
+</g></svg>
