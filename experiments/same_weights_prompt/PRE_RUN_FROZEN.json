@@ -1,0 +1,32 @@
+{
+  "status": "frozen prior to comparison; human-labelled public dev subset",
+  "hypothesis": "a system-instruction policy change with unchanged model weights can change per-case model answers even when the supplied evidence and input questions remain identical",
+  "not_a_weight_update": true,
+  "purpose": "technical test of prompt/retrieval-evidence authority configuration update, not natural prevalence or clinical error",
+  "current_and_proposed_same_model": "Qwen/Qwen2.5-1.5B-Instruct-GGUF qwen2.5-1.5b-instruct-q4_k_m.gguf",
+  "model_sha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+  "llama_cpp_release": "b12327",
+  "changed_variable": "System prompt only: require passage-only versus allow general knowledge fallback",
+  "held_constant": [
+    "model weights",
+    "quantization",
+    "decoding temperature=0",
+    "seed",
+    "max_tokens",
+    "llama.cpp CPU server",
+    "question and passage",
+    "context IDs",
+    "number of repeats"
+  ],
+  "sampling": "48 seeded stratified BoolQ dev cases, 24 YES + 24 NO; no reselecting after outcomes",
+  "gold_label_limitations": "Original public BoolQ labels have potential contamination and known potential conflicts with passages e.g. case p0155; not newly blind-adjudicated",
+  "questions_sha256": "3fa33a0e7e968c99056ffe17a430a555a9678f717d6fdcc78e1c352dfa4eb462",
+  "adapter_sha256": "d91234a6400aa92e6b3ed61dc69c4642d668228d7a76cf0db02f518e49ca04b4",
+  "config_sha256": "b79a464d492e8d87f384a36651f44562811a5de095de034f4eb5e021c1ece083",
+  "freeze_utc": "2026-11-12T22:07:48.713059+00:00",
+  "run_plan": {
+    "cases": 48,
+    "runs_per_version": 3,
+    "total_calls": 288
+  }
+}
