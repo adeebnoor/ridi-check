@@ -150,6 +150,11 @@ because fixing a broken adapter and resuming is a normal thing to do.
 **`results.csv`**: the contract in the [reference](REFERENCE.md#resultscsv). `run` writes it only after
 an invocation finishes. You can also write it yourself and use `report` and `gate` alone.
 
+**`evidence.json`**: written when an invocation finishes. `evidence_format`, `tool_version`, `written_at`,
+`files` (the SHA-256 of `raw_outputs.jsonl`, `results.csv` and `run_manifest.json`), `questions_sha256`,
+`scorer`, `scorer_source_sha256`, `systems_source_sha256`, `mode`, `cases`, `runs`. It holds fingerprints
+only. See the [evidence and audit protocol](EVIDENCE.md).
+
 **`summary.json`**: `mode`, `cases`, `cases_compared`, `runs_per_version`, `states` (count per state),
 `case_ids`, `first_run` (`change_between_versions`, `rerun_variation_current`,
 `rerun_variation_proposed`, each as `{count, n, rate, interval_95}`; in answer-key mode also the accuracies,

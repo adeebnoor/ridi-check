@@ -3,6 +3,24 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Added
+- `run` writes `evidence.json` when it finishes: the SHA-256 of the record, the table and the manifest,
+  with the fingerprints of the questions, the scorer and the adapters' source, and prints the SHA-256 of
+  that one file. `verify` compares the folder with it, and `verify --evidence-sha256 HEX` exits 1 when
+  `evidence.json` is missing or is not the one whose fingerprint was kept.
+- `docs/EVIDENCE.md`: the evidence and audit protocol. What a run records, which change each check sees,
+  the steps for the person who hands a result over and for the one who checks it, and what no check here
+  can show.
+- `examples/ci/ridi-check-evidence.yml`: the strict policy with a signed GitHub attestation of
+  `evidence.json`. Checked for syntax; not run on a live repository.
+
+### Changed
+- `verify` exits 1 when a file of the folder no longer has the fingerprint in `evidence.json`. A record
+  and a table edited together, which agreed with each other and passed before, are now reported. A folder
+  written by an earlier version has no `evidence.json` and is checked as before, with a note.
+
 ## 0.10.1
 
 ### Changed

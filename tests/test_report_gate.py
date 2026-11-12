@@ -544,6 +544,12 @@ def test_the_strict_ci_example_pins_the_policy():
                      "- run: ridi-check run --config ridi-check.json --out ridi-out --runs 2",
                      "- run: ridi-check verify ridi-out",
                      "- run: ridi-check gate ridi-out/results.csv --strict --min-runs 2"]
+    # the example with an attested record keeps the same policy, and signs evidence.json before the gate can stop the job
+    with open(os.path.join(root, "examples", "ci", "ridi-check-evidence.yml"), encoding="utf-8") as f:
+        text = f.read()
+    assert [line.strip() for line in text.splitlines() if line.strip().startswith("- run:")] == steps
+    assert text.index("subject-path: ridi-out/evidence.json") < text.index("ridi-check gate ridi-out/results.csv --strict")
+    assert "id-token: write" in text and "attestations: write" in text
 
 
 

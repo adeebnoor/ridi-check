@@ -111,6 +111,8 @@ latest release.
 A complete GitHub Actions workflow to copy: [examples/ci/ridi-check.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check.yml).
 Where a wrong answer is costly, copy [examples/ci/ridi-check-strict.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check-strict.yml)
 instead: two runs of each version, the table checked against the record, and every limit at zero.
+[examples/ci/ridi-check-evidence.yml](https://github.com/adeebnoor/ridi-check/blob/main/examples/ci/ridi-check-evidence.yml)
+adds a signed attestation of the run's record, which a reader can check without trusting the repository.
 `gate` prints counts and the offending cases; it never prints a verdict about your system. By default it
 does not count answers that did not hold on re-run, changes seen in a single run, or answers that changed
 while their score stayed the same. Where a wrong answer is costly, use `ridi-check gate ... --strict`,
@@ -191,8 +193,11 @@ would call the same answer, which is why the owner judges. The pairs are constru
 not judged by independent raters, so this shows how the rules behave, not how often such changes happen.
 
 **Can someone edit `results.csv` and pass the gate?** They can edit it; `ridi-check verify ridi-out`
-builds the table again from the recorded calls and prints every cell that differs. To show later that the
-record itself was not changed, keep the fingerprint that `run` prints and give it to `verify --raw-sha256`.
+builds the table again from the recorded calls and prints every cell that differs, and it compares every
+file with the fingerprint that `run` recorded in `evidence.json`. To show later that nothing in the folder
+was changed, `evidence.json` included, keep the fingerprint of it that `run` prints and give it to
+`verify --evidence-sha256`. The [evidence and audit protocol](https://github.com/adeebnoor/ridi-check/blob/main/docs/EVIDENCE.md)
+has the steps.
 
 **Can I open the CSV files in Excel?** Yes. A cell that starts with `=`, `+`, `-` or `@` is written with an
 apostrophe in front (`'=1+1`), so a spreadsheet does not run answer text as a formula. The tool takes the
@@ -238,6 +243,7 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 - [Use cases](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.md): thirteen situations and how to set each one up
 - [Developer guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.md): adapters, files, CI, library use
 - [Reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md): every command and option, `results.csv`, the labelling rules
+- [Evidence and audit protocol](https://github.com/adeebnoor/ridi-check/blob/main/docs/EVIDENCE.md): what a run records, what each check shows, and what none can show
 - [Transition set](https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions): constructed answer pairs and what the comparison rules see and miss
 - بالعربية: [دليل الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.ar.md) · [حالات الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.ar.md) ·
   [دليل المطورين](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.ar.md)

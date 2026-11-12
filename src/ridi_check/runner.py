@@ -32,6 +32,7 @@ from .util import atomic_write_text, now_iso, read_text, redact, sha256_file
 RAW_OUTPUTS = "raw_outputs.jsonl"
 MANIFEST = "run_manifest.json"
 RESULTS = "results.csv"
+EVIDENCE = "evidence.json"
 
 VERSIONS = ("current", "proposed")
 SIDE = {"current": "baseline", "proposed": "updated"}
@@ -564,10 +565,65 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
     atomic_write_text(results_path, to_csv(header, rows))
     outcome.results_path = results_path
     save_manifest()
+    write_evidence(config.out_dir, manifest)
     return outcome
 
 
+def write_evidence(out_dir: str, manifest: dict) -> str:
+    """evidence.json: every file of a finished run named by its SHA-256, with what the run was made from.
+
+    The fingerprint of this one file stands for all of them: kept somewhere the folder's owner cannot edit,
+    it later shows whether the record, the table, the manifest, the questions or the scorer were changed.
+    It holds fingerprints only, no question, answer or definition. Returns the path.
+    """
+    record = {
+        "evidence_format": 1,
+        "tool": "ridi-check",
+        "tool_version": __version__,
+        "written_at": now_iso(),
+        "files": {name: sha256_file(os.path.join(out_dir, name)) for name in (RAW_OUTPUTS, RESULTS, MANIFEST)},
+        "questions_sha256": manifest.get("questions_sha256"),
+        "scorer": manifest.get("scorer"),
+        "scorer_source_sha256": manifest.get("scorer_source_sha256"),
+        "systems_source_sha256": {
+            version: {key: value for key, value in (manifest.get("systems", {}).get(version) or {}).items()
+                      if key in ("python_source_sha256", "definition_file_sha256")}
+            for version in VERSIONS
+        },
+        "mode": manifest.get("mode"), "cases": manifest.get("cases"), "runs": manifest.get("runs"),
+    }
+    path = os.path.join(out_dir, EVIDENCE)
+    atomic_write_text(path, json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+    return path
+
+
 # ---------- verify ----------
+
+def _check_evidence(out_dir: str, manifest: dict, outcome: "VerifyOutcome") -> None:
+    """Compare the folder with evidence.json, the fingerprints `run` wrote when it finished."""
+    path = os.path.join(out_dir, EVIDENCE)
+    if not os.path.isfile(path):
+        outcome.notes.append(f"There is no {EVIDENCE} in this folder, so the files are not compared with what was "
+                             "recorded when the run ended. A run made with this version of the tool writes one.")
+        return
+    try:
+        with open(path, encoding="utf-8") as f:
+            evidence = json.load(f)
+        recorded = dict(evidence["files"])
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        outcome.differences.append(f"{EVIDENCE} cannot be read ({type(exc).__name__}: {exc}).")
+        return
+    outcome.fingerprints[EVIDENCE] = sha256_file(path)
+    for name in (RAW_OUTPUTS, RESULTS, MANIFEST):
+        if recorded.get(name) != sha256_file(os.path.join(out_dir, name)):
+            outcome.differences.append(f"{name} does not have the fingerprint that {EVIDENCE} recorded when the run ended.")
+    if evidence.get("questions_sha256") != manifest.get("questions_sha256"):
+        outcome.differences.append(f"the questions file named in {MANIFEST} is not the one {EVIDENCE} recorded.")
+    questions_path = manifest.get("questions_file")
+    if questions_path and os.path.isfile(questions_path) and sha256_file(questions_path) != evidence.get("questions_sha256"):
+        outcome.differences.append(f"the questions file does not have the fingerprint that {EVIDENCE} recorded.")
+    if evidence.get("scorer_source_sha256") != manifest.get("scorer_source_sha256") or evidence.get("scorer") != manifest.get("scorer"):
+        outcome.differences.append(f"the scorer named in {MANIFEST} is not the one {EVIDENCE} recorded.")
 
 @dataclass
 class VerifyOutcome:
@@ -596,6 +652,7 @@ def verify(out_dir: str) -> VerifyOutcome:
         raise RunError(f"{paths[MANIFEST]} cannot be read ({exc}).") from exc
     outcome = VerifyOutcome()
     outcome.fingerprints = {name: sha256_file(paths[name]) for name in (RAW_OUTPUTS, RESULTS)}
+    _check_evidence(out_dir, manifest, outcome)
     try:
         file_records = read_records(read_text(paths[RESULTS]))
     except ValueError as exc:

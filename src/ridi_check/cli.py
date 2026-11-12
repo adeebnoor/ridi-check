@@ -18,7 +18,7 @@ from .analysis import analyse
 from .contract import ContractError, read_results
 from .gate import evaluate
 from .report import read_judgments, text_summary, write_report
-from .runner import SERVICE_FAILURES, RunConfig, RunError, run, verify
+from .runner import EVIDENCE, SERVICE_FAILURES, RunConfig, RunError, run, verify
 from .scoring import check_scores, load_scorer
 from .util import sha256_file
 
@@ -159,6 +159,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--raw-sha256", metavar="HEX",
                    help="the SHA-256 of raw_outputs.jsonl that `run` printed when it finished (at least its first 16 "
                         "characters), kept somewhere else. Exit 1 when the record no longer has it.")
+    p.add_argument("--evidence-sha256", metavar="HEX",
+                   help="the SHA-256 of evidence.json that `run` printed when it finished (at least its first 16 "
+                        "characters), kept somewhere else. Exit 1 when evidence.json no longer has it. Since "
+                        "evidence.json names every other file by its fingerprint, this one value covers the folder.")
     p.set_defaults(handler=_cmd_verify)
 
     p = sub.add_parser("gate", help="exit non-zero when stable regressions exceed a limit",
@@ -342,6 +346,8 @@ def _cmd_run(args: argparse.Namespace) -> int:
           f"{outcome.calls_ok} succeeded, {outcome.calls_failed} failed ({outcome.attempts} attempts).")
     print(f"Wrote: {outcome.results_path}")
     print(f"sha256 {sha256_file(raw)}  raw_outputs.jsonl   (keep this line elsewhere to show later that the record is unchanged)")
+    print(f"sha256 {sha256_file(os.path.join(args.out, EVIDENCE))}  {EVIDENCE}   (or this one: it names the record, the "
+          "table, the manifest, the questions and the scorer)")
     if args.report:
         _print_report(outcome.results_path, args.similarity, bool(args.open))
     if args.limit:
@@ -375,14 +381,21 @@ def _cmd_verify(args: argparse.Namespace) -> int:
             print("verify: raw_outputs.jsonl does not have the fingerprint given with --raw-sha256, so the record "
                   "is not the one that fingerprint was taken from.")
             return 1
+    if args.evidence_sha256:
+        given, found = args.evidence_sha256.strip().lower(), outcome.fingerprints.get(EVIDENCE)
+        if len(given) < 16 or not found or not found.startswith(given):
+            print(f"verify: {EVIDENCE} " + ("is not in this folder" if not found else "does not have the fingerprint given "
+                  "with --evidence-sha256") + ", so the folder is not shown to be the one that fingerprint was taken from.")
+            return 1
     for difference in outcome.differences[:50]:
         print(difference)
     if len(outcome.differences) > 50:
         print(f"... and {len(outcome.differences) - 50} more")
     if outcome.differences:
-        print(f"verify: {len(outcome.differences)} difference(s) between results.csv and what raw_outputs.jsonl records.")
+        print(f"verify: {len(outcome.differences)} difference(s) between the folder and what was recorded.")
         return 1
-    print(f"verify: results.csv agrees with raw_outputs.jsonl ({outcome.cases} cases, {outcome.cells} cells compared).")
+    print(f"verify: results.csv agrees with raw_outputs.jsonl ({outcome.cases} cases, {outcome.cells} cells compared)"
+          + (f", and the files have the fingerprints in {EVIDENCE}." if EVIDENCE in outcome.fingerprints else "."))
     return 0
 
 

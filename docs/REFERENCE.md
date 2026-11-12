@@ -30,7 +30,7 @@ are. `--by-hand` writes only `results_template.csv`, for people who already have
 ### `ridi-check run`
 
 Calls the current and the proposed version on every question, `--runs` times each, and writes
-`raw_outputs.jsonl`, `run_manifest.json` and `results.csv`. A failed call is recorded as failed and its case
+`raw_outputs.jsonl`, `run_manifest.json`, `results.csv` and `evidence.json`. A failed call is recorded as failed and its case
 stays in the file. Run the same command again to resume: recorded calls are skipped, failed ones are retried,
 nothing is deleted.
 
@@ -129,6 +129,15 @@ and are not themselves checked; when the run's own scorer cannot be loaded, the 
 Both are said on standard error. A run that used a scorer of your own records the SHA-256 of the file the
 function lives in (`scorer_source_sha256` in `run_manifest.json`); when that file has changed since,
 `verify` says that the scores are being made again with other code.
+
+`run` also writes `evidence.json`: the SHA-256 of `raw_outputs.jsonl`, `results.csv` and
+`run_manifest.json` as the run left them, with the fingerprints of the questions, the scorer and the
+adapters' source. `verify` compares the folder with it and reports every file that no longer has its
+fingerprint, so a record and a table edited together no longer pass. Whoever can edit those can edit
+`evidence.json` too; its own SHA-256, which `run` prints, is the one value to keep outside the folder.
+`--evidence-sha256 HEX` (its first 16 characters are enough) makes `verify` exit 1 when `evidence.json`
+is missing or no longer has it. The [evidence and audit protocol](EVIDENCE.md) sets out what each check
+shows and what none of them can.
 
 ## Settings file
 
@@ -315,6 +324,7 @@ key the change equals regressions plus improvements, mean accuracy moves by thei
 | `raw_outputs.jsonl` | `run` | one line per attempt, appended as it completes, never rewritten |
 | `run_manifest.json` | `run` | hash of the questions file, both definitions, settings, one entry per invocation |
 | `results.csv` | `run` | the table above |
+| `evidence.json` | `run` | the SHA-256 of the three files above, with the fingerprints of the questions, the scorer and the adapters' source; no question or answer |
 | `summary.json` | `report` | counts per state, case ids, first-run rates |
 | `review_cases.csv` | `report` | every case that is not same / correct in both, and every case correct in both whose answer changed, with all its runs; can be read back by `report` |
 | `report.html` | `report` | one self-contained page, English and Arabic, light and dark |

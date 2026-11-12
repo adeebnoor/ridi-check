@@ -102,7 +102,9 @@ def test_verify_agrees_with_an_untouched_run_and_finds_a_cell_edited_by_hand(run
     results.write_text("\n".join(lines[:3] + [lines[3].replace(",1,1,0,0,", ",1,1,1,1,")]) + "\n", encoding="utf-8")
     assert main(["verify", out_dir]) == 1
     out = capsys.readouterr().out
-    assert "case 3, updated_correct: the file has '1', the record gives '0'" in out and "verify: 2 difference(s)" in out
+    assert "case 3, updated_correct: the file has '1', the record gives '0'" in out and "verify: 3 difference(s)" in out
+    # the table is also no longer the file whose fingerprint the run recorded
+    assert "results.csv does not have the fingerprint that evidence.json recorded when the run ended." in out
     assert main(["gate", str(results)]) == 0            # the edited table passes the gate; verify is what catches it
     capsys.readouterr()
 
@@ -144,8 +146,13 @@ def test_verify_scores_again_with_the_runs_own_scorer_and_says_when_the_version_
         assert manifest["scorer_source_sha256"] == hashlib.sha256(f.read()).hexdigest()
     manifest["scorer_source_sha256"] = "0" * 64
     (out_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-    assert main(["verify", str(out_dir)]) == 0
-    assert "The scorer's code is not the code this run was scored with" in capsys.readouterr().err
+    assert main(["verify", str(out_dir)]) == 1                      # the manifest is not the one the run left
+    printed = capsys.readouterr()
+    assert "The scorer's code is not the code this run was scored with" in printed.err
+    assert "run_manifest.json does not have the fingerprint that evidence.json recorded when the run ended." in printed.out
+    assert "the scorer named in run_manifest.json is not the one evidence.json recorded." in printed.out
+    # a folder from an earlier version of the tool has no evidence.json: the table is still checked against the record
+    os.remove(out_dir / "evidence.json")
     manifest["scorer"], manifest["tool_version"] = "no_such_module:function", "0.1.0"
     (out_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     capsys.readouterr()
@@ -153,6 +160,7 @@ def test_verify_scores_again_with_the_runs_own_scorer_and_says_when_the_version_
     err = capsys.readouterr().err
     assert "could not be loaded" in err and "so the scores are not checked" in err
     assert "This run was written by ridi-check 0.1.0" in err
+    assert "There is no evidence.json in this folder" in err
 
 
 
@@ -175,7 +183,78 @@ def test_a_fingerprint_kept_elsewhere_shows_a_record_that_was_changed_with_its_t
         path = out_dir / name
         path.write_text(path.read_text(encoding="utf-8").replace("new answer to question three", "old answer to question three"), encoding="utf-8")
     (out_dir / "results.csv").write_text((out_dir / "results.csv").read_text(encoding="utf-8").replace(",1,1,0,0,", ",1,1,1,1,"), encoding="utf-8")
-    assert main(["verify", str(out_dir)]) == 0                                            # they agree with each other
+    assert main(["verify", str(out_dir)]) == 1                 # they agree with each other, and not with evidence.json
+    assert "raw_outputs.jsonl does not have the fingerprint that evidence.json recorded" in capsys.readouterr().out
+    # someone who can edit the record can edit evidence.json as well: now everything in the folder agrees
+    import hashlib
+    import json
+    evidence = json.loads((out_dir / "evidence.json").read_text(encoding="utf-8"))
+    for name in ("raw_outputs.jsonl", "results.csv"):
+        evidence["files"][name] = hashlib.sha256((out_dir / name).read_bytes()).hexdigest()
+    (out_dir / "evidence.json").write_text(json.dumps(evidence), encoding="utf-8")
+    assert main(["verify", str(out_dir)]) == 0
     capsys.readouterr()
     assert main(["verify", str(out_dir), "--raw-sha256", fingerprint]) == 1               # and not with what was kept
     assert "raw_outputs.jsonl does not have the fingerprint given" in capsys.readouterr().out
+
+
+def test_one_fingerprint_kept_elsewhere_covers_the_whole_folder(run_args, tmp_path, capsys):
+    """evidence.json names the record, the table and the manifest by their fingerprints, with the questions and
+    the scorer. Its own fingerprint, kept outside the folder, therefore stands for all of them."""
+    import hashlib
+    import json
+    import re
+    assert main(run_args + ["--scorer", "fake_systems:scorer_contains"]) == 0
+    printed = re.search(r"sha256 ([0-9a-f]{64})  evidence\.json", capsys.readouterr().out)
+    assert printed, "run prints the fingerprint of evidence.json"
+    kept, out_dir = printed.group(1), tmp_path / "out"
+    evidence = json.loads((out_dir / "evidence.json").read_text(encoding="utf-8"))
+    assert evidence["evidence_format"] == 1 and evidence["tool_version"] == __version__
+    assert set(evidence["files"]) == {"raw_outputs.jsonl", "results.csv", "run_manifest.json"}
+    for name, digest in evidence["files"].items():
+        assert digest == hashlib.sha256((out_dir / name).read_bytes()).hexdigest()
+    questions = run_args[run_args.index("--questions") + 1]
+    with open(questions, "rb") as f:
+        assert evidence["questions_sha256"] == hashlib.sha256(f.read()).hexdigest()
+    with open(fake_systems.__file__, "rb") as f:
+        source = hashlib.sha256(f.read()).hexdigest()
+    assert evidence["scorer"] == "fake_systems:scorer_contains" and evidence["scorer_source_sha256"] == source
+    assert evidence["systems_source_sha256"] == {"current": {"python_source_sha256": source}, "proposed": {"python_source_sha256": source}}
+    # fingerprints only: no question, no answer and no definition is copied into it
+    text = (out_dir / "evidence.json").read_text(encoding="utf-8")
+    assert "question" not in text.replace("questions_sha256", "") and "answer" not in text and "fake_systems:current" not in text
+
+    assert main(["verify", str(out_dir), "--evidence-sha256", kept]) == 0
+    out = capsys.readouterr().out
+    assert f"sha256 {kept}  evidence.json" in out and "and the files have the fingerprints in evidence.json." in out
+    assert main(["verify", str(out_dir), "--evidence-sha256", kept[:16]]) == 0
+    assert main(["verify", str(out_dir), "--evidence-sha256", "abc"]) == 1
+    capsys.readouterr()
+
+    # the questions file changed after the run
+    with open(questions, "a", encoding="utf-8") as f:
+        f.write("4,question four,answer four\n")
+    assert main(["verify", str(out_dir), "--evidence-sha256", kept]) == 1
+    assert "the questions file does not have the fingerprint that evidence.json recorded." in capsys.readouterr().out
+
+    # a record, a table and an evidence file rewritten together agree with each other, and not with what was kept
+    for name in ("raw_outputs.jsonl", "results.csv"):
+        path = out_dir / name
+        path.write_text(path.read_text(encoding="utf-8").replace("new answer to question three", "old answer to question three"), encoding="utf-8")
+        evidence["files"][name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    (out_dir / "evidence.json").write_text(json.dumps(evidence), encoding="utf-8")
+    assert main(["verify", str(out_dir), "--evidence-sha256", kept]) == 1
+    assert "evidence.json does not have the fingerprint given with --evidence-sha256" in capsys.readouterr().out
+    os.remove(out_dir / "evidence.json")
+    assert main(["verify", str(out_dir), "--evidence-sha256", kept]) == 1
+    assert "evidence.json is not in this folder" in capsys.readouterr().out
+
+
+def test_a_run_that_is_resumed_leaves_evidence_of_the_folder_as_it_ends(run_args, tmp_path, capsys):
+    assert main(run_args + ["--limit", "2"]) == 0
+    first = (tmp_path / "out" / "evidence.json").read_text(encoding="utf-8")
+    assert main(run_args) == 0                                          # the third question is called now
+    capsys.readouterr()
+    assert (tmp_path / "out" / "evidence.json").read_text(encoding="utf-8") != first
+    assert main(["verify", str(tmp_path / "out")]) == 0
+    assert "and the files have the fingerprints in evidence.json." in capsys.readouterr().out

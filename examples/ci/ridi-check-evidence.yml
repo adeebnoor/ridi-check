@@ -1,0 +1,46 @@
+# The strict policy with an attested record. Copy to .github/workflows/ridi-check.yml in the repository that
+# holds your assistant or agent. It needs ridi-check.json, questions.csv and your adapter next to it:
+# `ridi-check init` writes them.
+#
+# It does what ridi-check-strict.yml does, and asks GitHub for an attestation of evidence.json: a signed
+# statement, recorded outside this repository, that the file with this SHA-256 was produced by this workflow
+# at this commit. evidence.json names the record, the table and the manifest by their fingerprints, so the
+# attestation covers the whole output folder. Later, with the folder downloaded:
+#     gh attestation verify ridi-out/evidence.json --repo OWNER/REPO
+#     ridi-check verify ridi-out
+# docs/EVIDENCE.md says what this shows and what it does not. Attestations need a public repository, or a
+# plan that offers them for private ones, and a pull request from a fork cannot ask for one.
+name: ridi-check (strict, with an attested record)
+on: [pull_request]
+
+permissions:
+  contents: read
+  id-token: write        # the workflow's identity, to sign with
+  attestations: write    # to store the attestation
+
+jobs:
+  answers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ridi-check
+      # Calls the current and the proposed version on every question, twice each, and writes evidence.json.
+      - run: ridi-check run --config ridi-check.json --out ridi-out --runs 2
+        env:
+          MY_API_KEY: ${{ secrets.MY_API_KEY }}   # whatever your adapter reads
+      # The table must be what the recorded calls give, and the files the ones evidence.json names.
+      - run: ridi-check verify ridi-out
+      # Signed before the gate, so that a run the gate stops is attested as well.
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ridi-out/evidence.json
+      - run: ridi-check gate ridi-out/results.csv --strict --min-runs 2
+      # Keep the report and the record, also when the gate stopped the job.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ridi-report
+          path: ridi-out
