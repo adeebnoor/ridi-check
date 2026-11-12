@@ -3,7 +3,7 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
-## Unreleased
+## 0.10.1
 
 ### Changed
 - `gate --check-scores` no longer passes what it could not check. A case with no expected answer and a
