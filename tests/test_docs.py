@@ -98,12 +98,16 @@ def test_community_files_are_in_place():
     assert "CODE_OF_CONDUCT.md" in read("CONTRIBUTING.md") and "CODE_OF_CONDUCT.md" in read("README.md")
 
 
-def test_root_page_leads_to_the_browser_version():
+def test_root_page_introduces_the_tool_and_links_to_the_browser_version():
+    """The front door is now a real landing page; the existing analyser has a stable direct URL."""
     page = read("index.html")
-    target = re.search(r'http-equiv="refresh" content="0; url=([^"]+)"', page).group(1)
-    assert target == "web/ridi-update-check.html" and os.path.exists(os.path.join(ROOT, target))
-    assert f'href="{target}"' in page                      # a plain link too, for readers without script or refresh
-    assert os.path.exists(os.path.join(ROOT, ".nojekyll"))  # the files are served as they are
+    target = "web/ridi-update-check.html"
+    assert '<main id="main">' in page and "RIDI Check" in page
+    assert 'href="./' + target + '"' in page
+    assert os.path.exists(os.path.join(ROOT, target))
+    assert 'http-equiv="refresh"' not in page
+    assert "location.replace" not in page
+    assert os.path.exists(os.path.join(ROOT, ".nojekyll"))  # GitHub Pages serves static assets as-is
 
 
 def test_release_workflow_publishes_without_any_stored_secret():

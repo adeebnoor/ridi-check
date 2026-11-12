@@ -1,14 +1,234 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RIDI Update Check</title>
-<meta http-equiv="refresh" content="0; url=web/ridi-update-check.html">
-<link rel="canonical" href="web/ridi-update-check.html">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1221">
+  <meta name="description" content="RIDI Check examines how AI system updates change individual answers, not just aggregate scores. Repeat runs, inspect transitions, and verify signed evaluation evidence. Open source.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="RIDI Check — Decisions deserve more than a score">
+  <meta property="og:description" content="See the answer changes that aggregate scores can hide. Repeat, review, and verify AI updates with auditable evidence.">
+  <meta property="og:url" content="https://adeebnoor.github.io/ridi-check/">
+  <meta property="og:image" content="https://adeebnoor.github.io/ridi-check/assets/og-card.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="color-scheme" content="dark light">
+  <link rel="canonical" href="https://adeebnoor.github.io/ridi-check/">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./assets/site.css">
+  <script src="./assets/site.js" defer></script>
+  <title>RIDI Check — Decisions deserve more than a score</title>
 </head>
 <body>
-<p>The browser version of ridi-check is at <a href="web/ridi-update-check.html">web/ridi-update-check.html</a>.</p>
-<script>location.replace("web/ridi-update-check.html" + location.hash);</script>
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#top" aria-label="RIDI Check home">
+        <span class="brand-symbol" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-type">RIDI<span class="brand-light">Check</span><small>DECISION INTELLIGENCE</small></span>
+      </a>
+      <nav class="nav-links" id="primaryNav" aria-label="Main navigation">
+        <a href="#problem" data-i18n="navWhy">Why RIDI</a>
+        <a href="#method" data-i18n="navHow">How it works</a>
+        <a href="#evidence" data-i18n="navEvidence">Verified evidence</a>
+        <a href="#research" data-i18n="navResearch">Research</a>
+        <a href="#start" data-i18n="navStart">Get started</a>
+      </nav>
+      <div class="header-actions">
+        <button type="button" class="lang-switch" id="langSwitch" aria-label="Switch to Arabic" lang="ar">العربية</button>
+        <a class="btn btn-primary btn-sm header-cta" href="./web/ridi-update-check.html"><span data-i18n="launch">Launch the tool</span><span class="arrow" aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" id="menuToggle" aria-controls="primaryNav" aria-expanded="false" aria-label="Open navigation"><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero shell" id="top" aria-labelledby="heroTitle">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span><span data-i18n="eyebrow">OPEN-SOURCE AI UPDATE ASSURANCE</span><span class="eyebrow-line"></span><span class="eyebrow-v">v0.10.1</span></div>
+        <h1 id="heroTitle"><span data-i18n="heroLine1">Your benchmark</span><span data-i18n="heroLine2">can stay the same.</span><span class="hero-em" data-i18n="heroLine3">The decision may not.</span></h1>
+        <p class="hero-lead" data-i18n="heroLead">Model swaps, prompt edits, and retrieval changes can alter individual answers while average scores obscure the shifts. RIDI checks the answers that changed, whether they hold across repeated runs, and the evidence behind them.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="./web/ridi-update-check.html"><span data-i18n="heroCta">Explore the live demo</span><span aria-hidden="true">↗</span></a>
+          <a class="btn btn-outline btn-lg" href="#evidence"><span data-i18n="heroSecondary">Inspect signed evidence</span><span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="hero-trust">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-5"/></svg><span data-i18n="trustOpen">Open source</span></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m8 10 2 2-2 2M13 14h4"/></svg><span data-i18n="trustLocal">Local-first analysis</span></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg><span data-i18n="trustEvidence">Verifiable run records</span></span>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-label="Illustrative results from the signed 48-case Qwen prompt update experiment">
+        <div class="visual-glow" aria-hidden="true"></div>
+        <div class="monitor">
+          <div class="monitor-top">
+            <div class="monitor-logo"><span class="mini-grid" aria-hidden="true">▦</span> RIDI<span class="mono-muted"> / UPDATE AUDIT</span></div>
+            <span class="monitor-status"><span class="status-dot"></span><span data-i18n="monitorSigned">SIGNED RUN</span></span>
+          </div>
+          <div class="monitor-body">
+            <div class="monitor-overline" data-i18n="monitorStudy">QWEN2.5 · SAME WEIGHTS · PROMPT UPDATE</div>
+            <div class="score-comparison">
+              <div><span class="metric-label" data-i18n="monitorBefore">BEFORE</span><strong>34<span>/48</span></strong></div>
+              <span class="score-comparison-arrow" aria-hidden="true">→</span>
+              <div><span class="metric-label" data-i18n="monitorAfter">AFTER</span><strong>32<span>/48</span></strong></div>
+              <span class="score-pill" data-i18n="monitorNotEnough">Score alone misses the cases</span>
+            </div>
+            <div class="monitor-divider"></div>
+            <div class="monitor-subhead"><span data-i18n="monitorTransitions">DECISION TRANSITIONS</span><span class="mono-muted">N = 48</span></div>
+            <div class="transition-list">
+              <div class="transition-row"><span class="trans-id">p1506</span><span class="trans-question" data-i18n="case1">Mount Fuji: tallest in the world?</span><span class="trans-answer"><em>NO</em><b aria-hidden="true">→</b><strong>YES</strong></span><span class="trans-indicator" aria-label="Published-label regression"></span></div>
+              <div class="transition-row"><span class="trans-id">p2179</span><span class="trans-question" data-i18n="case2">First country to have a president?</span><span class="trans-answer"><em>NO</em><b aria-hidden="true">→</b><strong>YES</strong></span><span class="trans-indicator" aria-label="Published-label regression"></span></div>
+              <div class="transition-row"><span class="trans-id">p2735</span><span class="trans-question" data-i18n="case3">Minimum drinking age in all states?</span><span class="trans-answer"><em>NO</em><b aria-hidden="true">→</b><strong>YES</strong></span><span class="trans-indicator" aria-label="Published-label regression"></span></div>
+              <div class="transition-row fade-row"><span class="trans-id">p0358</span><span class="trans-question" data-i18n="case4">Game-show winnings?</span><span class="trans-answer"><em>↔</em><b aria-hidden="true">·</b><strong data-i18n="case4state">VARIED</strong></span><span class="trans-indicator warn" aria-label="Unstable across repeats"></span></div>
+            </div>
+            <div class="monitor-bottom">
+              <div class="flag-stat"><span class="flag-num">04</span><span data-i18n="flagReg">STABLE REGRESSIONS</span></div>
+              <div class="flag-stat"><span class="flag-num warning">03</span><span data-i18n="flagUnst">UNSTABLE CASES</span></div>
+              <span class="release-state"><span aria-hidden="true">⊘</span><span data-i18n="releaseBlocked">GATE BLOCKED</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="visual-caption"><span data-i18n="visualCaption">Actual GitHub CPU results · 48 selected BoolQ questions · published labels, not independent adjudication</span><a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer" aria-label="View the signed run on GitHub">↗</a></div>
+      </div>
+    </section>
+
+    <div class="evidence-ribbon">
+      <div class="shell ribbon-inner">
+        <div class="ribbon-title"><span class="ribbon-dot"></span><span data-i18n="ribbonTitle">A reproducible evaluation, not a marketing claim</span></div>
+        <div class="ribbon-facts">
+          <div><strong>48</strong><span data-i18n="ribbonCases">matched questions</span></div>
+          <div><strong>288</strong><span data-i18n="ribbonCalls">real model calls</span></div>
+          <div><strong>3×</strong><span data-i18n="ribbonRepeats">runs per version</span></div>
+          <a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer" class="ribbon-link"><span data-i18n="ribbonProof">View proof</span><span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+
+    <section class="section shell" id="problem">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">01 /</span> <span data-i18n="whyKicker">THE PROBLEM</span></span>
+        <div class="intro-grid">
+          <h2 data-i18n="whyTitle">A single score is not a complete account of a system update.</h2>
+          <p data-i18n="whyBody">Two systems can look similar in an aggregate report and still respond differently to consequential questions. Without matched cases, repeated runs, and traceable evidence, that change is easy to overlook.</p>
+        </div>
+      </div>
+      <div class="principles">
+        <article class="principle"><div class="principle-icon"><span>01</span><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 28V8m0 20h26M10 23l7-8 5 4 8-11"/><circle cx="17" cy="15" r="2"/></svg></div><h3 data-i18n="p1Title">Look beneath the average.</h3><p data-i18n="p1Body">See the individual responses that moved, even when an overall score looks acceptable.</p></article>
+        <article class="principle"><div class="principle-icon"><span>02</span><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 10h19m-19 8h19m-19 8h12"/><path d="m24 23 3 3 5-6"/></svg></div><h3 data-i18n="p2Title">Separate change from noise.</h3><p data-i18n="p2Body">Repeat both versions. Distinguish a consistent transition from answers that vary on re-run.</p></article>
+        <article class="principle"><div class="principle-icon"><span>03</span><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m18 3 12 6v9c0 7-5 12-12 15C11 30 6 25 6 18V9L18 3Z"/><path d="m13 18 3 3 7-8"/></svg></div><h3 data-i18n="p3Title">Make the result auditable.</h3><p data-i18n="p3Body">Connect findings to frozen inputs, run records, checksums, and a release gate that can fail.</p></article>
+      </div>
+    </section>
+
+    <section class="section method-section" id="method">
+      <div class="shell">
+        <div class="section-intro">
+          <span class="section-kicker"><span class="kicker-index">02 /</span> <span data-i18n="howKicker">THE METHOD</span></span>
+          <div class="intro-grid"><h2 data-i18n="howTitle">From an update to a reviewable decision trail.</h2><p data-i18n="howBody">RIDI is model-agnostic. Use an answer key if available, or compare answer text and review the differences yourself.</p></div>
+        </div>
+        <div class="steps">
+          <article class="step"><span class="step-number">01</span><div class="step-icon" aria-hidden="true">≡</div><h3 data-i18n="step1Title">Hold the questions constant</h3><p data-i18n="step1Body">Compare the current and proposed configurations on matched inputs, with optional evidence passages.</p></article>
+          <article class="step"><span class="step-number">02</span><div class="step-icon" aria-hidden="true">↺</div><h3 data-i18n="step2Title">Repeat both versions</h3><p data-i18n="step2Body">Capture repeated outputs to reveal run-to-run instability rather than assume determinism.</p></article>
+          <article class="step"><span class="step-number">03</span><div class="step-icon" aria-hidden="true">↗</div><h3 data-i18n="step3Title">Inspect individual transitions</h3><p data-i18n="step3Body">Review regressions, improvements, stable changes, and cases whose answers vary.</p></article>
+          <article class="step"><span class="step-number">04</span><div class="step-icon" aria-hidden="true">◇</div><h3 data-i18n="step4Title">Verify before release</h3><p data-i18n="step4Body">Check recorded scores and run evidence. Optionally enforce strict limits in continuous integration.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="evidence">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">03 /</span> <span data-i18n="evidenceKicker">VERIFIED EVIDENCE</span></span>
+        <div class="intro-grid"><h2 data-i18n="evidenceTitle">Evidence you can inspect. Not numbers you have to trust.</h2><p data-i18n="evidenceBody">These are scoped engineering experiments, with reproducible run files and GitHub/Sigstore attestations. They are not independent clinical validation or a claim of superiority over evaluation frameworks.</p></div>
+      </div>
+      <div class="evidence-grid">
+        <article class="evidence-card evidence-primary">
+          <div class="evidence-meta"><span class="proof-mark"><span aria-hidden="true">◇</span> <span data-i18n="signedEvidence">SIGNED EVIDENCE</span></span><span class="date">NOV 2026</span></div>
+          <div class="evidence-content"><span class="evidence-type" data-i18n="study1Type">CONTROLLED CONFIGURATION UPDATE</span><h3 data-i18n="study1Title">Same model weights. Different instruction. Different answers.</h3><p data-i18n="study1Body">Qwen2.5-1.5B, 48 selected BoolQ cases, three repeats per version. The signed Linux run identified four stable regressions against published labels and three unstable cases. The result differed slightly from Windows, which is disclosed.</p></div>
+          <div class="evidence-numbers"><div><strong>288</strong><span data-i18n="studyCalls">model calls</span></div><div><strong>04</strong><span data-i18n="study1Reg">stable label regressions</span></div><div><strong>03</strong><span data-i18n="study1Var">unstable cases</span></div></div>
+          <div class="evidence-links"><a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer"><span data-i18n="seeSignedRun">Inspect signed run</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/research/same_weights_prompt_update_20261113.md" target="_blank" rel="noopener noreferrer"><span data-i18n="readStudy">Read scientific audit</span><span aria-hidden="true">↗</span></a></div>
+        </article>
+        <article class="evidence-card">
+          <div class="evidence-meta"><span class="proof-mark"><span aria-hidden="true">◇</span> <span data-i18n="signedEvidence">SIGNED EVIDENCE</span></span><span class="date">NOV 2026</span></div>
+          <div class="evidence-content"><span class="evidence-type" data-i18n="study2Type">REAL MODEL SUBSTITUTION</span><h3 data-i18n="study2Title">Aggregate improvement can coexist with case-level regressions.</h3><p data-i18n="study2Body">Two Qwen2.5 model sizes compared on 48 BoolQ cases with published labels. The independent CPU run reproduced six stable label regressions alongside sixteen improvements. Labels require adjudication.</p></div>
+          <div class="evidence-numbers"><div><strong>192</strong><span data-i18n="studyCalls">model calls</span></div><div><strong>06</strong><span data-i18n="study2Reg">label regressions</span></div><div><strong>16</strong><span data-i18n="study2Gain">label improvements</span></div></div>
+          <div class="evidence-links"><a href="https://github.com/adeebnoor/ridi-check/actions/runs/43312668253" target="_blank" rel="noopener noreferrer"><span data-i18n="seeSignedRun">Inspect signed run</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/blob/main/experiments/qwen_cpu_pilot/SCIENTIFIC_AUDIT.md" target="_blank" rel="noopener noreferrer"><span data-i18n="readStudy">Read scientific audit</span><span aria-hidden="true">↗</span></a></div>
+        </article>
+        <article class="evidence-card">
+          <div class="evidence-meta"><span class="proof-mark proof-mark-muted"><span aria-hidden="true">✧</span> <span data-i18n="syntheticControl">SYNTHETIC CONTROL</span></span><span class="date">NOV 2026</span></div>
+          <div class="evidence-content"><span class="evidence-type" data-i18n="study3Type">END-TO-END RELEASE GATE</span><h3 data-i18n="study3Title">A deliberately unsafe update should not pass.</h3><p data-i18n="study3Body">A fictional library handbook and deterministic toy assistant exercise the pipeline. Four stable regressions trigger the strict gate. This verifies mechanics, not model quality.</p></div>
+          <div class="evidence-numbers"><div><strong>30</strong><span data-i18n="study3Cases">constructed cases</span></div><div><strong>04</strong><span data-i18n="study3Reg">synthetic regressions</span></div><div><strong>01</strong><span data-i18n="study3Gate">blocked release</span></div></div>
+          <div class="evidence-links"><a href="https://github.com/adeebnoor/ridi-check/actions/runs/43308859544" target="_blank" rel="noopener noreferrer"><span data-i18n="seeSignedRun">Inspect signed run</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/EVIDENCE.md" target="_blank" rel="noopener noreferrer"><span data-i18n="readProtocol">Evidence protocol</span><span aria-hidden="true">↗</span></a></div>
+        </article>
+      </div>
+      <p class="evidence-footnote" data-i18n="evidenceFootnote">For BoolQ, “regression” refers to a change against the published answer key—not necessarily a wrong real-world decision. Some labels conflict with their passages or change with time. See the scientific audits.</p>
+    </section>
+
+    <section class="section research-section" id="research">
+      <div class="shell research-grid">
+        <div class="research-copy">
+          <span class="section-kicker"><span class="kicker-index">04 /</span> <span data-i18n="researchKicker">RESEARCH WITH RESTRAINT</span></span>
+          <h2 data-i18n="researchTitle">Designed for scrutiny, not unquestioned trust.</h2>
+          <p data-i18n="researchBody">RIDI makes observed changes easier to inspect. It does not determine whether a medical, legal, or other high-stakes decision is safe; it cannot replace human review or prove causal harm.</p>
+          <div class="research-links"><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/research/prior_art_boolq_temporal_drift_20261113.md" target="_blank" rel="noopener noreferrer"><span data-i18n="priorArtLink">Prior art and label limitations</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions" target="_blank" rel="noopener noreferrer"><span data-i18n="benchmarkLink">Constructed transition benchmark</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md" target="_blank" rel="noopener noreferrer"><span data-i18n="referenceLink">Technical reference</span><span aria-hidden="true">↗</span></a></div>
+        </div>
+        <div class="research-panel">
+          <div class="research-panel-header"><span data-i18n="researchNot">WHAT WE DO NOT CLAIM</span><span aria-hidden="true">◌</span></div>
+          <div class="limit-row"><span class="limit-icon">×</span><div><h3 data-i18n="limit1Title">Not clinical clearance</h3><p data-i18n="limit1Body">No independent clinical safety validation has been completed.</p></div></div>
+          <div class="limit-row"><span class="limit-icon">×</span><div><h3 data-i18n="limit2Title">Not independent human adjudication</h3><p data-i18n="limit2Body">Published labels and synthetic cases are not a substitute for blinded expert review.</p></div></div>
+          <div class="limit-row"><span class="limit-icon">×</span><div><h3 data-i18n="limit3Title">Not proven superior to HELM, Ragas, or Inspect AI</h3><p data-i18n="limit3Body">Task-matched head-to-head evaluations remain to be conducted.</p></div></div>
+          <div class="research-panel-footer"><span data-i18n="researchFooter">Credibility comes from showing both results and limits.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section start-section shell" id="start">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">05 /</span> <span data-i18n="startKicker">START IN MINUTES</span></span>
+        <div class="intro-grid"><h2 data-i18n="startTitle">Try the question. Test your update.</h2><p data-i18n="startBody">Use the interactive browser tool with example data, or connect RIDI to your own assistant and run checks locally or in CI. The browser analyser processes uploaded CSV files in your browser.</p></div>
+      </div>
+      <div class="start-grid">
+        <div class="start-card start-browser">
+          <div class="start-icon" aria-hidden="true">↗</div>
+          <h3 data-i18n="startBrowserTitle">No installation. Open the experiment.</h3>
+          <p data-i18n="startBrowserBody">Explore the existing 30-case example, switch to invented drug-name illustrations, or upload your own results locally.</p>
+          <a class="btn btn-primary" href="./web/ridi-update-check.html"><span data-i18n="startBrowserCta">Open browser tool</span><span aria-hidden="true">↗</span></a>
+          <span class="privacy-note"><span aria-hidden="true">◈</span><span data-i18n="privacyNote">Files are analysed in your browser, not uploaded to a RIDI server.</span></span>
+        </div>
+        <div class="start-card start-developer">
+          <div class="start-icon" aria-hidden="true">⌘</div>
+          <h3 data-i18n="startDevTitle">Built for local workflows and CI.</h3>
+          <p data-i18n="startDevBody">Install the Python package, run a synthetic demo, then connect your assistant through Python, a command, or HTTP.</p>
+          <div class="code-window"><div class="code-header"><span>TERMINAL / PYTHON 3.10+</span><button type="button" id="copyInstall" data-copy="pip install ridi-check&#10;ridi-check demo --open" aria-label="Copy installation commands" data-i18n-aria="copyAria"><span data-i18n="copyLabel">Copy</span><span aria-hidden="true">⧉</span></button></div><pre><code><span class="code-comment"># Install and see the offline demo</span>
+<span class="code-cmd">pip install ridi-check</span>
+<span class="code-cmd">ridi-check demo --open</span></code></pre></div>
+          <div class="developer-links"><a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer"><span data-i18n="githubLink">Source on GitHub</span> ↗</a><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.md" target="_blank" rel="noopener noreferrer"><span data-i18n="guideLink">User guide</span> ↗</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing-section">
+      <div class="shell closing-inner">
+        <div class="closing-grid" aria-hidden="true"></div>
+        <div class="closing-content">
+          <span class="section-kicker"><span class="kicker-index">RIDI /</span> <span data-i18n="closingKicker">DECISIONS DESERVE EVIDENCE</span></span>
+          <h2 data-i18n="closingTitle">Before you ship the update, see what it changed.</h2>
+          <p data-i18n="closingBody">Make the case-level difference visible. Keep the evidence. Leave the decision to accountable people.</p>
+          <div class="closing-actions"><a href="./web/ridi-update-check.html" class="btn btn-light btn-lg"><span data-i18n="closingCta">Launch RIDI Check</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer" class="closing-github"><span data-i18n="closingSource">Explore open source</span><span aria-hidden="true">↗</span></a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <a class="footer-brand" href="#top"><span class="brand-symbol mini" aria-hidden="true"><span></span><span></span><span></span></span> RIDI Check</a>
+      <div class="footer-center"><span data-i18n="footerTag">Open-source research software · Evidence before assertion</span><span class="footer-copy">© <span id="year">2026</span> RIDI Check</span></div>
+      <div class="footer-links"><a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="https://github.com/adeebnoor/ridi-check/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License ↗</a><a href="https://github.com/adeebnoor/ridi-check/issues" target="_blank" rel="noopener noreferrer" data-i18n="footerContact">Feedback ↗</a></div>
+    </div>
+  </footer>
 </body>
 </html>

@@ -11,9 +11,11 @@ average accuracy barely moves while individual answers flip. ridi-check runs the
 the same questions, more than once, and shows which answers changed and which of those changes hold on
 re-run. You need no test set, no answer key and no model judge.
 
-**Try it in your browser, with nothing to install:** [adeebnoor.github.io/ridi-check](https://adeebnoor.github.io/ridi-check/).
-It opens on two synthetic examples: a library handbook, and one with invented drug names (illustration
-only) where mean accuracy rises while three answers break in every run.
+**Start at the bilingual research and product website:** [adeebnoor.github.io/ridi-check](https://adeebnoor.github.io/ridi-check/).
+It explains the method, links to the signed model and BoolQ experiments (with their limitations),
+and launches the unchanged browser analyzer. **Direct access to the interactive tool:**
+[web/ridi-update-check.html](https://adeebnoor.github.io/ridi-check/web/ridi-update-check.html).
+The tool opens on synthetic examples: a fictional library handbook and invented drug names (illustration only), where an aggregate improvement can coexist with per-case regressions.
 
 ![The report: where each case landed, and the change between versions against re-run variation](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/report.png)
 
