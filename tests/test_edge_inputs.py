@@ -255,3 +255,23 @@ def test_twenty_thousand_cases_with_three_runs_give_exact_counts(tmp_path, capsy
         states = json.load(f)["states"]
     assert states == {"stable_change": 2 * tenth, "change_unconfirmed": 0, "unstable": tenth,
                       "same": n - 3 * tenth, "incomplete": 0}
+
+
+SCORED = ("case_id,baseline_answer,updated_answer,baseline_context,updated_context,"
+          "baseline_context_scores,updated_context_scores,baseline_context_hashes,updated_context_hashes\n")
+
+
+def test_scores_and_hashes_of_passages_written_by_hand(write, capsys):
+    good = write("good.csv", SCORED + "a,x,y,doc 1 | doc 2,doc 2 | doc 1,0.9 | -,.5 | 1e-1,h1 | h2,h2 | h9\nb,x,y,doc 1,,,,,\n")
+    cases, _ = read_results(good)
+    assert cases[0].baseline_scores == [0.9, None] and cases[0].updated_scores == [0.5, 0.1]
+    assert cases[0].updated_hashes == ["h2", "h9"] and cases[1].baseline_scores == []
+    assert main(["report", good]) == 0
+    assert "In 1 case(s) a passage kept its name while its content changed." in capsys.readouterr().out
+    for line, message in (("a,x,y,doc 1 | doc 2,doc 1,0.9,,,\n", "Row 2 (case a): baseline_context_scores has 1 value(s) for 2 passage(s)."),
+                          ("a,x,y,doc 1,doc 1,high,,,\n", "Row 2 (case a): baseline_context_scores must hold numbers, got 'high'."),
+                          ("a,x,y,doc 1,doc 1,,,h1 | h2,\n", "Row 2 (case a): baseline_context_hashes has 2 value(s) for 1 passage(s).")):
+        bad = write("bad.csv", SCORED + line)
+        assert main(["report", bad]) == 2
+        assert capsys.readouterr().err.strip() == f"ridi-check: {message}"
+

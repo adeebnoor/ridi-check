@@ -30,7 +30,7 @@ for (const job of JSON.parse(fs.readFileSync(process.argv[3], 'utf8'))) {
     out.push({ mode: r.mode, states: a.items.map((it) => [it.c.id, it.s]), counts: a.counts, first: s.first_run,
       any: s.any_run_disagreement, runs: s.runs_per_version, confirmable: s.confirmable_cases, compared: s.cases_compared,
       changed: s.wrong_both_answer_changed || null, correct_changed: s.correct_both_answer_changed || null, passages: s.passages || null, merged: s.labelled_by_similarity || null,
-      cards: core.pageData(a).cards.map((c) => [c.id, c.state, c.flag]), strip: core.pageData(a).strip, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
+      cards: core.pageData(a).cards.map((c) => [c.id, c.state, c.flag, c.mov]), strip: core.pageData(a).strip, review: core.toCsv(review.header, review.rows), tiles: core.pageData(a).tiles });
   } catch (e) { if (!e.code) throw e; out.push({ error: e.code, row: e.info.row || null }); }
 }
 fs.writeFileSync(process.argv[4], JSON.stringify(out));
@@ -42,6 +42,7 @@ ERRORS = [
     (r"^The file needs baseline_correct", "needCols"), (r"Answer-key mode needs", "needKey"), (r"No-key mode needs", "needAnswers"),
     (r"case_id is missing", "rowNoId"), (r"case_id .* appears more than once", "rowDup"), (r"must be 0 or 1, got", "rowBin"),
     (r"has a value but", "rowNoCorrect"), (r" is empty\.", "rowEmptyFirst"),
+    (r"value\(s\) for .* passage", "ctxCount"), (r"must hold numbers", "ctxNumber"),
 ]
 
 
@@ -69,7 +70,7 @@ def python_side(text, mode, sim):
             "compared": s["cases_compared"], "changed": s.get("wrong_both_answer_changed"),
             "correct_changed": s.get("correct_both_answer_changed"), "passages": s.get("passages"),
             "merged": s.get("labelled_by_similarity"),
-            "cards": [[c["id"], c["state"], c["flag"]] for c in page["cards"]], "strip": page["strip"],
+            "cards": [[c["id"], c["state"], c["flag"], c["mov"]] for c in page["cards"]], "strip": page["strip"],
             "review": to_csv(header, rows), "tiles": ledger_tiles(a)}
 
 
@@ -162,6 +163,12 @@ def test_browser_analysis_matches_python_on_random_files(tmp_path):
         medicines = f.read()
     jobs += [{"text": medicines, "mode": "auto", "sim": 1}, {"text": medicines, "mode": "nokey", "sim": 1},
              {"text": medicines, "mode": "nokey", "sim": 0.9}]
+    scored = ("case_id,baseline_answer,updated_answer,baseline_context,updated_context,"
+              "baseline_context_scores,updated_context_scores,baseline_context_hashes,updated_context_hashes\n")
+    jobs += [{"text": scored + line, "mode": "auto", "sim": 1} for line in (
+        "a,x,y,doc 1 | doc 2,doc 2 | doc 1 | doc 3,0.9 | -,.5 | 1e-1 | 2,h1 | h2,h2 | h9 | -\nb,x,x,doc 1,,,,,\n",
+        "a,x,y,doc 1 | doc 2,doc 1,0.9,,,\n", "a,x,y,doc 1,doc 1,high,,,\n", "a,x,y,doc 1,doc 1,1_000,,,\n",
+        "a,x,y,doc 1,doc 1,,,h1 | h2,\n", "a,x,y,doc 1 | doc 1 | doc 2,doc 2 | doc 1,3 | 2 | 1,1 | 2,k | k | m,m | z\n")]
     jobs += [{"text": fixture, "mode": "auto", "sim": 1}, {"text": fixture, "mode": "nokey", "sim": 1},
              {"text": "", "mode": "auto", "sim": 1}, {"text": "case_id,question\n1,x\n", "mode": "auto", "sim": 1},
              {"text": "case_id;baseline_correct;updated_correct\n1;1;0\n", "mode": "auto", "sim": 1},

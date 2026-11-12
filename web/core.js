@@ -67,6 +67,7 @@ const RidiCore = (function () {
   }
   const splitContext = (cell) => cell.split("|").map(strip).filter(Boolean);
 
+  const PLAIN_NUMBER = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/;
   function parseResults(text, mode) {
     mode = mode || "auto";
     const records = readRecords(text);
@@ -106,6 +107,21 @@ const RidiCore = (function () {
       firstRow.set(id, row);
       const c = { id, row, q: get("question"), expected: get("expected"), b: [], u: [],
         bc: splitContext(get("baseline_context")), uc: splitContext(get("updated_context")), err: get("run_errors"), incomplete: false };
+      /* optional scores and content hashes, one for each passage, "-" for none */
+      const aligned = (column, passages, numbers) => {
+        const cell = get(column);
+        if (strip(cell) === "") return [];
+        const values = cell.split("|").map(strip);
+        if (values.length !== passages.length) throw RidiError("ctxCount", { row, id, col: column, got: values.length, want: passages.length });
+        return values.map((v) => {
+          if (v === "" || v === "-") return null;
+          if (!numbers) return v;
+          if (!PLAIN_NUMBER.test(v)) throw RidiError("ctxNumber", { row, id, col: column, value: v });
+          return parseFloat(v);
+        });
+      };
+      c.bs = aligned("baseline_context_scores", c.bc, true); c.us = aligned("updated_context_scores", c.uc, true);
+      c.bh = aligned("baseline_context_hashes", c.bc, false); c.uh = aligned("updated_context_hashes", c.uc, false);
       for (const side of ["baseline", "updated"]) {
         const answers = new Map(runs[side + "|answer"] || []), corrects = runs[side + "|correct"] || [];
         const scored = new Map();
@@ -247,7 +263,8 @@ const RidiCore = (function () {
       Object.keys(a.counts).forEach((s) => { const mine = differs.filter((d) => d[0] === s);
         if (mine.length) byState[s] = { differ: mine.reduce((n, d) => n + d[1], 0), n: mine.length }; });
       summary.passages = { cases_with_passages: listed.length, differ: differs.reduce((n, d) => n + d[1], 0),
-        reordered: listed.filter((it) => reordered(it.c)).length, by_state: byState };
+        reordered: listed.filter((it) => reordered(it.c)).length,
+        content_changed: listed.filter((it) => passageMoves(it.c).some((m) => m[5])).length, by_state: byState };
     }
     if (key) {
       const flagged = (state, flag) => a.items.filter((it) => it.s === state && a.answerChange[it.c.id] === flag).map((it) => it.c.id);
@@ -258,6 +275,21 @@ const RidiCore = (function () {
       summary.labelled_by_similarity = a.bySimilarity.slice();
     }
     return summary;
+  }
+  /* For each passage that both versions retrieved: [name, rank in each, score in each or null, content changed],
+     when any of these differ. A rank is the place of the first time the passage appears. */
+  function passageMoves(c) {
+    const first = (names, values) => { const seen = new Map();
+      names.forEach((name, i) => { if (!seen.has(name)) seen.set(name, [i + 1, i < values.length ? values[i] : null]); }); return seen; };
+    const rankB = first(c.bc, c.bs || []), rankU = first(c.uc, c.us || []), hashB = first(c.bc, c.bh || []), hashU = first(c.uc, c.uh || []);
+    const out = [];
+    rankB.forEach((b, name) => {
+      if (!rankU.has(name)) return;
+      const u = rankU.get(name), hb = hashB.get(name)[1], hu = hashU.get(name)[1];
+      const changed = !!(hb && hu && hb !== hu);
+      if (b[0] !== u[0] || changed || (b[1] !== null && u[1] !== null && b[1] !== u[1])) out.push([name, b[0], u[0], b[1], u[1], changed]);
+    });
+    return out;
   }
   /* the same passages in both versions, in another order or another number of times */
   function reordered(c) {
@@ -327,7 +359,7 @@ const RidiCore = (function () {
       if ((!UNCHANGED.has(s) && (s !== "wrong_both" || flag)) || (s === "correct_both" && flag)) {
         const [onlyB, onlyU, kept] = passageDifference(c);
         (s === "correct_both" ? late : cards).push({ id: c.id, state: s, flag, q: c.q, expected: c.expected, b: runsForPage(c.b, key, a.threshold), u: runsForPage(c.u, key, a.threshold),
-          rem: onlyB, add: onlyU, kept, ord: reordered(c), err: c.err });
+          rem: onlyB, add: onlyU, kept, ord: reordered(c), mov: passageMoves(c), err: c.err });
       }
       stripCells.push([c.id, s, -1]);
       if (s === "wrong_both") wrong.push([c.id, c.q, flag]);

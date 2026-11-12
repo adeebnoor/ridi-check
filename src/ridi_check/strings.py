@@ -16,6 +16,9 @@ COMMON = {
         "passagesNote": " This is a count, not a cause.",
         "passagesOrder": " In {r} case(s) the same passages come in another order or number.",
         "ctxOrder": "The same passages were retrieved, in another order or another number of times.",
+        "passagesContent": " In {r} case(s) a passage kept its name while its content changed.",
+        "ctxMoved": "In both versions, with a change", "ctxRank": "rank {a} → {b}", "ctxScore": "score {a} → {b}",
+        "ctxContent": "content changed",
         "passagesAll": "The retrieved passages differ between the versions in all {n} cases that list passages, so "
                        "this count does not set any group of cases apart. An update that changes how documents are "
                        "split, or how passages are named, gives this result.",
@@ -86,6 +89,9 @@ COMMON = {
         "passagesNote": " هذا عدّ وليس سبباً.",
         "passagesOrder": " وفي {r} حالة جاءت المقاطع نفسها بترتيب أو عدد مختلف.",
         "ctxOrder": "استُرجعت المقاطع نفسها، لكن بترتيب مختلف أو بعدد مرات مختلف.",
+        "passagesContent": " وفي {r} حالة بقي اسم المقطع وتغيّر محتواه.",
+        "ctxMoved": "في النسختين، مع تغيّر", "ctxRank": "الرتبة {a} ← {b}", "ctxScore": "الدرجة {a} ← {b}",
+        "ctxContent": "تغيّر المحتوى",
         "passagesAll": "المقاطع المسترجعة تختلف بين النسختين في كل الحالات التي ذُكرت مقاطعها وعددها {n}، فهذا العدّ "
                        "لا يميّز أي مجموعة من الحالات. يحدث ذلك حين يغيّر التحديث طريقة تقسيم المستندات أو تسمية "
                        "المقاطع.",

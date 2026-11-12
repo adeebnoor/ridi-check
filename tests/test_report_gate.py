@@ -456,7 +456,10 @@ def test_the_same_passages_in_another_order_or_number_are_counted_apart(tmp_path
     assert "Retrieved passages differ between the versions in 1/4 cases that list passages: stable_change 1/4." in out
     assert "In 2 case(s) the same passages come in another order or number." in out
     html, data = page_data(tmp_path / "report.html")
-    assert data["summary"]["passages"] == {"cases_with_passages": 4, "differ": 1, "reordered": 2,
+    assert data["summary"]["passages"] == {"cases_with_passages": 4, "differ": 1, "reordered": 2, "content_changed": 0,
                                            "by_state": {"stable_change": {"differ": 1, "n": 4}}}
+    moves = {card["id"]: card["mov"] for card in data["cards"]}
+    assert moves["order"] == [["A", 1, 2, None, None, False], ["B", 2, 1, None, None, False]]      # each passage and where it stood
+    assert moves["number"] == [["B", 3, 2, None, None, False]] and moves["same"] == [] and moves["other"] == []
     assert {card["id"]: card["ord"] for card in data["cards"]} == {"order": True, "number": True, "same": False, "other": False}
 

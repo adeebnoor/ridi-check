@@ -92,6 +92,23 @@ def repeats_its_key(question):
     raise RuntimeError(f"the service refused the key {os.environ['TOY_API_KEY']}")
 
 
+def retrieves_with_scores(question):
+    """The current version: two passages, each with a score and its text."""
+    _note("retrieves_with_scores", question)
+    return {"answer": "three weeks", "context": [
+        {"id": "loans", "score": 0.91, "text": "Books are lent for three weeks."},
+        {"id": "fines", "score": 0.40, "text": "A late book costs ten pence a day."}]}
+
+
+def retrieves_reranked(question):
+    """The proposed version: the same two passages the other way round, one of them rewritten, and a third."""
+    _note("retrieves_reranked", question)
+    return {"answer": "two weeks", "context": [
+        {"id": "fines", "score": 0.77, "text": "A late book costs ten pence a day."},
+        {"id": "loans", "score": 0.52, "text": "Books are lent for two weeks."},
+        {"id": "events", "score": 0.31}]}
+
+
 def with_null(question):
     return {"answer": "an answer\x00 with a null character", "context": ["doc\x00 1"]}
 

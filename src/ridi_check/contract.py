@@ -23,6 +23,7 @@ NOKEY = "nokey"
 CONTEXT_SEPARATOR = " | "
 RUN_COLUMN = re.compile(r"^(baseline|updated)(?:_repeat([0-9]*))?_(answer|correct)$")
 
+PLAIN_NUMBER = re.compile(r"^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$")
 LINE = re.compile(r"[^\r\n]*(?:\r\n?|\n)|[^\r\n]+")
 FIRST_LINE_END = re.compile("[\n\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]")
 
@@ -57,6 +58,10 @@ class Case:
     updated: list[Run] = field(default_factory=list)
     baseline_context: list[str] = field(default_factory=list)
     updated_context: list[str] = field(default_factory=list)
+    baseline_scores: list = field(default_factory=list)   # float or None, one for each passage, when given
+    updated_scores: list = field(default_factory=list)
+    baseline_hashes: list = field(default_factory=list)   # short content hash or None, one for each passage
+    updated_hashes: list = field(default_factory=list)
     run_errors: str = ""
     incomplete: bool = False
 
@@ -113,6 +118,27 @@ def run_column(side: str, run: int, kind: str) -> str:
 def split_context(cell: str) -> list[str]:
     # The same passage names come back case after case: one copy of each is kept.
     return [sys.intern(part.strip()) for part in cell.split("|") if part.strip()]
+
+
+def _aligned(cell: str, passages: str, column: str, where: str, numbers: bool) -> list:
+    """The values of a `_context_scores` or `_context_hashes` cell: one for each passage, "-" for none."""
+    if not cell.strip():
+        return []
+    values = [part.strip() for part in cell.split("|")]
+    count = len(split_context(passages))
+    if len(values) != count:
+        raise ContractError(f"{where}: {column} has {len(values)} value(s) for {count} passage(s).")
+    out: list = []
+    for value in values:
+        if value in ("", "-"):
+            out.append(None)
+        elif numbers:
+            if not PLAIN_NUMBER.match(value):
+                raise ContractError(f"{where}: {column} must hold numbers, got {value!r}.")
+            out.append(float(value))
+        else:
+            out.append(value)
+    return out
 
 
 def _run_columns(header: list[str]) -> dict[tuple[str, str], dict[int, int]]:
@@ -206,6 +232,10 @@ def parse_results(text: str, mode: str = "auto") -> tuple[list[Case], str]:
             expected=get("expected"),
             baseline_context=split_context(get("baseline_context")),
             updated_context=split_context(get("updated_context")),
+            baseline_scores=_aligned(get("baseline_context_scores"), get("baseline_context"), "baseline_context_scores", where, True),
+            updated_scores=_aligned(get("updated_context_scores"), get("updated_context"), "updated_context_scores", where, True),
+            baseline_hashes=_aligned(get("baseline_context_hashes"), get("baseline_context"), "baseline_context_hashes", where, False),
+            updated_hashes=_aligned(get("updated_context_hashes"), get("updated_context"), "updated_context_hashes", where, False),
             run_errors=get("run_errors"),
         )
         same_text: dict[str, str] = {}

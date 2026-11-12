@@ -162,7 +162,9 @@ One row per question. `run` writes it; you can also make it by hand and use `rep
 | `baseline_repeat_answer`, `updated_repeat_answer` | no | second run; then `baseline_repeat2_answer`, and so on |
 | `baseline_correct`, `updated_correct` | no | 0 or 1; present means answer-key mode |
 | `baseline_repeat_correct`, `updated_repeat_correct` | no | 0 or 1 for the repeats |
-| `baseline_context`, `updated_context` | no | passage ids or titles separated by ` \| ` |
+| `baseline_context`, `updated_context` | no | passage ids or titles separated by ` \| `, in the order they were retrieved: the first is rank 1 |
+| `baseline_context_scores`, `updated_context_scores` | no | the retrieval score of each passage, in the same order and separated the same way; `-` where a passage has none |
+| `baseline_context_hashes`, `updated_context_hashes` | no | a short hash of each passage's content, in the same order; `-` where a passage has none |
 | `run_errors` | no | written by `run` when a call failed; such a case is `incomplete` |
 
 Missing or duplicate `case_id`, non-binary `_correct` values and files with neither answers nor correctness
@@ -207,8 +209,16 @@ When the file lists passages (`baseline_context`, `updated_context`), the report
 whose passages differ between the versions, in total and per state (`passages` in `summary.json`). It is a
 count of where retrieval changed. It does not say that the passages caused a change in the answer. The
 count compares which passages were retrieved; cases where the same passages come in another order or
-another number of times are counted apart (`reordered`) and marked on their cards. Passages are compared
-by the names given in the file: ranks, scores and the text of a passage are not in it. When
+another number of times are counted apart (`reordered`) and marked on their cards.
+
+A passage is known by its name. Its rank is its place in the cell. When the file also gives scores and
+content hashes, the card of a case lists each passage that both versions retrieved and what changed about
+it: its rank ("rank 2 → 1"), its score ("score 0.71 → 0.92") and whether its content changed, which is
+when both versions give a hash for it and the hashes differ. Cases with such a passage are counted
+(`content_changed`). `run` fills these columns when the assistant returns passages as objects with an
+`id`, a `score` and a `text`; the text itself is never written, only a twelve-character hash of it with
+spacing ignored. None of this is graded: a rank or a score says where a passage stood, not whether it held
+the evidence. When
 the passages differ in every case, or in none, the report says that in one sentence instead of a count per
 state. The built-in demo is such a case: its proposed version splits the handbook differently, so every
 passage has a new name.

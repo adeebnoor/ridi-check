@@ -50,6 +50,8 @@
         rowBin: "Row {row} (case {id}): {col} must be 0 or 1, got “{value}”.",
         rowEmptyFirst: "Row {row} (case {id}): {col} is empty. Every row needs a first-run value.",
         rowNoCorrect: "Row {row} (case {id}): {a} has a value but {c} is empty or absent.",
+        ctxCount: "Row {row} (case {id}): {col} has {got} value(s) for {want} passage(s).",
+        ctxNumber: "Row {row} (case {id}): {col} must hold numbers, got '{value}'.",
         read: "The file could not be read.",
         encoding: "The file is not UTF-8 text. Save it as UTF-8 and try again: in Excel, File > Save As > \"CSV UTF-8 (Comma delimited)\"."
       }
@@ -102,6 +104,8 @@
         rowBin: "الصف {row} (الحالة {id}): العمود {col} يجب أن يكون 0 أو 1، والموجود «{value}».",
         rowEmptyFirst: "الصف {row} (الحالة {id}): العمود {col} فارغ. كل صف يحتاج قيمة للتشغيل الأول.",
         rowNoCorrect: "الصف {row} (الحالة {id}): في {a} قيمة لكن {c} فارغ أو غير موجود.",
+        ctxCount: "الصف {row} (الحالة {id}): في {col} عدد القيم {got} وعدد المقاطع {want}.",
+        ctxNumber: "الصف {row} (الحالة {id}): العمود {col} يجب أن يحمل أرقاماً، والموجود '{value}'.",
         read: "تعذّرت قراءة الملف.",
         encoding: "الملف ليس نصاً بترميز UTF-8. احفظه بترميز UTF-8 ثم أعد المحاولة: في Excel، ملف > حفظ باسم > «CSV UTF-8»."
       }
@@ -198,11 +202,18 @@
     return h + "</div>";
   }
   function ctxHTML(c, i) {
-    if (!c.rem.length && !c.add.length) return c.ord ? '<p class="small muted">' + esc(t("ctxOrder")) + "</p>" : "";
+    const moved = c.mov || [];
+    if (!c.rem.length && !c.add.length && !moved.length) return c.ord ? '<p class="small muted">' + esc(t("ctxOrder")) + "</p>" : "";
     const li = (x) => '<li><span dir="auto">' + esc(x) + "</span></li>";
-    return '<details class="ctx" data-k="ctx-' + esc(c.id) + '"><summary>' + esc(t("ctx", { n: c.rem.length + c.add.length })) + '</summary><div class="ctxgrid"><div><p class="small muted">' +
-      esc(t("removed")) + "</p><ul>" + c.rem.map(li).join("") + '</ul></div><div><p class="small muted">' + esc(t("added")) + "</p><ul>" + c.add.map(li).join("") +
-      '</ul></div></div><p class="small muted" style="padding-top:10px">' + esc(t("kept", { n: c.kept })) + " " + esc(t("ctxNote")) + "</p></details>";
+    const num = (x) => String(Math.round(x * 1000) / 1000);
+    /* a passage that both versions retrieved: where it stood, what it scored, whether its content is the same */
+    const what = (m) => [m[1] !== m[2] ? t("ctxRank", { a: m[1], b: m[2] }) : "", m[3] !== null && m[4] !== null && m[3] !== m[4] ? t("ctxScore", { a: num(m[3]), b: num(m[4]) }) : "",
+      m[5] ? t("ctxContent") : ""].filter(Boolean).join("; ");
+    return '<details class="ctx" data-k="ctx-' + i + '"><summary>' + esc(t("ctx", { n: c.rem.length + c.add.length + moved.length })) + '</summary><div class="ctxgrid"><div><p class="small muted">' +
+      esc(t("removed")) + "</p><ul>" + c.rem.map(li).join("") + '</ul></div><div><p class="small muted">' + esc(t("added")) + "</p><ul>" + c.add.map(li).join("") + "</ul></div></div>" +
+      (moved.length ? '<p class="small muted" style="padding-top:10px">' + esc(t("ctxMoved")) + "</p><ul>" + moved.map((m) => '<li><span dir="auto">' + esc(m[0]) + '</span> <span class="small muted">' +
+        esc(what(m)) + "</span></li>").join("") + "</ul>" : "") +
+      '<p class="small muted" style="padding-top:10px">' + esc(t("kept", { n: c.kept })) + " " + esc(t("ctxNote")) + "</p></details>";
   }
   function cardHTML(c, i) {
     const D = state.D, KEYM = state.mode === "key";
@@ -296,7 +307,7 @@
     if (D.summary.passages) { const P = D.summary.passages, F = P.by_state[D.focus];
       h += '<p class="small muted">' + esc((P.differ === P.cases_with_passages && P.cases_with_passages > 1 ? t("passagesAll", { n: P.cases_with_passages })
         : !P.differ ? t("passagesNone", { n: P.cases_with_passages })
-        : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + (P.reordered ? t("passagesOrder", { r: P.reordered }) : "")) + "</p>"; }
+        : t("passages", { k: P.differ, n: P.cases_with_passages }) + (F ? t("passagesFocus", { k: F.differ, n: F.n }) : "") + t("passagesNote")) + (P.reordered ? t("passagesOrder", { r: P.reordered }) : "") + (P.content_changed ? t("passagesContent", { r: P.content_changed }) : "")) + "</p>"; }
     if ((D.summary.labelled_by_similarity || []).length) { const ids = D.summary.labelled_by_similarity;
       h += '<p class="small muted">' + esc(t("bySimilarity", { n: ids.length, ids: ids.slice(0, 20).join(", ") + (ids.length > 20 ? ", …" : "") })) + "</p>"; }
     h += '<p class="small muted">' + esc(t("rateFirst")) + (Math.max(S.runs_per_version.current, S.runs_per_version.proposed) > 2

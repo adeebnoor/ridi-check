@@ -197,10 +197,10 @@ No dates and no promises; this is what is planned and what is not.
 
 - **Done:** a release on [PyPI](https://pypi.org/project/ridi-check/), a hosted browser version, adapter
   examples for common APIs, intervals for the rates, a strict gate, a check of the results against the
-  recorded calls, and an open set of constructed answer pairs with the measured behaviour of the rules.
+  recorded calls, ranks, scores and content hashes of retrieved passages, and an open set of constructed
+  answer pairs with the measured behaviour of the rules.
 - **Next:** fixes and examples that real use asks for. Nothing else is scheduled.
-- **Being considered:** ranks and scores of retrieved passages, multi-turn conversations, tool-using
-  agents, more report languages.
+- **Being considered:** multi-turn conversations, tool-using agents, more report languages.
 - **Not planned:** model-based judging, or any hosted service that receives your data.
 
 Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issues).

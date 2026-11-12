@@ -83,7 +83,7 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if self.path == "/chat":
             reply = {"choices": [{"message": {"content": "deep " + body["messages"][0]["content"]}}],
-                     "sources": [{"title": "T1"}, {"title": "T2"}]}
+                     "sources": [{"title": "T1", "score": 0.8, "text": "first passage"}, {"title": "T2", "score": 0.5}]}
         else:
             reply = {"answer": "echo " + body["question"], "context": ["a", "b"]}
         data = json.dumps(reply).encode()
@@ -134,6 +134,18 @@ def test_http_adapter_with_a_definition_file(server, tmp_path, monkeypatch):
     # the manifest gets the definition as given: the secret itself is not in it
     assert "s3cret" not in json.dumps(description) and len(description["definition_file_sha256"]) == 64
     assert literal_secret_headers(str(definition)) == []
+
+
+def test_http_adapter_takes_passages_with_scores_and_content(server, tmp_path):
+    """A context path that leads to objects: each has a title or an id, and may have a score and a text."""
+    definition = tmp_path / "rich.json"
+    definition.write_text(json.dumps({
+        "type": "http", "url": server + "/chat", "request": {"messages": [{"role": "user", "content": "{question}"}]},
+        "answer_path": "choices.0.message.content", "context_path": "sources"}), encoding="utf-8")
+    answer, _ = build_adapter(str(definition))
+    out = answer("q", META)
+    assert out["context"] == ["T1", "T2"] and out["context_scores"] == [0.8, 0.5]
+    assert len(out["context_hashes"][0]) == 12 and out["context_hashes"][1] is None      # the text itself is not kept
 
 
 def test_http_adapter_failures(server, tmp_path):
@@ -197,7 +209,16 @@ def test_definition_file_problems(tmp_path, monkeypatch):
 def test_output_shapes_and_json_path():
     assert normalise_output("text") == {"answer": "text", "context": None}
     assert normalise_output({"answer": "a", "context": "one"}) == {"answer": "a", "context": ["one"]}
-    assert normalise_output({"answer": "a", "context": [{"id": 1}]})["context"] == ['{"id": 1}']
+    assert normalise_output({"answer": "a", "context": [{"id": 1}]})["context"] == ["1"]           # an object with an id is a passage
+    assert normalise_output({"answer": "a", "context": [{"n": 1}]})["context"] == ['{"n": 1}']     # any other object is kept as text
+    assert normalise_output({"answer": "a", "context": ["x"]}) == {"answer": "a", "context": ["x"]}  # no scores, no extra keys
+    rich = normalise_output({"answer": "a", "context": [
+        {"id": "doc 1", "score": 0.91, "text": "The   loan period\nis three weeks."},
+        {"title": "doc 2", "score": "high", "hash": "abc123"}, "doc 3", {"name": "doc 4", "text": "The loan period is three weeks."}]})
+    assert rich["context"] == ["doc 1", "doc 2", "doc 3", "doc 4"]
+    assert rich["context_scores"] == [0.91, None, None, None]                                      # a score that is not a number is dropped
+    assert rich["context_hashes"][1] == "abc123" and rich["context_hashes"][2] is None
+    assert rich["context_hashes"][0] == rich["context_hashes"][3] and len(rich["context_hashes"][0]) == 12   # spacing does not change the hash
     for bad in (None, 3, {"context": []}, {"answer": 5}, {"answer": "a", "context": 7}):
         with pytest.raises(AdapterError):
             normalise_output(bad)

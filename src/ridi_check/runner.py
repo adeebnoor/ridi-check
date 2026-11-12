@@ -179,7 +179,11 @@ def load_raw(path: str) -> tuple[dict[tuple, dict], dict[tuple, dict], int]:
 def _kept(record: dict) -> dict:
     """What a successful call is remembered by. The whole record is in raw_outputs.jsonl; a long run
     would otherwise hold every timestamp and field of every call in memory."""
-    return {"answer": record.get("answer"), "context": record.get("context")}
+    kept = {"answer": record.get("answer"), "context": record.get("context")}
+    for name in ("context_scores", "context_hashes"):
+        if record.get(name):
+            kept[name] = record[name]
+    return kept
 
 
 class RawWriter:
@@ -227,12 +231,25 @@ def context_cell(context: list[str] | None) -> str:
     return " | ".join(items)
 
 
+def aligned_cell(record: dict, name: str) -> str:
+    """The scores or the content hashes of the passages in a record's context cell, in the same order, "-"
+    where a passage has none. Empty when the record has none at all."""
+    values = record.get(name)
+    passages = record.get("context") or []
+    if not values:
+        return ""
+    kept = [value for passage, value in zip(passages, values) if " ".join(str(passage).split())]   # as context_cell keeps them
+    return " | ".join("-" if value is None else (f"{value:.6g}" if isinstance(value, float) else str(value)) for value in kept)
+
+
 def build_results(
     questions: list[Question], ok: dict[tuple, dict], failed: dict[tuple, dict], runs: int,
     scorer: Callable[[str, str], object] | None,
 ) -> tuple[list[str], list[list[str]]]:
     key = scorer is not None
     any_context = any(r.get("context") for r in ok.values())
+    any_scores = any(r.get("context_scores") for r in ok.values())
+    any_hashes = any(r.get("context_hashes") for r in ok.values())
     any_error = any(
         (q.case_id, v, k) not in ok for q in questions for v in VERSIONS for k in range(1, runs + 1)
     )
@@ -244,6 +261,10 @@ def build_results(
             header += [run_column(SIDE[version], k, "correct") for k in range(1, runs + 1)]
     if any_context:
         header += ["baseline_context", "updated_context"]
+    if any_scores:
+        header += ["baseline_context_scores", "updated_context_scores"]
+    if any_hashes:
+        header += ["baseline_context_hashes", "updated_context_hashes"]
     if any_error:
         header += ["run_errors"]
 
@@ -276,10 +297,13 @@ def build_results(
         row += answers["current"] + answers["proposed"]
         if key:
             row += corrects["current"] + corrects["proposed"]
+        firsts = [ok.get((q.case_id, version, 1)) for version in VERSIONS]
         if any_context:
-            for version in VERSIONS:
-                first = ok.get((q.case_id, version, 1))
-                row.append(context_cell(first.get("context")) if first else "")
+            row += [context_cell(first.get("context")) if first else "" for first in firsts]
+        if any_scores:
+            row += [aligned_cell(first, "context_scores") if first else "" for first in firsts]
+        if any_hashes:
+            row += [aligned_cell(first, "context_hashes") if first else "" for first in firsts]
         if any_error:
             row.append("; ".join(errors))
         rows.append(row)
@@ -440,6 +464,9 @@ def run(config: RunConfig, log: TextIO | None = None) -> RunOutcome:
             try:
                 out = adapters[version](q.question, meta)
                 record["answer"], record["context"] = out["answer"], out["context"]
+                for name in ("context_scores", "context_hashes"):
+                    if out.get(name):
+                        record[name] = out[name]
             except Exception as exc:  # a failed call is a result to record, not a crash
                 record["status"] = "failed"
                 record["error"] = redact(f"{type(exc).__name__}: {exc}")    # a key the service repeats is not kept

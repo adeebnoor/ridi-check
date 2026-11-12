@@ -128,6 +128,7 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
             "cases_with_passages": len(listed),
             "differ": sum(d for _, d in differs),
             "reordered": sum(passages_reordered(c) for c, _ in listed),
+            "content_changed": sum(any(move[5] for move in passage_moves(c)) for c, _ in listed),
             "by_state": {state: {"differ": sum(d for s, d in differs if s == state),
                                  "n": sum(1 for s, _ in differs if s == state)}
                          for state in a.counts if any(s == state for s, _ in differs)},
@@ -233,6 +234,30 @@ def passage_difference(case: Case) -> tuple[list[str], list[str], int]:
     return only_b, only_u, len(case.baseline_context) - len(only_b)
 
 
+def passage_moves(case: Case) -> list[list]:
+    """For each passage that both versions retrieved: [name, rank in the current version, rank in the proposed
+    one, score in each (or None), whether its content changed], when any of these differ. A rank is the place
+    of the first time the passage appears. Content is compared by the hashes in the file, when both are there.
+    """
+    def first(names: list[str], values: list) -> dict:
+        seen: dict[str, tuple] = {}
+        for i, name in enumerate(names):
+            seen.setdefault(name, (i + 1, values[i] if i < len(values) else None))
+        return seen
+
+    rank_b, rank_u = first(case.baseline_context, case.baseline_scores), first(case.updated_context, case.updated_scores)
+    hash_b, hash_u = first(case.baseline_context, case.baseline_hashes), first(case.updated_context, case.updated_hashes)
+    out = []
+    for name, (place_b, score_b) in rank_b.items():
+        if name not in rank_u:
+            continue
+        place_u, score_u = rank_u[name]
+        changed = bool(hash_b[name][1] and hash_u[name][1] and hash_b[name][1] != hash_u[name][1])
+        if place_b != place_u or changed or (score_b is not None and score_u is not None and score_b != score_u):
+            out.append([name, place_b, place_u, score_b, score_u, changed])
+    return out
+
+
 def passages_reordered(case: Case) -> bool:
     """The same passages in both versions, in another order or another number of times."""
     return (set(case.baseline_context) == set(case.updated_context)
@@ -295,7 +320,8 @@ def page_data(
                 "id": case.case_id, "state": state, "flag": flag, "q": case.question, "expected": case.expected,
                 "b": _runs_for_page(case.baseline, key, a.threshold),
                 "u": _runs_for_page(case.updated, key, a.threshold),
-                "rem": only_b, "add": only_u, "kept": kept, "ord": passages_reordered(case), "err": case.run_errors,
+                "rem": only_b, "add": only_u, "kept": kept, "ord": passages_reordered(case), "mov": passage_moves(case),
+                "err": case.run_errors,
             })
         strip.append([case.case_id, state, -1])
         if state == WRONG_BOTH:
@@ -496,5 +522,7 @@ def text_summary(summary: dict) -> str:
             )
     if passages and passages["reordered"]:
         lines.append(f"In {passages['reordered']} case(s) the same passages come in another order or number.")
+    if passages and passages["content_changed"]:
+        lines.append(f"In {passages['content_changed']} case(s) a passage kept its name while its content changed.")
     lines += summary["notes"]
     return "\n".join(lines)

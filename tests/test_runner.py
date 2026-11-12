@@ -301,3 +301,28 @@ def test_a_null_character_in_an_answer_does_not_make_a_file_that_cannot_be_read_
     cases, _ = read_results(os.path.join(cfg.out_dir, "results.csv"))
     assert cases[0].baseline[0].answer == "an answer with a null character" and cases[0].baseline_context == ["doc 1"]
 
+
+def test_ranks_scores_and_content_of_passages_are_recorded_and_compared(write, tmp_path, capsys):
+    """Names alone cannot show that a passage moved down the list or was rewritten. With a score and a text
+    from the assistant, the table holds both, and the report says what happened to each passage."""
+    from ridi_check.cli import main
+    from ridi_check.report import write_report
+    cfg = config(write, tmp_path, questions="case_id,question\n1,how long is a loan?\n",
+                 current="python:fake_systems:retrieves_with_scores", proposed="python:fake_systems:retrieves_reranked")
+    run(cfg)
+    row = results_rows(cfg.out_dir)[0]
+    assert (row["baseline_context"], row["updated_context"]) == ("loans | fines", "fines | loans | events")
+    assert (row["baseline_context_scores"], row["updated_context_scores"]) == ("0.91 | 0.4", "0.77 | 0.52 | 0.31")
+    hashes_b, hashes_u = row["baseline_context_hashes"].split(" | "), row["updated_context_hashes"].split(" | ")
+    assert hashes_b[1] == hashes_u[0] and hashes_b[0] != hashes_u[1] and hashes_u[2] == "-"     # fines the same, loans rewritten
+    assert "Books are lent" not in open(os.path.join(cfg.out_dir, "raw_outputs.jsonl"), encoding="utf-8").read()   # no passage text is kept
+
+    summary, paths, a, _ = write_report(os.path.join(cfg.out_dir, "results.csv"))
+    assert summary["passages"]["differ"] == 1 and summary["passages"]["content_changed"] == 1
+    from ridi_check.report import passage_moves
+    assert passage_moves(a.items[0][0]) == [["loans", 1, 2, 0.91, 0.52, True], ["fines", 2, 1, 0.4, 0.77, False]]
+    capsys.readouterr()
+    assert main(["verify", cfg.out_dir]) == 0                         # the table with its new columns agrees with the record
+    assert main(["report", os.path.join(cfg.out_dir, "results.csv")]) == 0
+    assert "In 1 case(s) a passage kept its name while its content changed." in capsys.readouterr().out
+

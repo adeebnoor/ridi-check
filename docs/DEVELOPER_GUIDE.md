@@ -49,6 +49,20 @@ def answer(question: str) -> dict:
 
 Returning a plain string is accepted. Anything else is recorded as a failed call.
 
+A passage can also be an object, so that the report can say more than which passages differ:
+
+```python
+    return {"answer": "text", "context": [
+        {"id": "doc-12", "score": 0.91, "text": "the passage itself"},      # in the order they were retrieved
+        {"id": "doc-40", "score": 0.40, "text": "another passage"},
+    ]}
+```
+
+`id` (or `title`, or `name`) is required; `score` and `text` are optional, and `hash` can be given in
+place of `text`. The text is not kept: `run` writes a short hash of it, so a passage that keeps its name
+and changes its content can be told apart. With the http adapter, point `context_path` at the list of
+objects (for example `"context_path": "sources"`).
+
 | Definition | Use it when | Notes |
 |---|---|---|
 | `python:module:function` | You can import the assistant | Called from `--concurrency` threads. The current folder is importable. No timeout can be enforced on a Python function. |

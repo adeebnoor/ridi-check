@@ -12,6 +12,7 @@ A system definition is one of:
 
 from __future__ import annotations
 
+import hashlib
 import inspect
 import json
 import os
@@ -75,7 +76,8 @@ class DefinitionError(ValueError):
 
 
 def normalise_output(out: Any) -> dict:
-    """Coerce an adapter result to {"answer": str, "context": list[str] | None}."""
+    """Coerce an adapter result to {"answer": str, "context": list[str] | None}, with "context_scores" and
+    "context_hashes" (one entry for each passage) when any passage came with a score or a content."""
     if isinstance(out, str):
         return {"answer": out, "context": None}
     if not isinstance(out, dict) or "answer" not in out:
@@ -90,10 +92,42 @@ def normalise_output(out: Any) -> dict:
         context = [context]
     if not isinstance(context, (list, tuple)):
         raise AdapterError(f'"context" must be a list of strings or null, got {type(context).__name__}')
-    return {
-        "answer": answer,
-        "context": [c if isinstance(c, str) else json.dumps(c, ensure_ascii=False) for c in context],
-    }
+    names, scores, hashes = [], [], []
+    for item in context:
+        name, score, digest = _passage(item)
+        names.append(name)
+        scores.append(score)
+        hashes.append(digest)
+    result = {"answer": answer, "context": names}
+    if any(score is not None for score in scores):
+        result["context_scores"] = scores
+    if any(digest is not None for digest in hashes):
+        result["context_hashes"] = hashes
+    return result
+
+
+def _passage(item: Any) -> tuple[str, float | None, str | None]:
+    """(name, retrieval score, short hash of the content) of one retrieved passage.
+
+    A passage is a string (its id or title), or an object with "id" (or "title" or "name") and, optionally,
+    "score" (a number) and "text" (the passage itself) or "hash". The text is not kept: only a short hash of
+    it, so that the same passage with another content can be told apart later.
+    """
+    if isinstance(item, str):
+        return item, None, None
+    if not isinstance(item, dict):
+        return json.dumps(item, ensure_ascii=False), None, None
+    name = next((item[k] for k in ("id", "title", "name") if item.get(k) not in (None, "")), None)
+    if name is None:
+        return json.dumps(item, ensure_ascii=False), None, None
+    score = item.get("score")
+    if isinstance(score, bool) or not isinstance(score, (int, float)) or score != score:
+        score = None
+    digest = item.get("hash")
+    if not isinstance(digest, str) or not digest.strip():
+        text = item.get("text")
+        digest = hashlib.sha256(" ".join(text.split()).encode("utf-8")).hexdigest()[:12] if isinstance(text, str) and text.strip() else None
+    return str(name), (float(score) if score is not None else None), (digest.strip() if digest else None)
 
 
 def json_path(obj: Any, path: str) -> Any:

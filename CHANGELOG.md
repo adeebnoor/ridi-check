@@ -3,6 +3,22 @@
 Notable changes to ridi-check. Versions follow [semantic versioning](https://semver.org/); before 1.0 the
 library API may change between minor versions.
 
+## Unreleased
+
+### Added
+- Retrieved passages can carry a score and a content hash. An assistant may return each passage as an
+  object with `id`, `score` and `text` (or `hash`); `run` writes `baseline_context_scores`,
+  `updated_context_scores`, `baseline_context_hashes` and `updated_context_hashes` next to the names, and a
+  file made by hand can hold the same columns. The text of a passage is never written, only a short hash.
+- For each passage that both versions retrieved, a case's card says what changed about it: its rank, its
+  score, and whether its content changed. Cases where a passage kept its name while its content changed
+  are counted (`passages.content_changed` in `summary.json`).
+- The second example in the browser version has made-up scores and content hashes, to show this.
+
+### Changed
+- An object with an `id`, a `title` or a `name` in an assistant's `context` is now a passage with that
+  name. Before, the whole object was written out as the passage's name.
+
 ## 0.7.0
 
 ### Changed
