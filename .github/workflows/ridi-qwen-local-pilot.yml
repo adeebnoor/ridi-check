@@ -114,6 +114,64 @@ jobs:
             sleep 6
           done
           exit 1
+      - name: Download and verify original human-labelled BoolQ development data
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 4 --retry-delay 5 \
+            'https://raw.githubusercontent.com/svinkapeppa/boolq/master/dev.jsonl' \
+            -o "$RUNNER_TEMP/boolq-dev.jsonl"
+          echo 'ebc29ea3808c5c611672384b3de56e83349fe38fc1fe876fd29b674d81d0a80a  '"$RUNNER_TEMP/boolq-dev.jsonl" | sha256sum --check
+      - name: Independently rebuild identical 48-case BoolQ human-labelled sample
+        shell: bash
+        run: python experiments/qwen_cpu_pilot/boolq_builder.py "$RUNNER_TEMP/boolq-dev.jsonl"
+      - name: Run 192 true model requests on independent BoolQ labels
+        working-directory: experiments/qwen_cpu_pilot/boolq
+        run: ridi-check run --config ridi-check.json
+      - name: Verify BoolQ raw and derived results
+        working-directory: experiments/qwen_cpu_pilot/boolq
+        run: ridi-check verify ridi-out
+      - name: Apply strict release gate and evaluate scores on BoolQ
+        working-directory: experiments/qwen_cpu_pilot/boolq
+        shell: bash
+        run: |
+          set +e
+          ridi-check gate ridi-out/results.csv --strict --check-scores > ridi-out/gate_execution.log 2>&1
+          status=$?
+          set -e
+          cat ridi-out/gate_execution.log
+          echo "BOOLQ_STRICT_GATE_EXIT=$status"
+          if [ "$status" -gt 1 ]; then exit "$status"; fi
+      - name: Sign independent BoolQ live-model evidence
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: experiments/qwen_cpu_pilot/boolq/ridi-out/evidence.json
+      - name: Verify BoolQ signed provenance
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if gh attestation verify experiments/qwen_cpu_pilot/boolq/ridi-out/evidence.json --repo "$GITHUB_REPOSITORY"; then
+              exit 0
+            fi
+            sleep 6
+          done
+          exit 1
+      - name: Preserve labelled BoolQ pilot evidence (CC BY-SA 3.0 source)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ridi-boolq-qwen-cpu-evidence
+          path: |
+            experiments/qwen_cpu_pilot/boolq/ridi-out/
+            experiments/qwen_cpu_pilot/boolq/questions.csv
+            experiments/qwen_cpu_pilot/boolq/PRE_RUN_FREEZE.json
+            experiments/qwen_cpu_pilot/boolq/local_models.py
+            experiments/qwen_cpu_pilot/boolq/ridi-check.json
+            experiments/qwen_cpu_pilot/boolq_builder.py
+            experiments/qwen_cpu_pilot/README.md
+          if-no-files-found: error
       - name: Keep full reproducibility evidence and bounded logs
         if: always()
         uses: actions/upload-artifact@v4
