@@ -119,8 +119,10 @@ def test_science_pages_state_the_manuscript_without_a_journal_claim():
         "10.17605/OSF.IO/ANBJD",
         "osf.io/7uzv5",
         "osf.io/anbjd",
-        "Manuscript under review",
+        "Manuscript not yet peer reviewed",
         "preprint forthcoming",
+        "174 Natural Questions items without a reference answer",
+        "+0.0412 [0.0292, 0.0537]",
         "Gemini 3.8 Flash",
         "+3.47 points",
         "[2.47, 4.52]",
@@ -174,7 +176,7 @@ def test_citation_files_do_not_invent_a_zenodo_record():
     assert "version: 0.10.1" in citation
     assert "10.17605/OSF.IO/7UZV5" in citation
     assert "10.17605/OSF.IO/ANBJD" in citation
-    assert "Manuscript under review" in citation
+    assert "Manuscript not yet peer reviewed" in citation
     assert "doi: 10.5281/zenodo.24193754" in citation
     assert "10.5281/zenodo.24193755" in citation
     assert "family-names: Noor" in citation and "given-names: Adeeb" in citation
