@@ -1,0 +1,2 @@
+# Signed evidence files must keep their exact bytes on every platform (their SHA-256 is checked in tests and in the browser).
+web/presets/*.csv -text
