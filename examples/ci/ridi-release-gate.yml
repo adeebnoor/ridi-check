@@ -1,0 +1,18 @@
+# Copy to .github/workflows/ridi-gate.yml in YOUR evaluation repository.
+# Requires a configured ridi-check.json and any adapter the project uses.
+# This example assumes ground-truth expected answers and exact-match scoring.
+# For semantic or high-stakes tasks, provide a vetted custom scorer and independent review.
+name: RIDI release gate
+on: [pull_request]
+jobs:
+  ridi-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install ridi-check
+      - run: ridi-check run --config ridi-check.json
+      - run: ridi-check verify ridi-out
+      - run: ridi-check gate ridi-out/results.csv --strict --check-scores

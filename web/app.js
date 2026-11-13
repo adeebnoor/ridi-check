@@ -115,6 +115,23 @@
   const SAMPLES = { library: JSON.parse(document.getElementById("ridi-sample").textContent),
     medicines: JSON.parse(document.getElementById("ridi-sample-medicines").textContent) };
   const SAMPLE = SAMPLES.library;
+  // Only these fixed, same-origin files can be loaded by the preset selector.
+  // SHA-256 values are byte-identical to signed GitHub Actions results.csv.
+  const REPRODUCIBLE_PRESETS = Object.freeze({
+    qwen_config: Object.freeze({
+      path: "presets/qwen_config_48.csv",
+      sha256: "18286273cf15a062629eaa59a3dbe976ea658a72d82d2b1dad5248e9b2e8317d",
+      run: "https://github.com/adeebnoor/ridi-check/actions/runs/43317397792",
+      label: "Qwen2.5 1.5B prompt change / signed Linux run"
+    }),
+    qwen_swap: Object.freeze({
+      path: "presets/qwen_swap_48.csv",
+      sha256: "8d9d0b48b48a0802df239fb47bbfa2dc9a72cb3eece853514aefec9ad982c629",
+      run: "https://github.com/adeebnoor/ridi-check/actions/runs/43312668253",
+      label: "Qwen2.5 0.5B to 1.5B swap / signed Linux run"
+    })
+  });
+  let activePresetRequest = 0;
   const JUDGMENTS = ["worse", "better", "same_meaning", "unsure"];
   const PAGE = 50, STRIP_MAX = 2000, LIST_MAX = 500;
 
@@ -386,6 +403,17 @@
     $("t-name").textContent = u("name"); $("t-headline").textContent = t("headline"); $("t-drop").textContent = u("drop"); $("lang").textContent = u("langBtn"); $("lang").lang = state.lang === "ar" ? "en" : "ar"; $("t-tagline").textContent = u("tagline");
     $("btn-sample-key").textContent = u("sampleKey"); $("btn-sample-nokey").textContent = u("sampleNoKey");
     $("t-set-label").textContent = u("setLabel"); $("opt-set-library").textContent = u("setLibrary"); $("opt-set-medicines").textContent = u("setMedicines");
+    $("opt-set-qwen-config").textContent = state.lang === "ar"
+      ? "Qwen2.5 1.5B - تحديث التعليمات (بيانات موقعة، 48 حالة)"
+      : "Qwen2.5 1.5B - prompt update (signed run, 48 cases)";
+    $("opt-set-qwen-swap").textContent = state.lang === "ar"
+      ? "Qwen2.5 0.5B مقابل 1.5B - استبدال نموذج (بيانات موقعة، 48 حالة)"
+      : "Qwen2.5 0.5B to 1.5B - model swap (signed run, 48 cases)";
+    $("tool-overview-link").textContent = state.lang === "ar" ? "العودة إلى RIDI Check" : "Back to RIDI Check overview";
+    $("tool-research-link").textContent = state.lang === "ar" ? "البحث والأدلة" : "Research & evidence";
+    $("tool-local-label").textContent = state.lang === "ar"
+      ? "ملفاتك تُحلل داخل المتصفح، والتجارب العامة تُجلب فقط عند اختيارها"
+      : "Your uploads stay in-browser; public preset CSVs load only when selected";
     $("sample-set").value = state.set;
     $("t-why").textContent = u("whyTitle"); $("t-why-list").innerHTML = UI[state.lang].whyList.map((x) => "<li>" + esc(x) + "</li>").join("");
     $("btn-sample-key").setAttribute("aria-pressed", state.source === "sample-key");
@@ -401,8 +429,18 @@
     if (state.errorCode) state.error = fill(UI[state.lang].err[state.errorCode.code] || UI[state.lang].err.read, state.errorCode.info);
     const err = $("err"); err.hidden = !state.error; err.textContent = state.error || "";
     if (!state.D) { $("report").innerHTML = ""; return; }
-    let note = "<span>" + esc(state.source === "sample-key" ? u(state.set === "medicines" ? "noteKeyMed" : "noteKey") : state.source === "sample-nokey" ? u(state.set === "medicines" ? "noteNoKeyMed" : "noteNoKey") : u(state.A.n === 1 ? "noteFileOne" : "noteFile", { n: state.A.n })) + "</span>";
+    const realPresetSelected = Boolean(REPRODUCIBLE_PRESETS[state.set]) && state.source !== "file";
+    // Do not put the misleading "fictional library example" label on an actual signed Qwen run.
+    let note = realPresetSelected ? "" : ("<span>" + esc(state.source === "sample-key" ? u(state.set === "medicines" ? "noteKeyMed" : "noteKey") : state.source === "sample-nokey" ? u(state.set === "medicines" ? "noteNoKeyMed" : "noteNoKey") : u(state.A.n === 1 ? "noteFileOne" : "noteFile", { n: state.A.n })) + "</span>");
     note += "<span>" + esc(state.mode === "key" ? t("modeNote") : t("modeNote", { rule: state.sim >= 1 ? t("simExact") : t("simWords", { p: fmt(state.sim * 100) }) })) + "</span>";
+    if (REPRODUCIBLE_PRESETS[state.set] && state.source !== "file") {
+      const meta = REPRODUCIBLE_PRESETS[state.set];
+      const scope = state.lang === "ar"
+        ? "نتائج نموذج حقيقي من تشغيل GitHub الموقّع. التقييم وفق تسميات BoolQ المنشورة، وليس تحكيماً طبياً أو بشرياً جديداً. قد تتعارض بعض التسميات مع النص أو الزمن. المصدر: "
+        : "Real model outputs from the signed GitHub CPU run. Scores use published BoolQ labels, not new independent human/medical adjudication; some labels conflict with the passage or time. Source: ";
+      note += '<span class="preset-origin">' + esc(scope) +
+        '<a href="' + meta.run + '" target="_blank" rel="noopener noreferrer">' + esc(meta.label) + '</a></span>';
+    }
     $("source-note").innerHTML = note;
     $("t-limits").textContent = t("limits"); $("t-limit-list").innerHTML = L().limitList.map((x) => "<li>" + esc(x) + "</li>").join("");
     $("report").innerHTML = reportHTML();
@@ -424,12 +462,68 @@
   $("lang").addEventListener("click", () => { state.lang = state.lang === "ar" ? "en" : "ar"; store.set("ridi-lang", state.lang); render(); });
   $("btn-sample-key").addEventListener("click", () => { state.errorCode = null; load("sample-key", SAMPLES[state.set]); });
   $("btn-sample-nokey").addEventListener("click", () => { state.errorCode = null; load("sample-nokey", SAMPLES[state.set]); });
-  $("sample-set").addEventListener("change", (ev) => {
-    state.set = ev.target.value === "medicines" ? "medicines" : "library"; state.errorCode = null;
-    load(state.source === "sample-nokey" ? "sample-nokey" : "sample-key", SAMPLES[state.set]);
-  });
+  function setPresetStatus(message, isError) {
+    const node = $("preset-status");
+    node.textContent = message || "";
+    node.classList.toggle("error", !!isError);
+  }
+  function storePresetInUrl(name) {
+    try {
+      const url = new URL(location.href);
+      url.searchParams.set("preset", name);
+      history.replaceState(null, "", url.pathname + url.search + url.hash);
+    } catch (_) { /* File URLs and locked-down browsers may reject history writes. */ }
+  }
+  async function choosePreset(name, { deepLink = false } = {}) {
+    const token = ++activePresetRequest;
+    if (Object.prototype.hasOwnProperty.call(SAMPLES, name)) {
+      state.set = name;
+      state.errorCode = null;
+      load(state.source === "sample-nokey" ? "sample-nokey" : "sample-key", SAMPLES[name]);
+      setPresetStatus("", false);
+      if (!deepLink) storePresetInUrl(name);
+      return;
+    }
+    const spec = REPRODUCIBLE_PRESETS[name];
+    if (!spec) {
+      // Fail explicitly instead of inventing a medical benchmark or silently loading fake drug names.
+      const unsupported = name === "clinical_ddi" || name === "counterfactual_med";
+      const message = unsupported
+        ? (state.lang === "ar"
+          ? "هذه المجموعة السريرية غير متاحة: لا توجد بيانات منشورة ومتحقق منها للعرض. يمكنك اختيار أمثلة الأدوية الخيالية الموسومة."
+          : "Clinical preset unavailable: no verified clinical source data is published here. The invented-drug illustration is explicitly labelled.")
+        : (state.lang === "ar" ? "معرّف المجموعة غير معروف." : "Unknown preset identifier.");
+      setPresetStatus(message, true);
+      $("sample-set").value = state.set;
+      return;
+    }
+    setPresetStatus(state.lang === "ar" ? "جارٍ جلب البيانات العامة والتحقق من بصمتها..." : "Loading the public dataset and verifying its SHA-256 fingerprint...", false);
+    try {
+      if (!window.crypto || !crypto.subtle) throw new Error("Crypto API requires HTTPS or localhost");
+      const response = await fetch(spec.path, { method: "GET", cache: "no-cache", credentials: "omit" });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (bytes.length > 1000000) throw new Error("Preset file too large");
+      const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), x => x.toString(16).padStart(2, "0")).join("");
+      if (digest !== spec.sha256) throw new Error("SHA-256 mismatch with signed CI artifact");
+      const data = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+      if (token !== activePresetRequest) return;
+      SAMPLES[name] = data; state.set = name; state.errorCode = null;
+      load(state.source === "sample-nokey" ? "sample-nokey" : "sample-key", data);
+      if (state.error) throw new Error("Results CSV was rejected by RIDI parser");
+      setPresetStatus(state.lang === "ar" ? "تم التحقق من البصمة؛ 48 حالة من التشغيل الموقّع، وليست بيانات سريرية." :
+        "SHA-256 verified: 48 cases from the signed run. Not clinical data.", false);
+      if (!deepLink) storePresetInUrl(name);
+    } catch (error) {
+      if (token !== activePresetRequest) return;
+      $("sample-set").value = state.set;
+      setPresetStatus((state.lang === "ar" ? "تعذّر فتح التجربة: " : "Cannot load signed preset: ") + String(error.message || error), true);
+    }
+  }
+  $("sample-set").addEventListener("change", (ev) => { choosePreset(ev.target.value); });
   $("btn-run").addEventListener("click", () => { state.errorCode = null; load("file", $("paste").value); });
   function readFile(f) {
+    activePresetRequest++;
     const rd = new FileReader();
     rd.onload = () => {
       const bytes = new Uint8Array(rd.result); let text = null;
@@ -481,4 +575,8 @@
   const kept = tab.get();
   if (kept) { $("paste").value = kept; load("file", kept); }
   if (!state.D) { state.errorCode = null; load("sample-key", SAMPLE); }
+  // Deep links are allowlisted identifiers, never a user-supplied path or URL.
+  const requestedPreset = (typeof URLSearchParams !== "undefined" && typeof location !== "undefined")
+    ? new URLSearchParams(location.search).get("preset") : null;
+  if (requestedPreset) { choosePreset(requestedPreset, { deepLink: true }); }
 })();

@@ -3,6 +3,10 @@
   "use strict";
 
   const ar = {
+    inspectLive:"افحص في الأداة التفاعلية",
+    ciSnippetLabel:"GITHUB ACTIONS / بوابة اعتماد التحديث",
+    ciSnippetCaveat:"يتطلب ridi-check.json ودالة ربط مع مساعدك في المستودع. يفترض المثال إجابات مرجعية وتطابقاً نصياً؛ استخدم دالة تقييم مستقلة للأسئلة الدلالية.",
+    bibtexLabel:"BIBTEX / مرجع Zenodo المعتمد للبرنامج",
     skip:"تجاوز إلى المحتوى",
     navWhy:"لماذا RIDI؟",
     navHow:"كيف تعمل؟",

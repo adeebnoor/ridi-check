@@ -18,6 +18,11 @@ and launches the unchanged browser analyzer. **Direct access to the interactive 
 [web/ridi-update-check.html](https://adeebnoor.github.io/ridi-check/web/ridi-update-check.html).
 The tool opens on synthetic examples: a fictional library handbook and invented drug names (illustration only), where an aggregate improvement can coexist with per-case regressions.
 
+**Inspect the signed real-model evaluations in one click:** [Qwen2.5 same-weights prompt update (48 cases)](https://adeebnoor.github.io/ridi-check/web/ridi-update-check.html?preset=qwen_config) or [Qwen2.5 model substitution (48 cases)](https://adeebnoor.github.io/ridi-check/web/ridi-update-check.html?preset=qwen_swap). The selected public `results.csv` is fetched from this site's static GitHub Pages origin and verified byte-for-byte by SHA-256 against the [original signed CI artifacts and limitations](web/presets/README.md). The browser's library/invented-drug examples remain bundled for offline use; **your own CSV remains local to the browser**. This release does **not** include validated real-world clinical drug-interaction cases.
+
+**Ready-to-copy CI template:** [examples/ci/ridi-release-gate.yml](examples/ci/ridi-release-gate.yml) uses the actual supported commands: `run`, `verify`, and `gate --strict --check-scores` for keyed exact-match evaluations. A domain-specific scorer and independent expert review are still required for semantic or high-stakes correctness.
+
+
 ![The report: where each case landed, and the change between versions against re-run variation](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/report.png)
 
 [What you will see](#what-you-will-see) · [Who it is for](#who-it-is-for) · [Start in one minute](#start-in-one-minute) ·
