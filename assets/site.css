@@ -381,3 +381,13 @@ svg{display:block}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+/* Connected evidence / copyable developer and academic references. */
+.evidence-links .inspect-primary{border:1px solid #5ebcaf;border-radius:8px;color:#d5fff2;padding:8px 10px;background:#204f4a75;order:-1}
+.evidence-links .inspect-primary:hover{background:#265951;text-decoration:none}
+.automation-example{margin-top:17px;max-width:100%}
+.automation-example pre{font-size:11px;white-space:pre;line-height:1.65;max-height:315px;overflow:auto}
+.automation-example .ci-note{margin:0;color:#a5bfd0;padding:12px 15px;font-size:12px;line-height:1.65}
+.citation-widget{max-width:840px;margin:18px 0 12px}.citation-widget pre{font-size:12px;white-space:pre;overflow-x:auto}
+.cite-identity{margin:10px 0;font-size:14px;display:flex;align-items:center;flex-wrap:wrap;gap:12px}.cite-identity a{color:#8beae0}
+@media(max-width:690px){.automation-example .ci-code{font-size:10px}.evidence-links{gap:7px}.evidence-links .inspect-primary{width:100%;justify-content:space-between}}

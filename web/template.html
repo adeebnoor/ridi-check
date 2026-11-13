@@ -16,6 +16,12 @@ __STYLE__
 <!--page-->
 <div id="app">
   <div class="band"><div class="wrap">
+    <nav class="tool-links" aria-label="RIDI site navigation">
+      <a href="../index.html" id="tool-overview-link">&#8592; RIDI Check overview</a>
+      <a href="../research.html" id="tool-research-link">Research &amp; evidence</a>
+      <a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">GitHub &#8599;</a>
+      <span class="tool-privacy-label" id="tool-local-label">Your files are processed in this browser</span>
+    </nav>
     <header class="top">
       <div class="brand"><svg class="logo" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="12.5" y="1" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="1" y="12.5" width="8.5" height="8.5" rx="2.2" fill="currentColor"/><rect x="12.5" y="12.5" width="8.5" height="8.5" rx="2.2" fill="var(--signal)"/></svg><h1 id="t-name">RIDI Update Check</h1></div>
       <button type="button" id="lang" lang="ar">العربية</button>
@@ -27,7 +33,8 @@ __STYLE__
     <div class="inputs">
       <div class="row source">
         <label for="sample-set" class="small"><span id="t-set-label"></span>
-          <select id="sample-set"><option value="library" id="opt-set-library"></option><option value="medicines" id="opt-set-medicines"></option></select></label>
+          <select id="sample-set" aria-describedby="preset-status"><option value="library" id="opt-set-library"></option><option value="medicines" id="opt-set-medicines"></option><option value="qwen_config" id="opt-set-qwen-config"></option><option value="qwen_swap" id="opt-set-qwen-swap"></option></select></label>
+        <p id="preset-status" class="small preset-status" role="status" aria-live="polite"></p>
         <div class="seg">
           <button type="button" id="btn-sample-key" aria-pressed="true"></button>
           <button type="button" id="btn-sample-nokey" aria-pressed="false"></button>
@@ -84,6 +91,17 @@ __STYLE__
       </section>
     </div>
     <p class="small muted foot">ridi-check __VERSION__ · the RIDI method</p>
+    <footer class="tool-footer" aria-label="RIDI credits and references">
+      <div><strong>RIDI Check</strong> · Software v0.10.1 ·
+        <a href="https://adeebnoor.github.io/" target="_blank" rel="noopener noreferrer">Prof. Adeeb Noor</a>,
+        King Abdulaziz University</div>
+      <div class="tool-footer-links">
+        <a href="../index.html" id="tool-footer-overview">Overview</a>
+        <a href="../reproducibility.html">Reproducibility</a>
+        <a href="https://doi.org/10.5281/zenodo.24193754" target="_blank" rel="noopener noreferrer">Zenodo DOI</a>
+        <a href="https://orcid.org/0000-0002-8251-1853" target="_blank" rel="noopener noreferrer">ORCID</a>
+      </div>
+    </footer>
   </div>
 </div>
 <script id="ridi-strings" type="application/json">__STRINGS__</script>
