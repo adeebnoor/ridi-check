@@ -11,6 +11,7 @@ import json
 import os
 import sys
 import webbrowser
+from fractions import Fraction
 from importlib import resources
 
 from . import __version__
@@ -41,6 +42,17 @@ def _threshold(text: str) -> float:
         raise argparse.ArgumentTypeError("expected a number, for example 0.9") from None
     if not 0 < value <= 1:
         raise argparse.ArgumentTypeError("must be above 0 and at most 1 (1 means exact match)")
+    return value
+
+
+def _open_unit(value: str) -> str:
+    """A number strictly between 0 and 1, kept as written when it parses."""
+    try:
+        number = Fraction(value)
+    except (ValueError, ZeroDivisionError):
+        raise argparse.ArgumentTypeError("expected a number strictly between 0 and 1, for example 0.05") from None
+    if not (0 < number < 1):
+        raise argparse.ArgumentTypeError("must be strictly between 0 and 1")
     return value
 
 
@@ -195,6 +207,12 @@ def build_parser() -> argparse.ArgumentParser:
                         "between the versions or from one run to the next. Not checked unless given.")
     p.add_argument("--max-incomplete", type=_non_negative, default=0, metavar="N",
                    help="cases allowed that could not be compared because a call failed. Default 0.")
+    p.add_argument("--exact-test", action="store_true",
+                   help="also fail when the exact conditional test cannot be computed, or its one-sided p-value "
+                        "is greater than alpha. Off unless given. --strict does not turn it on. It does not "
+                        "replace the limits on stable regressions.")
+    p.add_argument("--exact-test-alpha", type=_open_unit, default=None, metavar="A",
+                   help="one-sided alpha for --exact-test. Default 0.05. A number strictly between 0 and 1.")
     _add_analysis_options(p)
     p.set_defaults(handler=_cmd_gate)
     return parser
@@ -400,6 +418,8 @@ def _cmd_verify(args: argparse.Namespace) -> int:
 
 
 def _cmd_gate(args: argparse.Namespace) -> int:
+    if args.exact_test_alpha is not None and not args.exact_test:
+        raise ContractError("--exact-test-alpha is used together with --exact-test.")
     if args.strict and args.similarity < 1:
         # Word overlap can call "allowed" and "allowed only under supervision" the same answer once the rest of
         # the answer is long. A strict gate that lets that through would not be strict.
@@ -437,7 +457,8 @@ def _cmd_gate(args: argparse.Namespace) -> int:
         max_unjudged_changes=args.max_unjudged_changes, max_incomplete=args.max_incomplete,
         max_unstable=args.max_unstable, max_answer_changes=args.max_answer_changes,
         max_unconfirmed=args.max_unconfirmed, min_runs=args.min_runs, max_case_only=args.max_case_only,
-        score_check=score_check,
+        score_check=score_check, exact_test=args.exact_test,
+        exact_test_alpha="0.05" if args.exact_test_alpha is None else args.exact_test_alpha,
     )
     print(f"ridi-check gate: {args.results}, {len(cases)} case{'' if len(cases) == 1 else 's'}, "
           f"{'answer-key mode' if mode == 'key' else 'no answer key'}")

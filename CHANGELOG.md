@@ -6,6 +6,12 @@ library API may change between minor versions.
 ## Unreleased
 
 ### Added
+- `exact_conditional_test` in `summary.json`, the printed report, and `report.html`: a one-sided exact
+  conditional binomial test of between-version change against each version's run-1 versus run-2
+  disagreement, with the effect (change rate minus the larger re-run rate) and a conditional interval.
+  Status: implementation pending confirmation against the registered protocol. The rounded-rate block is
+  unchanged, and `execution_floor.exact_test_implemented` stays false. `gate --exact-test` can use the
+  new test; the default gate does not, and `--strict` does not turn it on.
 - Science, limitations, and reproducibility pages, with the manuscript described as under review and a
   preprint forthcoming. Preregistrations RIDI-24 (DOI 10.17605/OSF.IO/7UZV5) and the commercial addendum
   (DOI 10.17605/OSF.IO/ANBJD). The commercial replication is reported as registered: criterion H1c was not

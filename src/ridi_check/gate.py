@@ -7,11 +7,13 @@ a count within its limit means only that the count is within its limit.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from fractions import Fraction
 
 from .analysis import (
     INCOMPLETE, REGRESSION_UNCONFIRMED, STABLE_CHANGE, STABLE_REGRESSION, CHANGE_UNCONFIRMED, UNSTABLE, Analysis,
 )
 from .contract import KEY
+from .statistics import exact_conditional_test_from_analysis, ratio_fraction
 
 
 @dataclass
@@ -26,6 +28,7 @@ def evaluate(
     max_unjudged_changes: int = 0, max_incomplete: int = 0, max_unstable: int | None = None,
     max_answer_changes: int | None = None, max_unconfirmed: int | None = None,
     min_runs: int | None = None, max_case_only: int | None = None, score_check: dict | None = None,
+    exact_test: bool = False, exact_test_alpha: str = "0.05",
 ) -> GateResult:
     key = a.mode == KEY
     judgments = judgments or {}
@@ -94,6 +97,22 @@ def evaluate(
         unstable = a.ids(UNSTABLE)
         lines += [f"unstable\tcase {i}" for i in unstable]
         checks.append(("unstable cases", len(unstable), max_unstable))
+    if exact_test:
+        # Opt-in only. The rounded-rate comparison is not read here, and --strict does not turn this on.
+        tested = exact_conditional_test_from_analysis(a)
+        both = tested["exceeds_both"]
+        if both is None:
+            lines.append("exact conditional test\tnot computed (no item has two runs of both versions)")
+            checks.append(("exact conditional test not computed", 1, 0))
+        else:
+            p_value = ratio_fraction(both["p_value_one_sided"])
+            shown = both["p_value_one_sided"]["display"]
+            lines.append(f"exact conditional test\tp={shown} alpha={exact_test_alpha} n={tested['n_items']}")
+            failed = 1 if p_value > Fraction(exact_test_alpha) else 0
+            checks.append((
+                f"exact conditional test not at or under one-sided alpha {exact_test_alpha} (p={shown})",
+                failed, 0,
+            ))
     incomplete = a.ids(INCOMPLETE)
     if incomplete:
         lines += [f"incomplete (a first-run call failed)\tcase {i}" for i in incomplete]

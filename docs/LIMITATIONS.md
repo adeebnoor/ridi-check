@@ -10,9 +10,9 @@ No independent clinical safety validation has been done. The invented drug-name 
 
 The release gate prints counts and can exit 1. No output says a system is fit to deploy. Passages are shown, not graded. An ungraded passage can still carry the evidence. Without an answer key, a difference is a change, not a regression.
 
-## The execution floor is a thin baseline, and the exact test is not in the package
+## The execution floor is a thin baseline
 
-Two repeated runs are a thin estimate of re-execution noise. The shipped comparison asks whether the between-version change rate is strictly above both run-1 versus run-2 rates after rounding to 6 decimal places. That is not the manuscript's exact test. Details: [STATISTICS.md](STATISTICS.md).
+Two repeated runs are a thin estimate of re-execution noise. The shipped comparison asks whether the between-version change rate is strictly above both run-1 versus run-2 rates after rounding to 6 decimal places. Beside it, the package reports an exact conditional test labelled implementation pending confirmation against the registered protocol. That test is not the registered bootstrap. Details: [STATISTICS.md](STATISTICS.md).
 
 ## BoolQ labels are not ground truth
 
@@ -23,7 +23,7 @@ The 48-item pilots use published BoolQ labels. "Regression" there means a change
 - `p1686` asks about U.S. Air Force warrant officers. The passage predates their reintroduction in December 2024. An answer can differ for "as the passage says" and "as of 2026".
 - `p0746` asks whether Flint water is drinkable "now". That question moves with time. Michigan's August 2026 announcement is about the public system and known lead service lines, not a guarantee for every building.
 
-The flagged transitions have not been newly blinded and adjudicated. BoolQ dev is public, so training contamination is possible. These pilots are not a powered preregistered study. The same-weights McNemar p-value 0.7265625 and the BoolQ p-value of about 0.05248 were computed outside the package and are not significant at an unadjusted 0.05.
+The flagged transitions have not been newly blinded and adjudicated. BoolQ dev is public, so training contamination is possible. These pilots are not a powered preregistered study. The same-weights figure 186/256 = 0.7265625 and the BoolQ figure 13757/262144 (0.05248 to five decimal places) are two-sided exact binomial tests of gains against losses. They are not the execution-floor test, and neither was significant at an unadjusted 0.05.
 
 ## The same seed did not fix every answer
 

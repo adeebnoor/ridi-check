@@ -95,9 +95,13 @@ def test_summary_floor_matches_the_fixture_and_has_no_p_value(fixture_text):
     assert floor["floor_rate"] == 0.075
     assert floor["change_exceeds_floor"] is True
     assert floor["exact_test_implemented"] is False
+    assert "p_value" not in floor
     assert summary["first_run"]["change_exceeds_both_rerun_variations"] is True
     blob = json.dumps(summary)
-    assert "p_value" not in blob and "0.7265625" not in blob
+    assert "0.7265625" not in blob
+    assert summary["exact_conditional_test"]["status"] == (
+        "implementation pending confirmation against the registered protocol"
+    )
 
 
 def test_change_inside_the_floor_stays_false_in_the_summary():
@@ -148,3 +152,8 @@ def test_three_gains_against_five_losses_is_not_reported_as_mcnemar():
     assert summary["execution_floor"]["change_exceeds_floor"] is True
     assert "0.7265625" not in json.dumps(summary)
     assert summary["execution_floor"]["exact_test_implemented"] is False
+    # Eight between-version changes and no re-run disagreement. The floor test is not 3-versus-5.
+    tested = summary["exact_conditional_test"]
+    assert tested["n_items"] == 8
+    assert tested["change_count"] == 8
+    assert tested["exceeds_both"]["p_value_one_sided"]["display"] == "1/256"
