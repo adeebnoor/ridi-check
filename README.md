@@ -229,7 +229,7 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 
 ## The science
 
-The manuscript "Identical relevance grades cannot certify retrieval-augmented AI answers" is under review.
+The manuscript "Identical relevance grades cannot certify retrieval-augmented AI answers" has not yet been peer reviewed.
 A preprint is forthcoming. The public pages are [the science](https://adeebnoor.github.io/ridi-check/research.html),
 [limitations](https://adeebnoor.github.io/ridi-check/limitations.html) and
 [reproducibility](https://adeebnoor.github.io/ridi-check/reproducibility.html).
@@ -248,6 +248,7 @@ The preregistered commercial criterion H1c (support in at least 2 of 3 models af
 Gemini 3.8 Flash +3.47 points [2.47, 4.52] was supported. GPT-5.4 mini +0.98 [-0.24, 2.21] and
 Claude Sonnet 5.5 +0.74 [-0.23, 1.74] were not. The magnitude is model-dependent and has to be measured
 for each model. Those figures are the reported result. They are not recomputed in this repository.
+A check made after the outcomes found that 174 Natural Questions items without a reference answer had been scored incorrect in every arm, so they could not change; the registered addendum excludes such questions. Without them the decision is unchanged: Gemini 3.8 Flash +4.12 points [2.92, 5.37] was supported; GPT-5.4 mini +1.02 [-0.41, 2.44] and Claude Sonnet 5.5 +0.86 [-0.23, 1.99] were not. The manuscript reports both analyses.
 
 Cite this software with the concept DOI [10.5281/zenodo.24193754](https://doi.org/10.5281/zenodo.24193754).
 The version DOI [10.5281/zenodo.24193755](https://doi.org/10.5281/zenodo.24193755) is the snapshot of commit 9ea26b8.

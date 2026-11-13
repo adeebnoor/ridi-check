@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 title: ridi-check
 message: >-
-  If you use this software, please cite it as below. The manuscript is under
-  review and is not yet a publication. Cite that work as under review.
+  If you use this software, please cite it as below. The manuscript has not
+  yet been peer reviewed and is not a publication. Cite it as an unpublished manuscript.
 type: software
 authors:
   - family-names: Noor
@@ -61,4 +61,4 @@ references:
         orcid: https://orcid.org/0000-0002-8251-1853
         affiliation: King Abdulaziz University
     year: 2026
-    notes: "Manuscript under review. Preprint forthcoming."
+    notes: "Manuscript not yet peer reviewed. Preprint forthcoming."

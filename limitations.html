@@ -33,7 +33,7 @@
   <link rel="canonical" href="https://adeebnoor.github.io/ridi-check/limitations.html">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="stylesheet" href="./assets/site.css">
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareSourceCode","name":"ridi-check","identifier":"https://doi.org/10.5281/zenodo.24193754","description":"Compare two versions of a retrieval-augmented assistant on matched items. Repeated runs estimate an execution floor. The release gate is an application of the item-level labels.","codeRepository":"https://github.com/adeebnoor/ridi-check","url":"https://adeebnoor.github.io/ridi-check/","version":"0.10.1","datePublished":"2026-11-12","license":"https://opensource.org/licenses/MIT","programmingLanguage":"Python","author":{"@type":"Person","name":"Professor NooR","affiliation":{"@type":"CollegeOrUniversity","name":"King Abdulaziz University"}}},{"@type":"ScholarlyArticle","name":"Identical relevance grades cannot certify retrieval-augmented AI answers","author":{"@type":"Person","name":"Professor NooR","affiliation":{"@type":"CollegeOrUniversity","name":"King Abdulaziz University"}},"datePublished":"2026","description":"Manuscript under review. Preprint forthcoming. 10.5281/zenodo.24193754","isAccessibleForFree":true}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareSourceCode","name":"ridi-check","identifier":"https://doi.org/10.5281/zenodo.24193754","description":"Compare two versions of a retrieval-augmented assistant on matched items. Repeated runs estimate an execution floor. The release gate is an application of the item-level labels.","codeRepository":"https://github.com/adeebnoor/ridi-check","url":"https://adeebnoor.github.io/ridi-check/","version":"0.10.1","datePublished":"2026-11-12","license":"https://opensource.org/licenses/MIT","programmingLanguage":"Python","author":{"@type":"Person","name":"Professor NooR","affiliation":{"@type":"CollegeOrUniversity","name":"King Abdulaziz University"}}},{"@type":"ScholarlyArticle","name":"Identical relevance grades cannot certify retrieval-augmented AI answers","author":{"@type":"Person","name":"Professor NooR","affiliation":{"@type":"CollegeOrUniversity","name":"King Abdulaziz University"}},"datePublished":"2026","description":"Manuscript not yet peer reviewed. Preprint forthcoming. 10.5281/zenodo.24193754","isAccessibleForFree":true}]}</script>
   <script src="./assets/site.js" defer></script>
   <title>Limitations — RIDI Check</title>
 </head>
@@ -94,7 +94,7 @@
         <p>This repository has not run HELM, Inspect, lm-evaluation-harness, or Ragas on the same items. The <a href="./research.html#comparison">comparison</a> is not a claim that ridi-check is better.</p>
 
         <h2>Commercial replication</h2>
-        <p>The preregistered criterion H1c, support in at least 2 of 3 models after Holm, was not met. Gemini 3.8 Flash +0.0347 [0.0247, 0.0452] was supported. GPT-5.4 mini +0.0098 [-0.0024, 0.0221] and Claude Sonnet 5.5 +0.0074 [-0.0023, 0.0174] were not. The same differences were previously written here as percentage points: +3.47 points is +0.0347. The magnitude is model-dependent. Those figures were not recomputed here.</p>
+        <p>The preregistered criterion H1c, support in at least 2 of 3 models after Holm, was not met. Gemini 3.8 Flash +0.0347 [0.0247, 0.0452] was supported. GPT-5.4 mini +0.0098 [-0.0024, 0.0221] and Claude Sonnet 5.5 +0.0074 [-0.0023, 0.0174] were not. The same differences were previously written here as percentage points: +3.47 points is +0.0347. The magnitude is model-dependent. Those figures were not recomputed here. A check made after the outcomes found that 174 Natural Questions items without a reference answer had been scored incorrect in every arm, so they could not change; the registered addendum excludes such questions. Without them the decision is unchanged: Gemini 3.8 Flash +0.0412 [0.0292, 0.0537] was supported; GPT-5.4 mini +0.0102 [-0.0041, 0.0244] and Claude Sonnet 5.5 +0.0086 [-0.0023, 0.0199] were not. The manuscript reports both analyses.</p>
 
         <h2>Agents and measured size</h2>
         <p>Tool-using agents have a documented wrapper and a stand-in, and have not been tried on a production agent. Size was measured on Linux with Python 3.13 and Chromium, not on Windows or macOS.</p>
@@ -131,7 +131,7 @@
         <p>لم يُشغَّل HELM أو Inspect أو lm-evaluation-harness أو Ragas على البنود نفسها في هذا المستودع. <a href="./research.html#comparison">المقارنة</a> ليست ادّعاء أن ridi-check أفضل.</p>
 
         <h2>التكرار التجاري</h2>
-        <p>المعيار المسجّل H1c، أي الدعم في نموذجين على الأقل من ثلاثة بعد Holm، لم يتحقق. Gemini 3.8 Flash +0.0347 [0.0247, 0.0452] مدعوم. GPT-5.4 mini +0.0098 [-0.0024, 0.0221] وClaude Sonnet 5.5 +0.0074 [-0.0023, 0.0174] غير مدعومين. الفروق نفسها كُتبت هنا من قبل كنقاط مئوية: +3.47 نقطة هي +0.0347. المقدار يعتمد على النموذج. لم تُعد هذه الأرقام هنا.</p>
+        <p>المعيار المسجّل H1c، أي الدعم في نموذجين على الأقل من ثلاثة بعد Holm، لم يتحقق. Gemini 3.8 Flash +0.0347 [0.0247, 0.0452] مدعوم. GPT-5.4 mini +0.0098 [-0.0024, 0.0221] وClaude Sonnet 5.5 +0.0074 [-0.0023, 0.0174] غير مدعومين. الفروق نفسها كُتبت هنا من قبل كنقاط مئوية: +3.47 نقطة هي +0.0347. المقدار يعتمد على النموذج. لم تُعد هذه الأرقام هنا. فحص أُجري بعد ظهور النتائج وجد أن 174 سؤالاً من Natural Questions بلا إجابة مرجعية سُجّلت خاطئة في كل الأذرع، فلا يمكن أن تتغير، والملحق المسجّل يستبعد مثل هذه الأسئلة. وبعد استبعادها لا يتغير القرار: Gemini 3.8 Flash ‏+0.0412 [0.0292, 0.0537] مدعوم، وGPT-5.4 mini ‏+0.0102 [-0.0041, 0.0244] وClaude Sonnet 5.5 ‏+0.0086 [-0.0023, 0.0199] غير مدعومين. تذكر المخطوطة التحليلين معاً.</p>
 
         <h2>الوكلاء والحجم المقاس</h2>
         <p>للوكلاء الذين يستخدمون أدوات غلاف موثّق ومثال بديل، ولم يُجرَّبوا على وكيل إنتاج. قِيس الحجم على Linux مع Python 3.13 وChromium، لا على Windows أو macOS.</p>
@@ -142,13 +142,13 @@
     <h2 id="citeTitle" data-i18n="howToCite">How to cite</h2>
     <div data-lang-block="en">
       <p>Professor NooR (King Abdulaziz University). ridi-check, version 0.10.1, released 2026-11-12. <a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">github.com/adeebnoor/ridi-check</a>. MIT.</p>
-      <p>Professor NooR. Identical relevance grades cannot certify retrieval-augmented AI answers. 2026. Manuscript under review. Preprint forthcoming. King Abdulaziz University.</p>
+      <p>Professor NooR. Identical relevance grades cannot certify retrieval-augmented AI answers. 2026. Manuscript not yet peer reviewed. Preprint forthcoming. King Abdulaziz University.</p>
       <p>Cite this software: <a href="https://doi.org/10.5281/zenodo.24193754">10.5281/zenodo.24193754</a> (all versions). The snapshot of commit 9ea26b8 is <a href="https://doi.org/10.5281/zenodo.24193755">10.5281/zenodo.24193755</a>.</p>
       <p>RIDI-24: <a href="https://doi.org/10.17605/OSF.IO/7UZV5" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/7UZV5</a>. Commercial addendum: <a href="https://doi.org/10.17605/OSF.IO/ANBJD" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/ANBJD</a>.</p>
     </div>
     <div data-lang-block="ar" lang="ar" hidden>
       <p>الأستاذ نور (جامعة الملك عبدالعزيز). ridi-check، الإصدار 0.10.1، صدر في 2026-11-12. <a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">github.com/adeebnoor/ridi-check</a>. رخصة MIT.</p>
-      <p>الأستاذ نور. Identical relevance grades cannot certify retrieval-augmented AI answers. 2026. مخطوطة قيد المراجعة. النسخة الأولية ستصدر لاحقاً. جامعة الملك عبدالعزيز.</p>
+      <p>الأستاذ نور. Identical relevance grades cannot certify retrieval-augmented AI answers. 2026. مخطوطة لم تُحكَّم بعد. النسخة الأولية ستصدر لاحقاً. جامعة الملك عبدالعزيز.</p>
       <p>للاستشهاد بهذا البرنامج: <a href="https://doi.org/10.5281/zenodo.24193754">10.5281/zenodo.24193754</a> (كل الإصدارات). لقطة الالتزام 9ea26b8 هي <a href="https://doi.org/10.5281/zenodo.24193755">10.5281/zenodo.24193755</a>.</p>
       <p>RIDI-24: <a href="https://doi.org/10.17605/OSF.IO/7UZV5" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/7UZV5</a>. الملحق التجاري: <a href="https://doi.org/10.17605/OSF.IO/ANBJD" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/ANBJD</a>.</p>
     </div>
