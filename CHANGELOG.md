@@ -6,6 +6,10 @@ library API may change between minor versions.
 ## Unreleased
 
 ### Added
+- The public site shares one navigation bar and footer, a How to cite block taken from `CITATION.cff`,
+  citation and schema.org metadata, a content-security-policy meta tag, `robots.txt`, `sitemap.xml`,
+  and `404.html`. `tools/check_links.py` checks local links. The Zenodo DOI is still
+  `[Zenodo DOI to be added]`.
 - `exact_conditional_test` in `summary.json`, the printed report, and `report.html`: a one-sided exact
   conditional binomial test of between-version change against each version's run-1 versus run-2
   disagreement, with the effect (change rate minus the larger re-run rate) and a conditional interval.
