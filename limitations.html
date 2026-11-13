@@ -2,13 +2,13 @@
 <html lang="en" dir="ltr"
   data-title-en="Limitations — RIDI Check"
   data-title-ar="الحدود — RIDI Check"
-  data-description-en="Limits of ridi-check: not clinical clearance, BoolQ label conflicts, no exact test in the package, and no ranking against other evaluation tools."
+  data-description-en="Limits of ridi-check: not clinical clearance, BoolQ label conflicts, an exact conditional test pending confirmation against the registered protocol, and no ranking against other evaluation tools."
   data-description-ar="حدود ridi-check: ليست اعتماداً سريرياً، وتعارضات تسميات BoolQ، ولا اختباراً دقيقاً داخل الحزمة، ولا ترتيباً مقابل أدوات التقييم الأخرى.">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1221">
-  <meta name="description" content="Limits of ridi-check: not clinical clearance, BoolQ label conflicts, no exact test in the package, and no ranking against other evaluation tools.">
+  <meta name="description" content="Limits of ridi-check: not clinical clearance, BoolQ label conflicts, an exact conditional test pending confirmation against the registered protocol, and no ranking against other evaluation tools.">
   <meta name="color-scheme" content="dark light">
   <link rel="canonical" href="https://adeebnoor.github.io/ridi-check/limitations.html">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
@@ -50,10 +50,10 @@
         <p>No independent clinical safety validation has been done. The drug-name file in the browser tool is invented illustration. The names, doses, and effects are made up and are not medical guidance. A release gate that fails on those rows checks the software, not a formulary.</p>
 
         <h2>Not a certificate</h2>
-        <p>The release gate prints counts and can exit 1. No output says a system is fit to deploy. Passages are shown, not graded. Without an answer key, a difference is a change, not a regression. The gate is an application of the item labels. It is not the manuscript’s exact test.</p>
+        <p>The release gate prints counts and can exit 1. No output says a system is fit to deploy. Passages are shown, not graded. Without an answer key, a difference is a change, not a regression. The gate is an application of the item labels. It reads the exact conditional test only when <code>--exact-test</code> is set.</p>
 
         <h2>The execution floor is thin</h2>
-        <p>Two repeated runs are a thin estimate of re-execution noise. The shipped comparison asks whether the between-version change rate is strictly above both run-1 versus run-2 rates after rounding to 6 decimal places. That comparison is not the exact test described in the manuscript. See <a href="./research.html#software">what the software computes</a>.</p>
+        <p>Two repeated runs are a thin estimate of re-execution noise. The shipped comparison asks whether the between-version change rate is strictly above both run-1 versus run-2 rates after rounding to 6 decimal places. Beside it, the package reports an exact conditional test labelled implementation pending confirmation against the registered protocol. That test is not the registered bootstrap. See <a href="./research.html#software">what the software computes</a>.</p>
 
         <h2>BoolQ labels are not ground truth</h2>
         <p>In the 48-item pilots, “regression” means a change against the published BoolQ key.</p>
@@ -87,10 +87,10 @@
         <p>لم يُجرَ تحقق سريري مستقل من السلامة. ملف أسماء الأدوية في أداة المتصفح توضيح مخترع. الأسماء والجرعات والآثار مختلقة وليست إرشاداً طبياً. بوابة إصدار تفشل على هذه الصفوف تفحص البرنامج لا دليلاً علاجياً.</p>
 
         <h2>ليست شهادة</h2>
-        <p>تطبع بوابة الإصدار الأعداد ويمكنها الخروج بالحالة 1. لا يقول أي مخرج إن النظام صالح للنشر. المقاطع تُعرض ولا تُقيَّم. من دون مفتاح إجابات، الاختلاف تغيير لا تراجع. البوابة تطبيق لتسميات البنود. ليست الاختبار الدقيق في المخطوطة.</p>
+        <p>تطبع بوابة الإصدار الأعداد ويمكنها الخروج بالحالة 1. لا يقول أي مخرج إن النظام صالح للنشر. المقاطع تُعرض ولا تُقيَّم. من دون مفتاح إجابات، الاختلاف تغيير لا تراجع. البوابة تطبيق لتسميات البنود. تقرأ الاختبار الشرطي الدقيق فقط عند تمرير <code>--exact-test</code>.</p>
 
         <h2>أرضية التنفيذ رقيقة</h2>
-        <p>تشغيلان متكرران تقدير رقيق لضجيج إعادة التنفيذ. المقارنة المنشورة تسأل إن كانت نسبة التغيير بين النسختين أكبر بصرامة من نسبتي التشغيل الأول مقابل الثاني بعد التقريب إلى 6 منازل. هذه المقارنة ليست الاختبار الدقيق الموصوف في المخطوطة. انظر <a href="./research.html#software-ar">ما يحسبه البرنامج</a>.</p>
+        <p>تشغيلان متكرران تقدير رقيق لضجيج إعادة التنفيذ. المقارنة المنشورة تسأل إن كانت نسبة التغيير بين النسختين أكبر بصرامة من نسبتي التشغيل الأول مقابل الثاني بعد التقريب إلى 6 منازل. وإلى جانبها يُخرج البرنامج اختباراً شرطياً دقيقاً معلَّماً: التنفيذ بانتظار التأكيد مقابل البروتوكول المسجّل. هذا الاختبار ليس إعادة المعاينة المسجّلة. انظر <a href="./research.html#software-ar">ما يحسبه البرنامج</a>.</p>
 
         <h2>تسميات BoolQ ليست حقيقة واقعة</h2>
         <p>في تجارب البنود الثمانية والأربعين، «تراجع» يعني اختلافاً عن مفتاح BoolQ المنشور.</p>
@@ -100,7 +100,7 @@
           <li><code>p1686</code> تسأل عن ضباط الصف في سلاح الجو الأمريكي. المقطع يسبق إعادتهم في ديسمبر 2024.</li>
           <li><code>p0746</code> تسأل إن كان ماء فلينت صالحاً للشرب «الآن». السؤال يتحرك مع الزمن.</li>
         </ul>
-        <p>الانتقالات المعلَّمة لم تُحكَّم تحكيماً أعمى جديداً. مجموعة BoolQ التطويرية عامة، فتلويث التدريب ممكن. قيمة McNemar ‏0.7265625 في تجربة الأوزان نفسها والرقم حوالي 0.05248 في BoolQ حُسبا خارج الحزمة. لم يكن أي منهما معنوياً عند 0.05 غير معدَّل. ليسا من مخرجات <code>ridi-check report</code>.</p>
+        <p>الانتقالات المعلَّمة لم تُحكَّم تحكيماً أعمى جديداً. مجموعة BoolQ التطويرية عامة، فتلويث التدريب ممكن. القيمة 186/256 = 0.7265625 في تجربة الأوزان نفسها والقيمة 13757/262144 (أي 0.05248 عند خمس منازل) في BoolQ اختباران ذوا حدّين لطرفين للمكاسب مقابل الخسائر. لم يكن أي منهما معنوياً عند 0.05 غير معدَّل. ليسا اختبار أرضية التنفيذ ولا يُخرجهما <code>ridi-check report</code>.</p>
 
         <h2>البذرة نفسها لم تثبّت كل إجابة</h2>
         <p>مع حرارة 0 وبذرة 20261113، غيّر تشغيل لاحق على GitHub إجابات الأساس للحالتين <code>p03</code> و<code>p06</code> في مجموعة السياسة الخيالية. تطابقت إجابات التشغيل الأول لـ BoolQ بين Windows وGitHub، وبعض الإجابات المتكررة لم تتطابق.</p>

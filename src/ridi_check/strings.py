@@ -70,6 +70,13 @@ COMMON = {
                         "ask, which a hand-picked set is not, and they say nothing about one case's own re-run "
                         "variation. The execution floor is the larger of the two re-run rates: a comparison of "
                         "point estimates, not an exact test. Nothing here is decided by these intervals.",
+        "exactNone": "No matched item has two runs of both versions, so the exact conditional test is not computed.",
+        "exactTest": "Exact conditional test on {n} matched items: one-sided p = {p} that the between-version change "
+                     "exceeds both run-to-run disagreements. Change rate minus the larger re-run rate = {e}.",
+        "exactInterval": " Conditional 95% interval for that difference: {lo} to {hi}.",
+        "exactNoInterval": " The conditional interval is undefined because a version has no discordant items.",
+        "exactPending": " Implementation pending confirmation against the registered protocol. This does not replace "
+                        "the rounded-rate comparison, and the release gate ignores it unless --exact-test is set.",
         "anyRun": "With more than two runs a case can be unstable because of a later run. "
                   "Cases where any run differed from the first: current {b}, proposed {u}.",
         "review": "Cases to review", "fAll": "All", "fStable": "Stable", "fUns": "Unstable",
@@ -149,6 +156,13 @@ COMMON = {
                         "المنتقاة يدوياً ليست كذلك، ولا تقول شيئاً عن تقلب الحالة الواحدة عند إعادة التشغيل. "
                         "أرضية التنفيذ هي أكبر نسبتي إعادة التشغيل: مقارنة لتقديرات نقطية لا اختباراً دقيقاً. "
                         "لا يُبنى على هذه الفترات أي قرار هنا.",
+        "exactNone": "لا يوجد بند متطابق له تشغيلان لكلتا النسختين، فالاختبار الشرطي الدقيق غير محسوب.",
+        "exactTest": "الاختبار الشرطي الدقيق على {n} بنداً متطابقاً: قيمة p أحادية الطرف = {p} لكون تغيّر النسختين "
+                     "يتجاوز اختلافي إعادة التشغيل. نسبة التغيّر ناقص أكبر نسبة إعادة تشغيل = {e}.",
+        "exactInterval": " الفترة الشرطية 95% لهذا الفرق: {lo} إلى {hi}.",
+        "exactNoInterval": " الفترة الشرطية غير معرّفة لأن نسخة ليس لها بنود متنافرة.",
+        "exactPending": " التنفيذ بانتظار التأكيد مقابل البروتوكول المسجّل. هذا لا يستبدل مقارنة النسب المُقرَّبة، "
+                        "وبوابة الإصدار تتجاهله ما لم يُمرَّر --exact-test.",
         "anyRun": "مع أكثر من تشغيلين قد تكون الحالة متقلبة بسبب تشغيل لاحق. "
                   "الحالات التي خالف فيها أي تشغيل التشغيلَ الأول: الحالية {b}، المقترحة {u}.",
         "review": "حالات للمراجعة", "fAll": "الكل", "fStable": "الثابتة", "fUns": "المتقلبة",

@@ -375,6 +375,17 @@ function crossHTML() {
       : t("scoreCheckOk", { scorer: C.scorer, n: C.runs_checked })) + (skipped ? t("scoreCheckSkipped", { e: C.cases_without_expected, a: C.runs_without_answer_text }) : "")) + "</p>"; }
   return h + "</div></section>";
 }
+function exactTestSentence(X) {
+  if (!X || !X.n_items) return t("exactNone");
+  const both = X.exceeds_both;
+  let sentence = t("exactTest", {
+    n: X.n_items,
+    p: both.p_value_one_sided.display,
+    e: both.effect_change_minus_larger_rerun_rate.display
+  });
+  sentence += both.interval_95 ? t("exactInterval", { lo: both.interval_95.low, hi: both.interval_95.high }) : t("exactNoInterval");
+  return sentence + t("exactPending");
+}
 function render() {
   const open = Array.from(document.querySelectorAll("details[open][data-k]")).map((d) => d.dataset.k);
   const app = $("app");
@@ -416,6 +427,7 @@ function render() {
   else if (pT <= Math.max(pB, pU)) h += esc(t("rateWithin"));
   else h += esc(t("rateAbove", { t: fmt(pT), b: fmt(pB), u: fmt(pU) }));
   h += "</p>";
+  h += '<p class="small muted">' + esc(exactTestSentence(S.exact_conditional_test)) + "</p>";
   if (D.acc) { const d = pct(D.acc.b, D.acc.n) - pct(D.acc.a, D.acc.n);
     h += '<p class="small muted">' + esc(t("acc", { a: fmt(pct(D.acc.a, D.acc.n)), b: fmt(pct(D.acc.b, D.acc.n)), d: (d > 0 ? "+" : d < 0 ? "−" : "") + fmt(Math.abs(d)), r: D.acc.r, i: D.acc.i })) + "</p>";
     if (D.acc.n >= 3 && !D.acc.a && !D.acc.b) h += '<p class="small" style="color:var(--uns)">' + esc(t("noneCorrect")) + "</p>";

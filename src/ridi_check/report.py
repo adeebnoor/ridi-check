@@ -16,7 +16,9 @@ from .contract import (
     CONTEXT_SEPARATOR, KEY, NOKEY, Case, ContractError, read_records, read_results, run_column, to_csv,
 )
 from .scoring import check_scores, score_check_lines
-from .statistics import change_exceeds_execution_floor, execution_floor_record
+from .statistics import (
+    change_exceeds_execution_floor, exact_conditional_test_from_analysis, exact_test_lines, execution_floor_record,
+)
 from .strings import strings_for
 from .util import atomic_write_text, now_iso, read_text, sha256_file
 
@@ -134,6 +136,7 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
             None if rerun_b is None else rerun_b["rate"],
             None if rerun_u is None else rerun_u["rate"],
         ),
+        "exact_conditional_test": exact_conditional_test_from_analysis(a),
     }
     if a.case_only:     # equal after lower-casing, and not equal before it
         summary["differ_only_in_letter_case"] = list(a.case_only)
@@ -593,5 +596,6 @@ def text_summary(summary: dict) -> str:
         lines.append(f"In {passages['reordered']} case(s) the same passages come in another order or number.")
     if passages and passages["content_changed"]:
         lines.append(f"In {passages['content_changed']} case(s) a passage kept its name while its content changed.")
+    lines += exact_test_lines(summary["exact_conditional_test"])
     lines += summary["notes"]
     return "\n".join(lines)

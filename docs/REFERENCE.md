@@ -109,6 +109,8 @@ Prints the counts and one line per offending case. It prints no verdict about th
 | `--max-unstable N` | not checked | cases whose answers did not hold on re-run. Give it to make the gate count them; `--max-unstable 0` is the setting for a release check where a wrong answer is costly |
 | `--max-incomplete N` | 0 | cases that could not be compared because a call failed |
 | `--check-scores`, `--scorer` | off | as for `report`; here every scored run that does not have the score the scorer gives counts against a limit of zero, and so does every score that could not be checked: a case with no expected answer, a scored run with no answer text. `--strict` does not turn this on, because scores given by a person need not follow a function; on a file with no `run_manifest.json` beside it, it says so on standard error |
+| `--exact-test` | off | also fail when the exact conditional test cannot be computed, or its one-sided p-value is greater than alpha. A p-value equal to alpha passes. `--strict` does not turn this on |
+| `--exact-test-alpha A` | 0.05, and only with `--exact-test` | one-sided alpha, a number strictly between 0 and 1 |
 | `--mode`, `--similarity`, `--judgments` | as for `report` | |
 
 ### `ridi-check verify DIR`
@@ -314,13 +316,15 @@ version (run 1 against run 2). Those two re-run rates are the execution floor, a
 larger of them. Both are always shown and neither is subtracted from the change. Each rate is rounded to
 6 decimal places. The change exceeds the floor only when it is strictly greater than both
 (`change_exceeds_both_rerun_variations`, and the same boolean in `execution_floor`). This is a comparison
-of point estimates. It is not the exact test in the manuscript under review, and the release gate does not
-use it. See [STATISTICS.md](STATISTICS.md).
+of point estimates. It is not an exact test, and the release gate does not use it. Beside it,
+`summary.json` adds `exact_conditional_test`: an exact conditional binomial test of the same items,
+labelled implementation pending confirmation against the registered protocol. The release gate reads
+that block only with `--exact-test`. See [STATISTICS.md](STATISTICS.md).
 
 Each rate comes with a 95% Wilson interval (`interval_95` in `summary.json`, z = 1.959964). The interval
 treats the cases as a random sample of what users ask, which a hand-picked set of questions is not, and it
-says nothing about one case's own re-run variation. No exact test is applied, and no label or gate decision
-depends on the interval. With an answer key the change equals regressions plus improvements, mean accuracy
+says nothing about one case's own re-run variation. No label or gate decision depends on the Wilson
+interval. The exact conditional test is a separate block and is not decided by these intervals. With an answer key the change equals regressions plus improvements, mean accuracy
 moves by their difference, and `2 × min(regressions, improvements)` changes cancel out in the mean.
 
 ## Files written

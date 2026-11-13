@@ -232,9 +232,10 @@ The method, in the manuscript's terms: aggregate scores do not certify item-leve
 on matched items estimate an execution floor (re-execution noise); an exact test asks whether answer
 changes exceed that floor. The release gate is an application of the item labels.
 
-ridi-check 0.10.1 computes the floor as a comparison of rates rounded to 6 decimal places. It does not
-compute the exact test. [docs/STATISTICS.md](https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md)
-records the difference. Preregistrations: [RIDI-24](https://doi.org/10.17605/OSF.IO/7UZV5)
+ridi-check computes the floor as a comparison of rates rounded to 6 decimal places, and beside it
+an exact conditional test labelled implementation pending confirmation against the registered
+protocol. [docs/STATISTICS.md](https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md)
+records both. Preregistrations: [RIDI-24](https://doi.org/10.17605/OSF.IO/7UZV5)
 (osf.io/7uzv5) and the [commercial addendum](https://doi.org/10.17605/OSF.IO/ANBJD) (osf.io/anbjd).
 
 The preregistered commercial criterion H1c (support in at least 2 of 3 models after Holm) was not met.
@@ -255,9 +256,10 @@ in the repository. No Zenodo record has been created.
 - It is not a readiness or safety certificate. No output says a system is fit to deploy; the gate prints
   counts and the decision stays yours.
 - Agents that use tools or keep state have a documented pattern and a stand-in example, but the tool has
-  not been tried on a production agent. Not in this version: model-based judging, or the manuscript's exact
-  test. The tool does report an execution floor: the larger of the two run-1 versus run-2 disagreement
-  rates, as a comparison of rounded point estimates. The release gate does not use that comparison. See
+  not been tried on a production agent. Not in this version: model-based judging. The tool reports an
+  execution floor as a comparison of rounded point estimates, and an exact conditional test labelled
+  implementation pending confirmation against the registered protocol. The release gate does not use
+  either unless you pass `--exact-test` for the conditional test. See
   [the statistics note](https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md).
 - Size was measured on Linux with Python 3.13 and Chromium only, not on Windows or macOS. There, 100,000
   cases with three runs of each version take about 9 seconds and 354 MB in `report`; the HTML report for

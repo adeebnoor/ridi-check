@@ -102,8 +102,12 @@ How many calls will it make? questions × 2 versions × runs. 50 questions with 
 **Change between versions against the execution floor.** Three bars: how many answers differ between
 the two versions, and how many differ when the *same* version is asked twice. Those two re-run bars are
 the execution floor (re-execution noise) from repeated runs on matched items. If the first bar is no
-longer than the others, the total tells you little: read the stable cases instead. The comparison is not
-an exact test, and the release gate does not use it.
+longer than the others, the total tells you little: read the stable cases instead. That comparison
+is not an exact test, and the release gate does not use it. Under the bars, the report also gives an
+exact conditional test: a one-sided p-value, the change rate minus the larger re-run rate, and a
+conditional 95% interval. Its label is implementation pending confirmation against the registered
+protocol. `gate --exact-test` can fail a build on that p-value. It is off unless you ask, and
+`--strict` does not turn it on. See [STATISTICS.md](STATISTICS.md).
 
 **Score and answer text, side by side.** With an answer key, one table counts the cases by what the score
 did (the rows) and by what the answer text did (the columns). An answer that changed while the score stayed

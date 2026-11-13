@@ -231,7 +231,12 @@ analysis = analyse(cases, mode, threshold=1.0)
 print(analysis.counts, analysis.ids("stable_regression"))
 summary = build_summary(analysis)
 write_report("results.csv", "out")                  # the three report files
+summary["exact_conditional_test"]["exceeds_both"]   # p-value and effect; None if no item was run twice
 ```
+
+`exact_conditional_test()` in `ridi_check.statistics` is the same test on a list of
+`(change, current_rerun, proposed_rerun)` indicators. It is labelled pending confirmation against the
+registered protocol. See [STATISTICS.md](STATISTICS.md).
 
 `ridi_check.runner.run(RunConfig(...))` runs the calls; `ridi_check.gate.evaluate(analysis)` returns
 the gate lines and whether a limit was exceeded. The API may change before 1.0.

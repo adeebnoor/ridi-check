@@ -2,13 +2,13 @@
 <html lang="en" dir="ltr"
   data-title-en="The science — RIDI Check"
   data-title-ar="العلم — RIDI Check"
-  data-description-en="Plain-language account of the RIDI manuscript under review: matched items, repeated runs, the execution floor, and the exact test the software does not yet compute. OSF preregistrations and the commercial replication result."
-  data-description-ar="شرح مبسّط لمخطوطة RIDI قيد المراجعة: بنود متطابقة، تشغيلات متكررة، أرضية التنفيذ، والاختبار الدقيق الذي لا يحسبه البرنامج بعد. تسجيلا OSF ونتيجة التكرار التجاري.">
+  data-description-en="Plain-language account of the RIDI manuscript under review: matched items, repeated runs, the execution floor, and an exact conditional test labelled pending confirmation against the registered protocol. OSF preregistrations and the commercial replication result."
+  data-description-ar="شرح مبسّط لمخطوطة RIDI قيد المراجعة: بنود متطابقة، تشغيلات متكررة، أرضية التنفيذ، واختبار شرطي دقيق معلَّم بانتظار التأكيد مقابل البروتوكول المسجّل. تسجيلا OSF ونتيجة التكرار التجاري.">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1221">
-  <meta name="description" content="Plain-language account of the RIDI manuscript under review: matched items, repeated runs, the execution floor, and the exact test the software does not yet compute.">
+  <meta name="description" content="Plain-language account of the RIDI manuscript under review: matched items, repeated runs, the execution floor, and an exact conditional test labelled pending confirmation against the registered protocol.">
   <meta name="color-scheme" content="dark light">
   <link rel="canonical" href="https://adeebnoor.github.io/ridi-check/research.html">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
@@ -64,6 +64,7 @@
         <p>The execution floor is the re-execution noise baseline: how often the same version disagrees with itself. Answer changes have to be read against that floor. A change that sits inside the noise is not evidence about the update.</p>
         <h3>Exact test</h3>
         <p>The manuscript describes an exact test for answer changes beyond that floor. The test asks whether the item-level changes are larger than re-execution noise, rather than whether an average moved.</p>
+        <p>On the questions that were asked twice on both versions, mark two things: did the first answers of the two versions differ, and did a version’s first answer differ from its own second answer? Among the questions where those marks disagree, the exact conditional test asks whether between-version changes outnumber re-run disagreements by more than a fair coin would allow. The p-value is that exact chance. The effect is the change rate minus the larger re-run rate. The interval is an exact interval for that paired difference, given the questions where the two marks disagree.</p>
         <h3>Release gate</h3>
         <p>The release gate is an application of the item labels. It can stop a build when stable regressions exceed a limit you set. It is not the exact test, and it is not a certificate that a system is safe to deploy.</p>
         <h3>Labelled examples</h3>
@@ -71,11 +72,12 @@
 
         <h2 id="software">What this software computes</h2>
         <div class="callout">
-          <p>ridi-check 0.10.1 reports the execution floor as a comparison of rounded rates. It does not compute the manuscript’s exact test and it does not report a p-value. The math was left as it is. The difference is written out in <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md">docs/STATISTICS.md</a> rather than quietly replaced.</p>
+          <p>ridi-check still reports the execution floor as a comparison of rounded rates. Beside it, the report now adds an exact conditional test. The label on that test is: implementation pending confirmation against the registered protocol. The rounded-rate comparison was not replaced. The arithmetic is written out in <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md">docs/STATISTICS.md</a>.</p>
         </div>
         <p>For each version, the re-run rate is how often run 2 disagrees with run 1. Each rate is rounded to 6 decimal places. The floor is the larger of the two rates. The between-version change “exceeds the floor” only when its rate is strictly greater. Equal rates do not exceed it. A missing repeated run leaves the comparison undefined. Neither re-run rate is subtracted from the change. Wilson 95% intervals use z = 1.959964. They are not a hypothesis test, and the release gate does not use them.</p>
         <p>Item labels are separate. “Stable” means every repeated run agreed with that version’s first run, and both versions were run at least twice. Otherwise the item is unstable, or unconfirmed when a version was run once.</p>
-        <p>Exploratory notes in this repository quote two exact McNemar p-values computed outside the package (3 gains versus 5 losses, p = 0.7265625; 16 improvements versus 6 regressions, about 0.05248). Those tests ask whether improvements and regressions are balanced. They are not the execution-floor test, and <code>ridi-check report</code> does not emit them.</p>
+        <p>The registered analysis script on <a href="https://osf.io/anbjd" target="_blank" rel="noopener noreferrer">osf.io/anbjd</a> is a paired bootstrap: 20,000 within-benchmark draws, a control that is 1 when any of three same-context executions disagree, a margin of 2 percentage points, and a Holm adjustment across models. This package does not run that bootstrap. A results file here has two runs of each version and no benchmark column. That is why the conditional test is labelled pending confirmation.</p>
+        <p>Exploratory notes in this repository quote two exact binomial p-values (3 gains versus 5 losses, p = 0.7265625; 16 improvements versus 6 regressions, 13757/262144, which is 0.05248 to five decimal places). Those tests ask whether improvements and regressions are balanced. They are not the execution-floor test, and <code>ridi-check report</code> does not emit them.</p>
 
         <h2 id="registrations">Preregistrations</h2>
         <ul>
@@ -108,6 +110,7 @@
         <p>أرضية التنفيذ هي خط الأساس لضجيج إعادة التنفيذ: كم مرة تخالف النسخة نفسها نفسها. تُقرأ تغيّرات الإجابات مقابل هذه الأرضية. التغيير الذي يبقى داخل الضجيج ليس دليلاً على التحديث.</p>
         <h3>الاختبار الدقيق</h3>
         <p>تصف المخطوطة اختباراً دقيقاً لتغيّرات الإجابات التي تتجاوز هذه الأرضية. يسأل الاختبار إن كانت التغيّرات على مستوى البند أكبر من ضجيج إعادة التنفيذ، لا إن كان المتوسط قد تحرّك.</p>
+        <p>على الأسئلة التي طُرحت مرتين على كلتا النسختين، تُعلَّم علامتان: هل اختلفت إجابتَا التشغيل الأول بين النسختين، وهل اختلفت إجابة النسخة الأولى عن تشغيلها الثاني؟ بين الأسئلة التي تختلف فيها العلامتان، يسأل الاختبار الشرطي الدقيق إن كانت تغيّرات النسختين أكثر من اختلافات إعادة التشغيل بما يفوق عملة عادلة. قيمة p هي ذلك الاحتمال الدقيق. الأثر هو نسبة التغيّر ناقص أكبر نسبة إعادة تشغيل. الفترة دقيقة لهذا الفرق المزدوج، بشرط الأسئلة التي اختلفت علامتاها.</p>
         <h3>بوابة الإصدار</h3>
         <p>بوابة الإصدار تطبيق لتسميات البنود. يمكنها إيقاف البناء عندما تتجاوز التراجعات الثابتة حداً تضعه أنت. ليست الاختبار الدقيق، وليست شهادة بأن النظام آمن للنشر.</p>
         <h3>أمثلة موسومة</h3>
@@ -115,11 +118,12 @@
 
         <h2 id="software-ar">ما يحسبه هذا البرنامج</h2>
         <div class="callout">
-          <p>يعرض ridi-check 0.10.1 أرضية التنفيذ كمقارنة لنسب مُقرَّبة. لا يحسب الاختبار الدقيق الوارد في المخطوطة ولا يُخرج قيمة p. تُركت الحسابات كما هي. الفرق مكتوب في <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md">docs/STATISTICS.md</a> بدل استبداله بصمت.</p>
+          <p>ما زال ridi-check يعرض أرضية التنفيذ كمقارنة لنسب مُقرَّبة. وإلى جانبها يضيف التقرير اختباراً شرطياً دقيقاً. التسمية على هذا الاختبار: التنفيذ بانتظار التأكيد مقابل البروتوكول المسجّل. لم تُستبدل مقارنة النسب المُقرَّبة. الحسابات مكتوبة في <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md">docs/STATISTICS.md</a>.</p>
         </div>
         <p>لكل نسخة، نسبة إعادة التشغيل هي كم مرة يختلف التشغيل الثاني عن الأول. تُقرَّب كل نسبة إلى 6 منازل عشرية. الأرضية هي أكبر النسبتين. «تجاوز التغيير للأرضية» لا يقع إلا إذا كانت نسبته أكبر بصرامة. النسب المتساوية لا تتجاوزها. غياب تشغيل متكرر يجعل المقارنة غير معرّفة. لا تُطرح أي نسبة إعادة تشغيل من التغيير. فترات Wilson بنسبة 95% تستخدم z = 1.959964. ليست اختبار فرضية، وبوابة الإصدار لا تستخدمها.</p>
         <p>تسميات البنود مستقلة. «ثابت» يعني أن كل تشغيل متكرر وافق التشغيل الأول لتلك النسخة، وأن النسختين شُغّلتا مرتين على الأقل. وإلا فالبند غير مستقر، أو غير مؤكَّد إذا شُغّلت نسخة مرة واحدة.</p>
-        <p>تذكر ملاحظات استكشافية في هذا المستودع قيمتي p لاختبار McNemar الدقيق حُسبتا خارج الحزمة (3 مكاسب مقابل 5 خسائر، p = 0.7265625؛ و16 تحسيناً مقابل 6 تراجعات، حوالي 0.05248). هذان الاختباران يسألان إن كانت التحسينات والتراجعات متوازنة. ليسا اختبار أرضية التنفيذ، ولا يُخرجهما <code>ridi-check report</code>.</p>
+        <p>نص التحليل المسجّل على <a href="https://osf.io/anbjd" target="_blank" rel="noopener noreferrer">osf.io/anbjd</a> إعادة معاينة مزدوجة: 20,000 سحبة داخل كل معيار، وضابط يساوي 1 إذا اختلف أي تنفيذ من ثلاثة تنفيذات للسياق نفسه، وهامش نقطتين مئويتين، وتصحيح Holm عبر النماذج. لا يشغّل هذا البرنامج تلك الإعادة. ملف النتائج هنا فيه تشغيلان لكل نسخة ولا عمود للمعيار. لذلك يُعلَّم الاختبار الشرطي بأنه بانتظار التأكيد.</p>
+        <p>تذكر ملاحظات استكشافية قيمتي p ذات حدّين دقيقتين (3 مكاسب مقابل 5 خسائر، p = 0.7265625؛ و16 تحسيناً مقابل 6 تراجعات، 13757/262144، أي 0.05248 عند خمس منازل). يسأل هذان الاختباران إن كانت التحسينات والتراجعات متوازنة. ليسا اختبار أرضية التنفيذ، ولا يُخرجهما <code>ridi-check report</code>.</p>
 
         <h2 id="registrations-ar">التسجيل المسبق</h2>
         <ul>
@@ -229,7 +233,7 @@
               <td>Compares two versions of one system on matched items. The release gate is an application of the item labels.</td>
               <td>Per-item transition, plus the descriptive execution floor.</td>
               <td>Part of the method. Run 1 against run 2 is the floor.</td>
-              <td>Yes, as a comparison of rounded rates. The manuscript’s exact test is not computed.</td>
+              <td>Yes. Rounded rates remain. An exact conditional test is also reported, labelled pending confirmation against the registered protocol.</td>
             </tr>
           </tbody>
         </table>

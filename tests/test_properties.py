@@ -1,12 +1,15 @@
 """Invariants that must hold for any results file, checked on seeded random files."""
 
 import random
+from decimal import Decimal
+from fractions import Fraction
 
 import pytest
 
 from ridi_check.analysis import analyse
 from ridi_check.contract import parse_results, run_column, to_csv
 from ridi_check.report import build_summary, review_table
+from ridi_check.statistics import exact_conditional_test_from_analysis
 
 STABLE = {"stable_regression", "stable_improvement", "stable_change"}
 UNCONFIRMED = {"regression_unconfirmed", "improvement_unconfirmed", "change_unconfirmed"}
@@ -57,6 +60,33 @@ def test_invariants(seed):
             assert len(b) == 1 or len(u) == 1
     stable_or_unconfirmed = sum(a.counts.get(s, 0) for s in STABLE | UNCONFIRMED)
     assert stable_or_unconfirmed <= a.changed      # every such case differs on the first run
+
+    tested = summary["exact_conditional_test"]
+    assert tested["status"] == "implementation pending confirmation against the registered protocol"
+    assert tested["n_items"] == a.confirmable
+    assert tested["excluded_missing_second_run"] == a.n_compared - a.confirmable
+    assert tested["registered_protocol"]["reproduced"] is False
+    if tested["n_items"] == 0:
+        assert tested["exceeds_both"] is None
+    else:
+        both = tested["exceeds_both"]
+        effect = Fraction(int(both["effect_change_minus_larger_rerun_rate"]["numerator"]),
+                          int(both["effect_change_minus_larger_rerun_rate"]["denominator"]))
+        assert effect == Fraction(
+            tested["change_count"] - max(tested["current_rerun_count"], tested["proposed_rerun_count"]),
+            tested["n_items"],
+        )
+        for side in (tested["versus_current"], tested["versus_proposed"]):
+            p = Fraction(int(side["p_value_one_sided"]["numerator"]), int(side["p_value_one_sided"]["denominator"]))
+            assert 0 <= p <= 1
+            assert side["change_only"] + side["floor_only"] + side["concordant"] == tested["n_items"]
+            if side["interval_95"] is not None:
+                point = Fraction(int(side["effect_change_rate_minus_rerun_rate"]["numerator"]),
+                                 int(side["effect_change_rate_minus_rerun_rate"]["denominator"]))
+                assert Decimal(side["interval_95"]["low"]) <= Decimal(point.numerator) / Decimal(point.denominator)
+                assert Decimal(point.numerator) / Decimal(point.denominator) <= Decimal(side["interval_95"]["high"])
+        again = exact_conditional_test_from_analysis(a)
+        assert again["exceeds_both"]["p_value_one_sided"] == both["p_value_one_sided"]
 
     if key:
         first = summary["first_run"]
