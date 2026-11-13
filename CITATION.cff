@@ -38,24 +38,27 @@ references:
   - type: report
     title: "RIDI-24 preregistration"
     authors:
-      - family-names: NooR
-        given-names: Professor
+      - family-names: Noor
+        given-names: Adeeb
+        orcid: https://orcid.org/0000-0002-8251-1853
         affiliation: King Abdulaziz University
     doi: 10.17605/OSF.IO/7UZV5
     url: https://osf.io/7uzv5
   - type: report
     title: "Commercial replication addendum"
     authors:
-      - family-names: NooR
-        given-names: Professor
+      - family-names: Noor
+        given-names: Adeeb
+        orcid: https://orcid.org/0000-0002-8251-1853
         affiliation: King Abdulaziz University
     doi: 10.17605/OSF.IO/ANBJD
     url: https://osf.io/anbjd
   - type: unpublished
     title: "Identical relevance grades cannot certify retrieval-augmented AI answers"
     authors:
-      - family-names: NooR
-        given-names: Professor
+      - family-names: Noor
+        given-names: Adeeb
+        orcid: https://orcid.org/0000-0002-8251-1853
         affiliation: King Abdulaziz University
     year: 2026
     notes: "Manuscript under review. Preprint forthcoming."
