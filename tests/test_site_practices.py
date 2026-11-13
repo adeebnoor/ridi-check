@@ -26,11 +26,12 @@ def test_pages_share_landmarks_metadata_and_the_citation():
         assert "SoftwareSourceCode" in page and "ScholarlyArticle" in page, name
         assert 'name="citation_title"' in page and 'name="citation_author"' in page, name
         assert 'name="citation_publication_date" content="2026/11/12"' in page, name
-        assert "[Zenodo DOI to be added]" in page, name
+        assert "10.5281/zenodo.24193754" in page, name
+        assert "[Zenodo DOI to be added]" not in page, name
         assert "No trackers" in page, name
         assert "Changelog 0.10.1" in page, name
         assert "Nature" not in page and "accepted" not in page.lower(), name
-        assert "10.5281" not in page, name
+        assert 'name="citation_doi" content="10.5281/zenodo.24193754"' in page, name
 
 
 def test_sitemap_and_robots_name_the_public_pages():

@@ -175,7 +175,10 @@ def test_citation_files_do_not_invent_a_zenodo_record():
     assert "10.17605/OSF.IO/7UZV5" in citation
     assert "10.17605/OSF.IO/ANBJD" in citation
     assert "Manuscript under review" in citation
-    assert "10.5281" not in citation
+    assert "doi: 10.5281/zenodo.24193754" in citation
+    assert "10.5281/zenodo.24193755" in citation
+    assert "family-names: Noor" in citation and "given-names: Adeeb" in citation
+    assert "https://orcid.org/0000-0002-8251-1853" in citation
     zenodo = json.loads((ROOT / ".zenodo.json").read_text(encoding="utf-8"))
     assert zenodo["upload_type"] == "software"
     assert zenodo["license"] == "MIT"

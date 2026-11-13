@@ -5,9 +5,18 @@ message: >-
   review and is not yet a publication. Cite that work as under review.
 type: software
 authors:
-  - family-names: NooR
-    given-names: Professor
+  - family-names: Noor
+    given-names: Adeeb
+    orcid: https://orcid.org/0000-0002-8251-1853
     affiliation: King Abdulaziz University
+doi: 10.5281/zenodo.24193754
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.24193754
+    description: Concept DOI for all versions of this software
+  - type: doi
+    value: 10.5281/zenodo.24193755
+    description: Version DOI for the snapshot of commit 9ea26b8
 repository-code: https://github.com/adeebnoor/ridi-check
 url: https://adeebnoor.github.io/ridi-check/
 abstract: >-
