@@ -193,7 +193,22 @@ svg{display:block}
 .closing-github{font-weight:710;color:#b3f7ec;font-size:13px;display:inline-flex;gap:10px}
 .closing-github:hover{text-decoration:underline}
 .site-footer{background:#070d18;border-top:1px solid #273c4d}
-.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:35px;padding-block:33px}
+.footer-affiliation{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;padding-top:26px}
+.affiliation{display:block;max-width:min(440px,100%);line-height:0}
+.affiliation img{width:100%;height:auto}
+.affiliation-name{margin:0;color:#d5e4f0;font-size:14px;line-height:1.45;max-width:28rem}
+.figure{margin:22px 0 4px;background:#0e1a2b;border:1px solid #2c455c;border-radius:16px;padding:14px 14px 8px}
+.figure-scroll{overflow-x:auto}
+.figure-scroll svg{display:block;width:100%;height:auto}
+.diagram-flow{min-width:340px}
+.diagram-chart{min-width:740px}
+
+.figure text{font-family:"Segoe UI",Arial,sans-serif;fill:#e8f4fb}
+.figure text.muted{fill:#9eb6c9}
+.figure text.accent{fill:#5be3d7}
+.figure text.warn{fill:#e2b15a}
+.figure figcaption{margin:10px 2px 6px;color:#b7c9d8;font-size:14px;line-height:1.55}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:35px;padding-block:22px 33px}
 .footer-brand{display:inline-flex;gap:10px;align-items:center;color:#eff9ff;font-size:15px;font-weight:800;white-space:nowrap}
 .footer-center{display:flex;flex-direction:column;gap:4px;text-align:center;color:#8da1b7;font-size:13px;max-width:36rem}
 .footer-copy{color:#9aafc3}

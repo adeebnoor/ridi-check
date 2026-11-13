@@ -6,6 +6,7 @@ library API may change between minor versions.
 ## Unreleased
 
 ### Added
+- Inline diagrams on the home, science, and reproducibility pages: the methodology flow, an illustrative score-versus-answers picture with no measured counts, the discordant cells b and c, and the reported H1c intervals against a zero line. The footer carries the official Faculty of Computing and Information Technology wordmark from kau.edu.sa.
 - The home page now opens with who the audit is for, what it adds beside aggregate-score tools, a 60-second demo command with the recorded gate output, the unmet commercial H1c result, and a direct link to the limitations page. The reading is in `docs/EXPERT_REVIEW.md`.
 - The public site shares one navigation bar and footer, a How to cite block taken from `CITATION.cff`,
   citation and schema.org metadata, a content-security-policy meta tag, `robots.txt`, `sitemap.xml`,
