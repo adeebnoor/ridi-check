@@ -6,6 +6,7 @@ library API may change between minor versions.
 ## Unreleased
 
 ### Added
+- The home page now opens with who the audit is for, what it adds beside aggregate-score tools, a 60-second demo command with the recorded gate output, the unmet commercial H1c result, and a direct link to the limitations page. The reading is in `docs/EXPERT_REVIEW.md`.
 - The public site shares one navigation bar and footer, a How to cite block taken from `CITATION.cff`,
   citation and schema.org metadata, a content-security-policy meta tag, `robots.txt`, `sitemap.xml`,
   and `404.html`. `tools/check_links.py` checks local links. Cite this software with concept DOI

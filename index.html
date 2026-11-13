@@ -16,7 +16,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="color-scheme" content="dark">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-eAqke3eV3Cp9kw2D+h3tDDb1AWBl4eLuBOoeFe/ksQY='; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-eAqke3eV3Cp9kw2D+h3tDDb1AWBl4eLuBOoeFe/ksQY='; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="citation_title" content="ridi-check">
   <meta name="citation_doi" content="10.5281/zenodo.24193754">
   <meta name="citation_author" content="Professor NooR">
@@ -65,10 +65,10 @@
       <div class="hero-copy">
         <div class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span><span data-i18n="eyebrow">OPEN-SOURCE AI UPDATE ASSURANCE</span><span class="eyebrow-line"></span><span class="eyebrow-v">v0.10.1</span></div>
         <h1 id="heroTitle"><span data-i18n="heroLine1">Your benchmark</span><span data-i18n="heroLine2">can stay the same.</span><span class="hero-em" data-i18n="heroLine3">The decision may not.</span></h1>
-        <p class="hero-lead" data-i18n="heroLead">Model swaps, prompt edits, and retrieval changes can alter individual answers on matched items while an aggregate score stays put. Repeated runs estimate an execution floor. The release gate is an application of the item-level labels, not a certificate.</p>
+        <p class="hero-lead" data-i18n="heroLead">A model update, a prompt edit, or a retrieval change can leave an aggregate score, or a relevance grade, looking the same and still change the answers a person receives. RIDI Check is an item-level release audit: matched items, repeated runs, an execution floor, and an exact conditional test beside the rounded comparison. The release gate can fail a build. It is not a certificate.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="./web/ridi-update-check.html"><span data-i18n="heroCta">Explore the live demo</span><span aria-hidden="true">↗</span></a>
-          <a class="btn btn-outline btn-lg" href="#evidence"><span data-i18n="heroSecondary">Inspect signed evidence</span><span aria-hidden="true">↓</span></a>
+          <a class="btn btn-primary btn-lg" href="#quickstart"><span data-i18n="heroCta">60-second quickstart</span><span aria-hidden="true">↓</span></a>
+          <a class="btn btn-outline btn-lg" href="#not-for"><span data-i18n="heroSecondary">When not to use it</span><span aria-hidden="true">↓</span></a>
         </div>
         <div class="hero-trust">
           <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-5"/></svg><span data-i18n="trustOpen">Open source</span></span>
@@ -122,6 +122,139 @@
         </div>
       </div>
     </div>
+
+    <section class="section shell" id="why-use" aria-labelledby="whyUseTitle">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">00 /</span> <span data-i18n="doorKicker">WHY USE IT</span></span>
+        <div class="intro-grid">
+          <h2 id="whyUseTitle" data-i18n="doorTitle">The score can hold still while the answers move.</h2>
+          <p data-i18n="doorLead">That is the risk. If you ship, evaluate, or review an update, an unchanged average is not evidence that the answers people receive stayed the same.</p>
+        </div>
+      </div>
+      <div class="principles">
+        <article class="principle"><div class="principle-icon"><span>P</span></div><h3 data-i18n="whoPracTitle">Practitioner</h3><p data-i18n="whoPracBody">You are about to change a prompt, a model, or the passages a system retrieves. You need the cases that moved, and a gate that can stop the build, before users see the new answers.</p></article>
+        <article class="principle"><div class="principle-icon"><span>E</span></div><h3 data-i18n="whoEvalTitle">Evaluator</h3><p data-i18n="whoEvalBody">A task score answers a different question. RIDI Check reports item-level transitions on the same case ids, next to how often each version disagrees with itself.</p></article>
+        <article class="principle"><div class="principle-icon"><span>R</span></div><h3 data-i18n="whoRegTitle">Reviewer</h3><p data-i18n="whoRegBody">You need a record you can re-read: matched items, repeated runs, and a stated limit. A gate failure is an application of those labels. It is not clearance to deploy.</p></article>
+      </div>
+    </section>
+
+    <section class="section method-section" id="contribution" aria-labelledby="contribTitle">
+      <div class="shell">
+        <div class="section-intro">
+          <span class="section-kicker"><span class="kicker-index">·</span> <span data-i18n="contribKicker">WHAT IT ADDS</span></span>
+          <div class="intro-grid">
+            <h2 id="contribTitle" data-i18n="contribTitle">An item-level audit, not another aggregate score.</h2>
+            <p data-i18n="contribBody">HELM, lm-evaluation-harness, and Inspect are built to configure, score, and log evaluations. Their usual reported unit is a task score. This repository has not run them on the same items and does not claim to outrank them. What ridi-check adds is a report of item-level transitions on matched items, set next to an execution floor from repeated runs, with an exact conditional test beside the rounded-rate comparison, and a release gate that can fail a build. The exact test is labelled implementation pending confirmation against the registered protocol. The gate does not certify the system.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="quickstart" aria-labelledby="quickTitle">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">60s</span> <span data-i18n="quickKicker">QUICKSTART</span></span>
+        <div class="intro-grid">
+          <h2 id="quickTitle" data-i18n="quickTitle">Install, run the offline demo, read the gate.</h2>
+          <p data-i18n="quickBody">The demo is a fictional library handbook and a deterministic toy assistant. It checks the mechanism. It is not a model study. The lines below are the gate output already recorded for that demo in this repository.</p>
+        </div>
+      </div>
+      <div class="start-grid">
+        <div class="code-window">
+          <div class="code-header"><span>TERMINAL</span><button type="button" id="copyQuick" data-copy="pip install ridi-check&#10;ridi-check demo" aria-label="Copy installation commands" data-i18n-aria="copyAria"><span data-i18n="copyLabel">Copy</span></button></div>
+          <pre><code><span class="code-cmd">pip install ridi-check</span>
+<span class="code-cmd">ridi-check demo</span></code></pre>
+        </div>
+        <div class="code-window">
+          <div class="code-header"><span data-i18n="sampleCaption">SAMPLE OUTPUT · SYNTHETIC DEMO</span></div>
+          <pre><code>stable_regression  case q02
+stable_regression  case q09
+stable_regression  case q18
+stable_regression  case q25
+stable regressions: 4 (limit 0) - over the limit
+gate: a limit was exceeded</code></pre>
+        </div>
+      </div>
+      <p class="evidence-footnote" data-i18n="quickNote">Question q02 is “How often must membership be renewed?” The handbook is constructed. Four stable regressions are enough for the strict gate to exit 1. That is a test of the software, not of a library.</p>
+    </section>
+
+    <section class="section shell" id="worked" aria-labelledby="workedTitle">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">·</span> <span data-i18n="workedKicker">A REAL RESULT, INCLUDING THE NULL</span></span>
+        <div class="intro-grid">
+          <h2 id="workedTitle" data-i18n="workedTitle">The preregistered commercial replication did not meet its criterion.</h2>
+          <p data-i18n="workedBody">RIDI-CONFIRM-C, OSF DOI 10.17605/OSF.IO/ANBJD. Criterion H1c was support in at least 2 of 3 models after Holm. It was not met. The figures below are the reported result. They were not recomputed from files in this repository. An overlap count for changed items was not in the public files that could be read from here, so it is not shown.</p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <caption data-i18n="workedCaption">Reported H1c differences. Not recomputed here.</caption>
+          <thead>
+            <tr>
+              <th scope="col" data-i18n="workedModel">Model</th>
+              <th scope="col" data-i18n="workedEstimate">Reported difference</th>
+              <th scope="col" data-i18n="workedInterval">Interval</th>
+              <th scope="col" data-i18n="workedCall">Preregistered reading</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Gemini 3.8 Flash</th>
+              <td>+3.47 points</td>
+              <td>[2.47, 4.52]</td>
+              <td data-i18n="workedYes">Supported</td>
+            </tr>
+            <tr>
+              <th scope="row">GPT-5.4 mini</th>
+              <td>+0.98 points</td>
+              <td>[-0.24, 2.21]</td>
+              <td data-i18n="workedNo">Not supported</td>
+            </tr>
+            <tr>
+              <th scope="row">Claude Sonnet 5.5</th>
+              <td>+0.74 points</td>
+              <td>[-0.23, 1.74]</td>
+              <td data-i18n="workedNo">Not supported</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="evidence-footnote"><span data-i18n="workedSource">Source: the reported commercial replication on this site, registration</span> <a href="https://doi.org/10.17605/OSF.IO/ANBJD" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/ANBJD</a>. <a href="./research.html#replication"><span data-i18n="workedMore">The same table, with the science-page wording</span></a>.</p>
+    </section>
+
+    <section class="section shell" id="audience" aria-labelledby="audienceTitle">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">·</span> <span data-i18n="audienceKicker">WHO IT IS FOR</span></span>
+        <div class="intro-grid">
+          <h2 id="audienceTitle" data-i18n="audienceTitle">Use it when the unit of harm is one answer.</h2>
+          <p data-i18n="audienceBody">Use it to compare two versions of one system on the same case ids. Do not use it to rank models on a public leaderboard, to clear a clinical system, or to decide that an answer is correct when you have no answer key. Without a key, a difference is a change, not a regression.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="faq" aria-labelledby="faqTitle">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">·</span> <span data-i18n="faqKicker">FAQ</span></span>
+        <h2 id="faqTitle" data-i18n="faqTitle">Short answers, with the limits left in.</h2>
+      </div>
+      <div class="principles">
+        <article class="principle"><h3 data-i18n="faq1q">Does a model judge the answers?</h3><p data-i18n="faq1a">No. Scoring is exact match after normalisation, or a function you supply. A judge would add its own error.</p></article>
+        <article class="principle"><h3 data-i18n="faq2q">Is the exact test the registered bootstrap?</h3><p data-i18n="faq2a">No. The registered analysis is a paired bootstrap with a 2-point margin. The package reports an exact conditional binomial test and labels it pending confirmation. The rounded-rate comparison is unchanged.</p></article>
+        <article class="principle"><h3 data-i18n="faq3q">What if there is no answer key?</h3><p data-i18n="faq3a">The report lists changes, not regressions. You judge which changes are worse. The release gate can count those judgments. It still does not certify the system.</p></article>
+      </div>
+    </section>
+
+    <section class="section method-section" id="not-for" aria-labelledby="notTitle">
+      <div class="shell">
+        <div class="section-intro">
+          <span class="section-kicker"><span class="kicker-index">×</span> <span data-i18n="notKicker">WHEN NOT TO USE IT</span></span>
+          <div class="intro-grid">
+            <h2 id="notTitle" data-i18n="notTitle">A gate failure is not clearance, and a pass is not either.</h2>
+            <p data-i18n="notBody">Do not use ridi-check as clinical clearance, as a ranking against HELM, Inspect, or lm-evaluation-harness, or as proof that a stable answer is a correct one. Two runs are a thin execution floor. The limitations page is the list, not a footnote.</p>
+          </div>
+        </div>
+        <p><a class="btn btn-outline" href="./limitations.html"><span data-i18n="notLink">Read the limitations</span><span aria-hidden="true">↗</span></a></p>
+      </div>
+    </section>
 
     <section class="section shell" id="problem">
       <div class="section-intro">
