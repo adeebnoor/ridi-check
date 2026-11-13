@@ -92,6 +92,16 @@ pytest -q</pre>
 ridi-check demo</pre>
       </div>
 
+<figure class="figure">
+        <div class="figure-scroll">
+          <svg class="diagram-flow" role="img" aria-labelledby="reproTitleId reproDescId" viewBox="0 0 340 392">
+            <title id="reproTitleId" data-i18n="reproTitle">Reproducibility path</title>
+            <desc id="reproDescId" data-i18n="reproDesc">Four steps for runs that are in this repository: a frozen record, a pinned command and seed, a signed run, then a checksum you can recompute. The commercial replication is not on this path.</desc>
+            <rect x="24" y="8" width="292" height="74" rx="12" fill="#13283a" stroke="#3d6f78"/><text class="accent" x="46" y="52" font-size="18">1</text><text x="76" y="40" font-size="16">Frozen record</text><text class="muted" x="76" y="62" font-size="14">Inputs fixed before the run</text><line x1="170" y1="82" x2="170" y2="104" stroke="#5be3d7" stroke-width="2"/><rect x="24" y="104" width="292" height="74" rx="12" fill="#13283a" stroke="#3d6f78"/><text class="accent" x="46" y="148" font-size="18">2</text><text x="76" y="136" font-size="16">Pinned command and seed</text><text class="muted" x="76" y="158" font-size="14">The command is in the repo</text><line x1="170" y1="178" x2="170" y2="200" stroke="#5be3d7" stroke-width="2"/><rect x="24" y="200" width="292" height="74" rx="12" fill="#13283a" stroke="#3d6f78"/><text class="accent" x="46" y="244" font-size="18">3</text><text x="76" y="232" font-size="16">Signed run</text><text class="muted" x="76" y="254" font-size="14">A GitHub Actions record</text><line x1="170" y1="274" x2="170" y2="296" stroke="#5be3d7" stroke-width="2"/><rect x="24" y="296" width="292" height="74" rx="12" fill="#13283a" stroke="#3d6f78"/><text class="accent" x="46" y="340" font-size="18">4</text><text x="76" y="328" font-size="16">Checksum</text><text class="muted" x="76" y="350" font-size="14">Recompute it yourself</text>
+          </svg>
+        </div>
+        <figcaption data-i18n="reproCap">Path for the runs in this repository. The commercial replication is not on this path.</figcaption>
+      </figure>
       <h2>Same weights, prompt update <span lang="ar">/ الأوزان نفسها</span></h2>
       <p data-lang-block="en">Frozen record: <code>experiments/same_weights_prompt/PRE_RUN_FROZEN.json</code>. Both arms use one Qwen2.5-1.5B GGUF. Decoding is temperature 0 and seed 20261113. The signed run is GitHub Actions <a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer">43317397792</a>. A fixed seed did not make every repeated answer identical across Windows and Ubuntu.</p>
       <p data-lang-block="ar" lang="ar" hidden>السجل المجمّد: <code>experiments/same_weights_prompt/PRE_RUN_FROZEN.json</code>. الذراعان يستخدمان ملف GGUF واحداً من Qwen2.5-1.5B. فك الترميز بحرارة 0 وبذرة 20261113. التشغيل الموقّع هو GitHub Actions <a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer">43317397792</a>. البذرة الثابتة لم تجعل كل إجابة متكررة متطابقة بين Windows وUbuntu.</p>
@@ -162,6 +172,16 @@ ridi-check gate ridi-out/results.csv --strict --check-scores</pre>
     </div>
   </section>
   <footer class="site-footer">
+  <div class="shell footer-affiliation">
+    <a class="affiliation" href="https://fcit.kau.edu.sa/" target="_blank" rel="noopener noreferrer">
+      <!-- Official wordmark of the Faculty of Computing and Information Technology, King Abdulaziz University.
+           Downscaled from the PNG served by kau.edu.sa on https://kau.edu.sa/faculty/en/cis
+           (https://kau.edu.sa/web/static?path=uploads/2026/Feb/app/984crwxkyxKZ1OsR.png ; alt on that page: "KAU Logo").
+           Light wordmark for a dark ground. Not redrawn. -->
+      <img src="./assets/fcit-kau.png" width="1600" height="168" alt="Faculty of Computing and Information Technology, King Abdulaziz University">
+    </a>
+    <p class="affiliation-name" data-i18n="affiliation">Faculty of Computing and Information Technology, King Abdulaziz University</p>
+  </div>
     <div class="shell footer-inner">
       <a class="footer-brand" href="./index.html" aria-label="RIDI Check home"><span class="brand-symbol mini" aria-hidden="true"><span></span><span></span><span></span></span> RIDI Check</a>
       <div class="footer-center"><span data-i18n="footerTag">Open-source research software · Evidence before assertion</span><span data-i18n="privacyFoot">No trackers. These pages are static. Nothing you do here is sent to a server we run.</span><span class="footer-copy">Version 0.10.1 · © <span id="year">2026</span> RIDI Check</span></div>

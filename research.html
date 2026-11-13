@@ -88,6 +88,32 @@
         <h3>Exact test</h3>
         <p>The manuscript describes an exact test for answer changes beyond that floor. The test asks whether the item-level changes are larger than re-execution noise, rather than whether an average moved.</p>
         <p>On the questions that were asked twice on both versions, mark two things: did the first answers of the two versions differ, and did a version’s first answer differ from its own second answer? Among the questions where those marks disagree, the exact conditional test asks whether between-version changes outnumber re-run disagreements by more than a fair coin would allow. The p-value is that exact chance. The effect is the change rate minus the larger re-run rate. The interval is an exact interval for that paired difference, given the questions where the two marks disagree.</p>
+<figure class="figure">
+        <div class="figure-scroll">
+          <svg class="diagram-flow" role="img" aria-labelledby="gridTitleEn gridDescEn" viewBox="0 0 340 260">
+            <title id="gridTitleEn" data-i18n="gridTitle">Discordant cells b and c</title>
+            <desc id="gridDescEn" data-i18n="gridDesc">A two-by-two. b is a between-version change where that version's re-run agrees. c is no between-version change where the re-run disagrees. Cells where the two marks agree are set aside. The exact test is a fair-coin count on b plus c.</desc>
+            
+            <text class="muted" x="160" y="36" text-anchor="middle" font-size="13">re-run agrees</text>
+            <text class="muted" x="272" y="36" text-anchor="middle" font-size="13">re-run disagrees</text>
+            <text class="muted" x="4" y="92" font-size="13">change = 0</text>
+            <text class="muted" x="4" y="176" font-size="13">change = 1</text>
+            <rect x="112" y="52" width="96" height="72" rx="8" fill="#13283a" stroke="#3d5568"/>
+            <rect x="216" y="52" width="112" height="72" rx="8" fill="#14343a" stroke="#5be3d7"/>
+            <rect x="112" y="136" width="96" height="72" rx="8" fill="#14343a" stroke="#5be3d7"/>
+            <rect x="216" y="136" width="112" height="72" rx="8" fill="#13283a" stroke="#3d5568"/>
+            <text class="muted" x="160" y="94" text-anchor="middle" font-size="13">set aside</text>
+            <text x="272" y="84" text-anchor="middle" font-size="16">c</text>
+            <text class="muted" x="272" y="104" text-anchor="middle" font-size="13">noise only</text>
+            <text x="160" y="168" text-anchor="middle" font-size="16">b</text>
+            <text class="muted" x="160" y="188" text-anchor="middle" font-size="13">change only</text>
+            <text class="muted" x="272" y="178" text-anchor="middle" font-size="13">set aside</text>
+            <text x="8" y="236" font-size="14">The coin toss uses b + c only.</text>
+    
+          </svg>
+        </div>
+        <figcaption data-i18n="gridCap">b is a between-version change with no re-run disagreement. c is a re-run disagreement with no between-version change. The test counts only those discordant cells.</figcaption>
+      </figure>
         <h3>Release gate</h3>
         <p>The release gate is an application of the item labels. It can stop a build when stable regressions exceed a limit you set. It is not the exact test, and it is not a certificate that a system is safe to deploy.</p>
         <h3>Labelled examples</h3>
@@ -134,6 +160,32 @@
         <h3>الاختبار الدقيق</h3>
         <p>تصف المخطوطة اختباراً دقيقاً لتغيّرات الإجابات التي تتجاوز هذه الأرضية. يسأل الاختبار إن كانت التغيّرات على مستوى البند أكبر من ضجيج إعادة التنفيذ، لا إن كان المتوسط قد تحرّك.</p>
         <p>على الأسئلة التي طُرحت مرتين على كلتا النسختين، تُعلَّم علامتان: هل اختلفت إجابتَا التشغيل الأول بين النسختين، وهل اختلفت إجابة النسخة الأولى عن تشغيلها الثاني؟ بين الأسئلة التي تختلف فيها العلامتان، يسأل الاختبار الشرطي الدقيق إن كانت تغيّرات النسختين أكثر من اختلافات إعادة التشغيل بما يفوق عملة عادلة. قيمة p هي ذلك الاحتمال الدقيق. الأثر هو نسبة التغيّر ناقص أكبر نسبة إعادة تشغيل. الفترة دقيقة لهذا الفرق المزدوج، بشرط الأسئلة التي اختلفت علامتاها.</p>
+<figure class="figure">
+        <div class="figure-scroll">
+          <svg class="diagram-flow" role="img" aria-labelledby="gridTitleAr gridDescAr" viewBox="0 0 340 260">
+            <title id="gridTitleAr" data-i18n="gridTitle">Discordant cells b and c</title>
+            <desc id="gridDescAr" data-i18n="gridDesc">A two-by-two. b is a between-version change where that version's re-run agrees. c is no between-version change where the re-run disagrees. Cells where the two marks agree are set aside. The exact test is a fair-coin count on b plus c.</desc>
+            
+            <text class="muted" x="160" y="36" text-anchor="middle" font-size="13">re-run agrees</text>
+            <text class="muted" x="272" y="36" text-anchor="middle" font-size="13">re-run disagrees</text>
+            <text class="muted" x="4" y="92" font-size="13">change = 0</text>
+            <text class="muted" x="4" y="176" font-size="13">change = 1</text>
+            <rect x="112" y="52" width="96" height="72" rx="8" fill="#13283a" stroke="#3d5568"/>
+            <rect x="216" y="52" width="112" height="72" rx="8" fill="#14343a" stroke="#5be3d7"/>
+            <rect x="112" y="136" width="96" height="72" rx="8" fill="#14343a" stroke="#5be3d7"/>
+            <rect x="216" y="136" width="112" height="72" rx="8" fill="#13283a" stroke="#3d5568"/>
+            <text class="muted" x="160" y="94" text-anchor="middle" font-size="13">set aside</text>
+            <text x="272" y="84" text-anchor="middle" font-size="16">c</text>
+            <text class="muted" x="272" y="104" text-anchor="middle" font-size="13">noise only</text>
+            <text x="160" y="168" text-anchor="middle" font-size="16">b</text>
+            <text class="muted" x="160" y="188" text-anchor="middle" font-size="13">change only</text>
+            <text class="muted" x="272" y="178" text-anchor="middle" font-size="13">set aside</text>
+            <text x="8" y="236" font-size="14">The coin toss uses b + c only.</text>
+    
+          </svg>
+        </div>
+        <figcaption data-i18n="gridCap">b is a between-version change with no re-run disagreement. c is a re-run disagreement with no between-version change. The test counts only those discordant cells.</figcaption>
+      </figure>
         <h3>بوابة الإصدار</h3>
         <p>بوابة الإصدار تطبيق لتسميات البنود. يمكنها إيقاف البناء عندما تتجاوز التراجعات الثابتة حداً تضعه أنت. ليست الاختبار الدقيق، وليست شهادة بأن النظام آمن للنشر.</p>
         <h3>أمثلة موسومة</h3>
@@ -157,9 +209,18 @@
       </div>
 
       <h2 id="replication">Commercial replication <span lang="ar">/ التكرار التجاري</span></h2>
-      <p data-i18n="replicationLine">Preregistered commercial replication: criterion H1c, support in at least 2 of 3 models after Holm, was not met. Gemini 3.8 Flash +3.47 points [2.47, 4.52] was supported. GPT-5.4 mini +0.98 [-0.24, 2.21] and Claude Sonnet 5.5 +0.74 [-0.23, 1.74] were not. The magnitude is model-dependent and has to be measured for each model.</p>
+      <p data-i18n="replicationLine">Preregistered commercial replication: criterion H1c, support in at least 2 of 3 models after Holm, was not met. Gemini 3.8 Flash +0.0347 [0.0247, 0.0452] was supported. GPT-5.4 mini +0.0098 [-0.0024, 0.0221] and Claude Sonnet 5.5 +0.0074 [-0.0023, 0.0174] were not. The same reported differences were previously written here as percentage points: Gemini 3.8 Flash +3.47 points [2.47, 4.52], GPT-5.4 mini +0.98 [-0.24, 2.21], and Claude Sonnet 5.5 +0.74 [-0.23, 1.74]. +3.47 points is +0.0347. The magnitude is model-dependent and has to be measured for each model.</p>
       <p data-lang-block="en">Reporting a registered criterion that did not hold is part of the registration. The partial support for one model is not rounded up into a general effect. These figures are the reported result. They were not recomputed from files in this repository.</p>
       <p data-lang-block="ar" lang="ar" hidden>الإبلاغ عن معيار مسجّل لم يتحقق جزء من التسجيل. الدعم الجزئي لنموذج واحد لا يُرفع إلى أثر عام. هذه الأرقام نتيجة مُبلَّغة ولم تُعد حساباتها من ملفات هذا المستودع.</p>
+<figure class="figure">
+        <div class="figure-scroll">
+          <svg class="diagram-chart" role="img" aria-labelledby="scienceChartTitle scienceChartDesc" viewBox="0 0 740 324">
+            <title id="scienceChartTitle" data-i18n="chartTitle">Reported H1c differences</title>
+            <desc id="scienceChartDesc" data-i18n="chartDesc">Reported H1c differences with intervals. The dashed line is zero. Gemini 3.8 Flash +0.0347 [0.0247, 0.0452] is above zero and was supported. GPT-5.4 mini +0.0098 [-0.0024, 0.0221] crosses zero and was not supported. Claude Sonnet 5.5 +0.0074 [-0.0023, 0.0174] crosses zero and was not supported. Source OSF DOI 10.17605/OSF.IO/ANBJD. Not recomputed here.</desc>
+            <line x1="329.1" y1="48" x2="329.1" y2="278" stroke="#e2b15a" stroke-width="2" stroke-dasharray="4 4"/><text class="warn" x="329.1" y="40" text-anchor="middle" font-size="14">null (0)</text><line x1="228" y1="278" x2="700" y2="278" stroke="#3d5568"/><line x1="261.7" y1="278" x2="261.7" y2="284" stroke="#3d5568"/><text class="muted" x="261.7" y="300" text-anchor="middle" font-size="13">-0.01</text><line x1="329.1" y1="278" x2="329.1" y2="284" stroke="#3d5568"/><text class="muted" x="329.1" y="300" text-anchor="middle" font-size="13">0</text><line x1="464.0" y1="278" x2="464.0" y2="284" stroke="#3d5568"/><text class="muted" x="464.0" y="300" text-anchor="middle" font-size="13">0.02</text><line x1="598.9" y1="278" x2="598.9" y2="284" stroke="#3d5568"/><text class="muted" x="598.9" y="300" text-anchor="middle" font-size="13">0.04</text><text x="12" y="78" font-size="15">Gemini 3.8 Flash</text><text class="muted" x="12" y="98" font-size="13">+0.0347  above 0</text><line x1="495.7" y1="86" x2="633.9" y2="86" stroke="#8de4d8" stroke-width="3"/><line x1="495.7" y1="79" x2="495.7" y2="93" stroke="#8de4d8" stroke-width="2"/><line x1="633.9" y1="79" x2="633.9" y2="93" stroke="#8de4d8" stroke-width="2"/><circle cx="563.1" cy="86" r="5" fill="#e8f4fb"/><text x="12" y="148" font-size="15">GPT-5.4 mini</text><text class="muted" x="12" y="168" font-size="13">+0.0098  crosses 0</text><line x1="313.0" y1="156" x2="478.2" y2="156" stroke="#8de4d8" stroke-width="3"/><line x1="313.0" y1="149" x2="313.0" y2="163" stroke="#8de4d8" stroke-width="2"/><line x1="478.2" y1="149" x2="478.2" y2="163" stroke="#8de4d8" stroke-width="2"/><circle cx="395.2" cy="156" r="5" fill="#e8f4fb"/><text x="12" y="218" font-size="15">Claude Sonnet 5.5</text><text class="muted" x="12" y="238" font-size="13">+0.0074  crosses 0</text><line x1="313.6" y1="226" x2="446.5" y2="226" stroke="#8de4d8" stroke-width="3"/><line x1="313.6" y1="219" x2="313.6" y2="233" stroke="#8de4d8" stroke-width="2"/><line x1="446.5" y1="219" x2="446.5" y2="233" stroke="#8de4d8" stroke-width="2"/><circle cx="379.0" cy="226" r="5" fill="#e8f4fb"/>          </svg>
+        </div>
+        <figcaption data-i18n="chartCap">Reported H1c differences and intervals. The vertical line is zero. Source: OSF DOI 10.17605/OSF.IO/ANBJD. Not recomputed here.</figcaption>
+      </figure>
       <div class="table-scroll">
         <table class="data-table">
           <caption data-i18n="repCaption">Preregistered commercial replication. Figures as reported. Not recomputed in this repository.</caption>
@@ -174,20 +235,20 @@
           <tbody>
             <tr>
               <th scope="row">Gemini 3.8 Flash</th>
-              <td>+3.47 points</td>
-              <td>[2.47, 4.52]</td>
+              <td>+0.0347</td>
+              <td>[0.0247, 0.0452]</td>
               <td data-i18n="repYes">Supported</td>
             </tr>
             <tr>
               <th scope="row">GPT-5.4 mini</th>
-              <td>+0.98 points</td>
-              <td>[-0.24, 2.21]</td>
+              <td>+0.0098</td>
+              <td>[-0.0024, 0.0221]</td>
               <td data-i18n="repNo">Not supported</td>
             </tr>
             <tr>
               <th scope="row">Claude Sonnet 5.5</th>
-              <td>+0.74 points</td>
-              <td>[-0.23, 1.74]</td>
+              <td>+0.0074</td>
+              <td>[-0.0023, 0.0174]</td>
               <td data-i18n="repNo">Not supported</td>
             </tr>
           </tbody>
@@ -271,6 +332,16 @@
     </article>
   </main>
   <footer class="site-footer">
+  <div class="shell footer-affiliation">
+    <a class="affiliation" href="https://fcit.kau.edu.sa/" target="_blank" rel="noopener noreferrer">
+      <!-- Official wordmark of the Faculty of Computing and Information Technology, King Abdulaziz University.
+           Downscaled from the PNG served by kau.edu.sa on https://kau.edu.sa/faculty/en/cis
+           (https://kau.edu.sa/web/static?path=uploads/2026/Feb/app/984crwxkyxKZ1OsR.png ; alt on that page: "KAU Logo").
+           Light wordmark for a dark ground. Not redrawn. -->
+      <img src="./assets/fcit-kau.png" width="1600" height="168" alt="Faculty of Computing and Information Technology, King Abdulaziz University">
+    </a>
+    <p class="affiliation-name" data-i18n="affiliation">Faculty of Computing and Information Technology, King Abdulaziz University</p>
+  </div>
     <div class="shell footer-inner">
       <a class="footer-brand" href="./index.html" aria-label="RIDI Check home"><span class="brand-symbol mini" aria-hidden="true"><span></span><span></span><span></span></span> RIDI Check</a>
       <div class="footer-center"><span data-i18n="footerTag">Open-source research software · Evidence before assertion</span><span data-i18n="privacyFoot">No trackers. These pages are static. Nothing you do here is sent to a server we run.</span><span class="footer-copy">Version 0.10.1 · © <span id="year">2026</span> RIDI Check</span></div>
