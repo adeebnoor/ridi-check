@@ -3,6 +3,7 @@
 **See what a model or prompt update really changed in your assistant's answers, before you ship it.**
 
 [![tests](https://github.com/adeebnoor/ridi-check/actions/workflows/tests.yml/badge.svg)](https://github.com/adeebnoor/ridi-check/actions/workflows/tests.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24193754.svg)](https://doi.org/10.5281/zenodo.24193754)
 [![licence: MIT](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/badge-licence.svg)](https://github.com/adeebnoor/ridi-check/blob/main/LICENSE)
 [![Python 3.10+](https://raw.githubusercontent.com/adeebnoor/ridi-check/main/docs/img/badge-python.svg)](https://github.com/adeebnoor/ridi-check/blob/main/pyproject.toml)
 
@@ -243,8 +244,10 @@ Gemini 3.8 Flash +3.47 points [2.47, 4.52] was supported. GPT-5.4 mini +0.98 [-0
 Claude Sonnet 5.5 +0.74 [-0.23, 1.74] were not. The magnitude is model-dependent and has to be measured
 for each model. Those figures are the reported result. They are not recomputed in this repository.
 
+Cite this software with the concept DOI [10.5281/zenodo.24193754](https://doi.org/10.5281/zenodo.24193754).
+The version DOI [10.5281/zenodo.24193755](https://doi.org/10.5281/zenodo.24193755) is the snapshot of commit 9ea26b8.
 How to cite the software and the manuscript is on the science page. `CITATION.cff` and `.zenodo.json` are
-in the repository. No Zenodo record has been created.
+in the repository.
 
 ## Limitations
 

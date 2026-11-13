@@ -1,6 +1,6 @@
 {
   "title": "ridi-check",
-  "description": "Compare two versions of a retrieval-augmented assistant on matched items. Repeated runs estimate an execution floor (re-execution noise). The release gate is an application of the item-level labels. Version 0.10.1 does not compute the manuscript's exact test. The manuscript 'Identical relevance grades cannot certify retrieval-augmented AI answers' is under review; a preprint is forthcoming. This file prepares a Zenodo deposit. It is not itself a Zenodo record and it does not assign a DOI.",
+  "description": "Compare two versions of a retrieval-augmented assistant on matched items. Repeated runs estimate an execution floor (re-execution noise). The release gate is an application of the item-level labels. Version 0.10.1 does not compute the manuscript's exact test. The manuscript 'Identical relevance grades cannot certify retrieval-augmented AI answers' is under review; a preprint is forthcoming.",
   "upload_type": "software",
   "access_right": "open",
   "license": "MIT",
@@ -14,7 +14,8 @@
   ],
   "creators": [
     {
-      "name": "NooR, Professor",
+      "name": "Noor, Adeeb",
+      "orcid": "0000-0002-8251-1853",
       "affiliation": "King Abdulaziz University"
     }
   ],

@@ -8,8 +8,8 @@ library API may change between minor versions.
 ### Added
 - The public site shares one navigation bar and footer, a How to cite block taken from `CITATION.cff`,
   citation and schema.org metadata, a content-security-policy meta tag, `robots.txt`, `sitemap.xml`,
-  and `404.html`. `tools/check_links.py` checks local links. The Zenodo DOI is still
-  `[Zenodo DOI to be added]`.
+  and `404.html`. `tools/check_links.py` checks local links. Cite this software with concept DOI
+  10.5281/zenodo.24193754. Version DOI 10.5281/zenodo.24193755 is the snapshot of commit 9ea26b8.
 - `exact_conditional_test` in `summary.json`, the printed report, and `report.html`: a one-sided exact
   conditional binomial test of between-version change against each version's run-1 versus run-2
   disagreement, with the effect (change rate minus the larger re-run rate) and a conditional interval.
@@ -19,7 +19,7 @@ library API may change between minor versions.
 - Science, limitations, and reproducibility pages, with the manuscript described as under review and a
   preprint forthcoming. Preregistrations RIDI-24 (DOI 10.17605/OSF.IO/7UZV5) and the commercial addendum
   (DOI 10.17605/OSF.IO/ANBJD). The commercial replication is reported as registered: criterion H1c was not
-  met. `CITATION.cff` and `.zenodo.json` (no Zenodo record is created). `docs/STATISTICS.md`,
+  met. `CITATION.cff` and `.zenodo.json` (concept DOI 10.5281/zenodo.24193754). `docs/STATISTICS.md`,
   `docs/LIMITATIONS.md`, `docs/REPRODUCIBILITY.md`, and `docs/COMPARISON.md`.
 - `summary.json` field `execution_floor`: the same rounded-rate comparison as
   `change_exceeds_both_rerun_variations`, named as the execution floor. `exact_test_implemented` is false.
