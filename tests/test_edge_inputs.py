@@ -104,7 +104,7 @@ def test_one_run_of_each_version_is_reported_as_unconfirmed_never_as_stable(writ
     assert main(["report", results]) == 0
     out = capsys.readouterr().out
     assert "4 cases, answer-key mode" in out and "regression_unconfirmed" in out and "improvement_unconfirmed" in out
-    assert "re-run variation: current no second run, proposed no second run" in out
+    assert "execution floor (re-run variation): current no second run, proposed no second run" in out
     with open(tmp_path / "summary.json", encoding="utf-8") as f:
         summary = json.load(f)
     assert summary["states"]["stable_regression"] == 0 and summary["states"]["regression_unconfirmed"] == 1

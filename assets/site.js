@@ -14,7 +14,7 @@
     heroLine1:"قد تبقى نتيجة",
     heroLine2:"التقييم كما هي.",
     heroLine3:"لكن القرار يتغير.",
-    heroLead:"تغيير النموذج أو التعليمات أو طريقة الاسترجاع قد يغيّر إجابات فردية بينما تُخفي المتوسطات ما حدث. تفحص RIDI الإجابات المتغيرة، وثباتها عبر الإعادات، والأدلة التي تستند إليها.",
+    heroLead:"تغيير النموذج أو التعليمات أو الاسترجاع قد يغيّر إجابات فردية على بنود متطابقة بينما تبقى الدرجة الإجمالية كما هي. تقدّر التشغيلات المتكررة أرضية التنفيذ، وبوابة الإصدار تطبيق لتسميات البنود لا شهادة اعتماد.",
     heroCta:"جرّب الأداة مباشرة",
     heroSecondary:"افحص الأدلة الموقّعة",
     trustOpen:"مفتوحة المصدر",
@@ -25,18 +25,15 @@
     monitorBefore:"قبل التحديث",
     monitorAfter:"بعد التحديث",
     monitorNotEnough:"المتوسط وحده لا يُظهر الحالات",
-    monitorTransitions:"تغيّرات الإجابات الفردية",
-    case1:"هل فوجي أعلى جبل في العالم؟",
-    case2:"أول دولة استخدمت منصب الرئيس؟",
-    case3:"سن الشرب الأدنى في جميع الولايات؟",
-    case4:"جائزة مسابقة تلفزيونية؟",
-    case4state:"متذبذبة",
+    monitorTransitions:"بنود متطابقة",
+    caseItem:"بند BoolQ متطابق",
+    caseReg:"تراجع ثابت",
     flagReg:"تراجعات ثابتة",
     flagUnst:"حالات غير مستقرة",
-    releaseBlocked:"منع تمرير التحديث",
-    visualCaption:"نتائج تشغيل CPU حقيقية على GitHub · 48 سؤالًا منتقى من BoolQ · تسميات منشورة لم تُحكّم مستقلًا",
+    releaseBlocked:"بوابة الإصدار: إيقاف",
+    visualCaption:"تشغيل GitHub الموقّع · تراجعات ثابتة مقابل التسميات المنشورة: p1506 وp1574 وp2179 وp2735 · غير مستقرة عند التكرار: p0358 وp0746 وp1686 · تسميات منشورة وليست تحكيماً مستقلاً",
     ribbonTitle:"تجربة قابلة لإعادة الإنتاج، لا ادعاء تسويقي",
-    ribbonCases:"سؤالًا متطابق المدخلات",
+    ribbonCases:"بندًا متطابقًا",
     ribbonCalls:"استدعاء فعليًا للنموذج",
     ribbonRepeats:"إعادات لكل نسخة",
     ribbonProof:"افحص الإثبات",
@@ -45,8 +42,8 @@
     whyBody:"قد تبدو نسختان متقاربتين في التقرير الإجمالي، لكنهما تقدّمان إجابات مختلفة لأسئلة ذات أثر مهم. ومن دون حالات متطابقة وإعادات تشغيل وأدلة موثّقة، يسهل أن نفوّت هذه التغيّرات.",
     p1Title:"انظر لما وراء المتوسط.",
     p1Body:"اعرف أي الإجابات تغيّرت فعليًا، حتى عندما تبدو نتيجة التقييم الإجمالية مقبولة.",
-    p2Title:"ميّز التغيير من التذبذب.",
-    p2Body:"أعِد تشغيل النسختين، لتمييز التغيّر المتكرر عن الإجابة التي تتبدّل بين التشغيلات.",
+    p2Title:"افصل التغيير عن أرضية التنفيذ.",
+    p2Body:"كرّر النسختين على البنود المتطابقة. أرضية التنفيذ هي ضجيج إعادة التنفيذ. التغيير الذي لا يتجاوزها ليس دليلاً على أثر التحديث.",
     p3Title:"اجعل النتائج قابلة للتدقيق.",
     p3Body:"اربط النتائج بالمدخلات المجمّدة والسجلات والبصمات وبوابة نشر يمكنها رفض التحديث.",
     howKicker:"المنهجية",
@@ -55,11 +52,11 @@
     step1Title:"ثبّت الأسئلة والمدخلات",
     step1Body:"قارن النسخة الحالية والمقترحة على الأسئلة نفسها، مع إرفاق النصوص المسترجعة إن توفرت.",
     step2Title:"كرّر تشغيل النسختين",
-    step2Body:"سجّل الإجابات المتكررة لكشف اختلاف التشغيلات بدل افتراض أن النموذج حتمي.",
+    step2Body:"التشغيلات المتكررة تقدّر أرضية التنفيذ: كم مرة تخالف النسخة نفسها.",
     step3Title:"راجع تغيّرات كل حالة",
     step3Body:"حدّد التراجعات والتحسينات والتغيّرات الثابتة والحالات التي تتذبذب فيها الإجابات.",
-    step4Title:"تحقّق قبل النشر",
-    step4Body:"راجع الدرجات المسجّلة وأدلة التشغيل، وفعّل حدودًا صارمة في خط التكامل المستمر عند الحاجة.",
+    step4Title:"طبّق بوابة إصدار",
+    step4Body:"بوابة الإصدار تطبيق. يمكنها إيقاف البناء عندما تتجاوز التراجعات الثابتة حداً تضعه أنت. وهي لا تعتمد النظام.",
     evidenceKicker:"أدلة قابلة للتحقق",
     evidenceTitle:"أدلة تستطيع فحصها، لا أرقامًا يُطلب منك تصديقها.",
     evidenceBody:"هذه تجارب هندسية محددة النطاق، ولها ملفات تشغيل قابلة لإعادة الإنتاج وتوقيعات GitHub/Sigstore. ليست اعتمادًا سريريًا مستقلًا ولا إثباتًا للتفوّق على أطر التقييم الأخرى.",
@@ -86,9 +83,9 @@
     study3Gate:"منع للتمرير",
     readProtocol:"بروتوكول الأدلة",
     evidenceFootnote:"في BoolQ، تشير «التراجعات» إلى الاختلاف عن مفتاح الإجابات المنشور، لا بالضرورة إلى قرار خاطئ في العالم الحقيقي. توجد تسميات تتعارض مع النصوص أو تتغير مع الزمن. راجع التدقيق العلمي.",
-    researchKicker:"بحث منضبط",
+    researchKicker:"العلم",
     researchTitle:"مصممة للتدقيق لا للثقة العمياء.",
-    researchBody:"تجعل RIDI التغيّرات المرصودة أوضح للمراجعة. لكنها لا تحدّد وحدها سلامة قرار طبي أو قانوني أو عالي الخطورة، ولا تحل محل المراجعة البشرية أو تثبت ضررًا سببيًا.",
+    researchBody:"تقارن RIDI البنود المتطابقة عبر تشغيلات متكررة وتعرض التغيير إلى جانب أرضية التنفيذ. الاختبار الدقيق الموصوف في المخطوطة غير محسوب في هذه النسخة من البرنامج. ولا شيء هنا اعتماد سريري.",
     priorArtLink:"الأعمال السابقة وحدود التسميات",
     benchmarkLink:"معيار التغيّرات الاصطناعي",
     referenceLink:"المرجع التقني",
@@ -104,7 +101,7 @@
     startTitle:"ابدأ بالسؤال. اختبر التحديث.",
     startBody:"استخدم أداة المتصفح التفاعلية مع أمثلة جاهزة، أو اربط RIDI بمساعدك وشغّلها محليًا أو في CI. يحلل المتصفح ملفات CSV على جهازك.",
     startBrowserTitle:"دون تثبيت. افتح التجربة.",
-    startBrowserBody:"استكشف مثال الثلاثين حالة، أو أمثلة بأسماء أدوية خيالية للتوضيح، أو ارفع نتائجك محليًا.",
+    startBrowserBody:"استكشف مثال المكتبة ذا الثلاثين حالة، أو المجموعة الموسومة بأسماء أدوية مخترعة للتوضيح فقط، أو ارفع نتائجك محليًا.",
     startBrowserCta:"افتح أداة المتصفح",
     privacyNote:"تحليل الملفات داخل متصفحك، دون رفعها إلى خادم RIDI.",
     startDevTitle:"جاهزة للعمل المحلي وCI.",
@@ -121,7 +118,36 @@
     closingCta:"افتح RIDI Check",
     closingSource:"استكشف المشروع المفتوح",
     footerTag:"برمجية بحثية مفتوحة المصدر · الدليل قبل الادعاء",
-    footerContact:"ملاحظات واقتراحات ↗"
+    footerContact:"ملاحظات واقتراحات ↗",
+    navHome:"الرئيسية",
+    navScience:"العلم",
+    navLimits:"الحدود",
+    navRepro:"إعادة الإنتاج",
+    examplesKicker:"أمثلة موسومة",
+    examplesTitle:"أمثلة واضحة التسمية، لا ادّعاءات.",
+    examplesBody:"النصوص أدناه من ملفات هذا المستودع. المثال الطبي أسماء وآثار مخترعة للتوضيح فقط.",
+    ex1Kicker:"اصطناعي · داخل المستودع",
+    ex1Title:"دليل المكتبة، البند q02",
+    ex1Body:"السؤال: «كم مرة يجب تجديد العضوية؟» يدرجه التشغيل التجريبي ضمن التراجعات الثابتة. الدليل والإجابات مبنية للتوضيح، وليست دراسة على نموذج.",
+    ex2Kicker:"مخترع · للتوضيح فقط",
+    ex2Title:"تفاعل دوائي مخترع، البند m01",
+    ex2Body:"السؤال يستخدم الاسمين المخترعين Zorvalin وMerdapine. الجرعات والآثار مخترعة وليست إرشاداً طبياً. الأداة تعلّم هذه المجموعة بأنها للتوضيح فقط.",
+    manuscriptLine:"مخطوطة قيد المراجعة. النسخة الأولية ستصدر لاحقاً. العنوان: Identical relevance grades cannot certify retrieval-augmented AI answers.",
+    replicationLine:"تكرار تجاري مسجّل مسبقاً: المعيار H1c، أي الدعم في نموذجين على الأقل من ثلاثة بعد تصحيح Holm، لم يتحقق. Gemini 3.8 Flash +3.47 نقطة [2.47, 4.52] مدعوم. GPT-5.4 mini +0.98 [-0.24, 2.21] وClaude Sonnet 5.5 +0.74 [-0.23, 1.74] غير مدعومين. المقدار يعتمد على النموذج ويجب قياسه لكل نموذج.",
+    sciencePage:"اقرأ صفحة العلم",
+    repCaption:"التكرار التجاري المسجّل. الأرقام كما أُبلغت، ولم تُعد حساباتها في هذا المستودع.",
+    repModel:"النموذج",
+    repEstimate:"الفرق المُبلَّغ",
+    repInterval:"الفترة",
+    repCall:"قراءة التسجيل المسبق",
+    repYes:"مدعوم",
+    repNo:"غير مدعوم",
+    cmpCaption:"ماذا يقدّم كل أداة. هذا ليس ترتيباً ولا ادّعاء بأن RIDI أفضل.",
+    cmpTool:"الأداة",
+    cmpWhat:"ما هي",
+    cmpUnit:"وحدة التقرير المعتادة",
+    cmpRepeat:"التشغيلات المتكررة",
+    cmpFloor:"انتقالات البنود مقابل أرضية إعادة التنفيذ"
   };
 
   const original = new Map();
@@ -161,13 +187,26 @@
     langButton.setAttribute("aria-label", inArabic ? "Switch to English" : "التبديل إلى العربية");
     menuToggle.setAttribute("aria-label", inArabic ? "فتح القائمة" : "Open navigation");
     nav.setAttribute("aria-label", inArabic ? "روابط التنقل الرئيسية" : "Main navigation");
-    document.title = inArabic
-      ? "RIDI Check — القرارات تستحق أكثر من درجة"
-      : "RIDI Check — Decisions deserve more than a score";
+    const root = document.documentElement;
+    const titleEn = root.getAttribute("data-title-en");
+    const titleAr = root.getAttribute("data-title-ar");
+    document.title = titleEn
+      ? (inArabic ? (titleAr || titleEn) : titleEn)
+      : (inArabic
+        ? "RIDI Check — القرارات تستحق أكثر من درجة"
+        : "RIDI Check — Decisions deserve more than a score");
     const description = document.querySelector('meta[name="description"]');
-    if (description) description.setAttribute("content", inArabic
-      ? "RIDI Check تكشف اختلاف الإجابات الفردية بعد تحديث الذكاء الاصطناعي، وتوثّق الأدلة وتكرار التشغيل والتوقيع الرقمي."
-      : "RIDI Check examines how AI system updates change individual answers, not just aggregate scores. Repeat runs, inspect transitions, and verify signed evaluation evidence. Open source.");
+    const descEn = root.getAttribute("data-description-en");
+    const descAr = root.getAttribute("data-description-ar");
+    if (description) {
+      if (descEn) description.setAttribute("content", inArabic ? (descAr || descEn) : descEn);
+      else description.setAttribute("content", inArabic
+        ? "RIDI Check تكشف اختلاف الإجابات الفردية بعد تحديث الذكاء الاصطناعي، وتوثّق الأدلة وتكرار التشغيل والتوقيع الرقمي."
+        : "RIDI Check examines how AI system updates change individual answers, not just aggregate scores. Repeat runs, inspect transitions, and verify signed evaluation evidence. Open source.");
+    }
+    document.querySelectorAll("[data-lang-block]").forEach((node) => {
+      node.hidden = node.getAttribute("data-lang-block") !== language;
+    });
     if (save) saveLanguage(language);
   }
 

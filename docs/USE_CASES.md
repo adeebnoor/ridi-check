@@ -56,8 +56,8 @@ still make the assistant less consistent.
 ## 6. How consistent is my assistant? (no update at all)
 
 *Set up.* Give the same definition as `--current` and `--proposed`.
-*Read.* Every difference is the assistant disagreeing with itself. This is the floor that any later
-update has to be read against. Do this once before your first real check.
+*Read.* Every difference is the assistant disagreeing with itself. This is the execution floor, the
+re-execution noise baseline, that any later update has to be read against. Do this once before your first real check.
 
 ## 7. A gate before deploy
 

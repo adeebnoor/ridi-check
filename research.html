@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" dir="ltr"
+  data-title-en="The science — RIDI Check"
+  data-title-ar="العلم — RIDI Check"
+  data-description-en="Plain-language account of the RIDI manuscript under review: matched items, repeated runs, the execution floor, and the exact test the software does not yet compute. OSF preregistrations and the commercial replication result."
+  data-description-ar="شرح مبسّط لمخطوطة RIDI قيد المراجعة: بنود متطابقة، تشغيلات متكررة، أرضية التنفيذ، والاختبار الدقيق الذي لا يحسبه البرنامج بعد. تسجيلا OSF ونتيجة التكرار التجاري.">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1221">
+  <meta name="description" content="Plain-language account of the RIDI manuscript under review: matched items, repeated runs, the execution floor, and the exact test the software does not yet compute.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="canonical" href="https://adeebnoor.github.io/ridi-check/research.html">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./assets/site.css">
+  <script src="./assets/site.js" defer></script>
+  <title>The science — RIDI Check</title>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="./index.html" aria-label="RIDI Check home">
+        <span class="brand-symbol" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-type">RIDI<span class="brand-light">Check</span><small>DECISION INTELLIGENCE</small></span>
+      </a>
+      <nav class="nav-links" id="primaryNav" aria-label="Main navigation">
+        <a href="./index.html" data-i18n="navHome">Home</a>
+        <a href="./research.html" data-i18n="navScience" aria-current="page">The science</a>
+        <a href="./limitations.html" data-i18n="navLimits">Limitations</a>
+        <a href="./reproducibility.html" data-i18n="navRepro">Reproducibility</a>
+      </nav>
+      <div class="header-actions">
+        <button type="button" class="lang-switch" id="langSwitch" aria-label="Switch to Arabic" lang="ar">العربية</button>
+        <a class="btn btn-primary btn-sm header-cta" href="./web/ridi-update-check.html"><span data-i18n="launch">Launch the tool</span><span class="arrow" aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" id="menuToggle" aria-controls="primaryNav" aria-expanded="false" aria-label="Open navigation"><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="page">
+    <article class="shell prose">
+      <div data-lang-block="en">
+        <p class="status-pill">Manuscript under review · preprint forthcoming</p>
+        <h1>The science</h1>
+        <p class="lede">Identical relevance grades cannot certify retrieval-augmented AI answers. An aggregate score, including the same grade on two retrieved passages, does not certify that the answer a person would act on is unchanged.</p>
+        <ul class="page-nav">
+          <li><a href="#method">Method</a></li>
+          <li><a href="#software">What the software computes</a></li>
+          <li><a href="#registrations">Preregistrations</a></li>
+          <li><a href="#replication">Commercial replication</a></li>
+          <li><a href="#cite">How to cite</a></li>
+          <li><a href="#comparison">Comparison</a></li>
+        </ul>
+
+        <h2 id="method">Method, in plain language</h2>
+        <p>Professor NooR (King Abdulaziz University) is submitting this argument as a manuscript. This page describes that manuscript as under review. A preprint is forthcoming.</p>
+        <h3>Matched items</h3>
+        <p>Both versions answer the same questions, with the same case identifiers. A comparison that uses different questions for each version cannot say which answers moved.</p>
+        <h3>Repeated runs</h3>
+        <p>Each version is run more than once on those matched items. One run cannot separate an update from an answer that would have changed on its own.</p>
+        <h3>Execution floor</h3>
+        <p>The execution floor is the re-execution noise baseline: how often the same version disagrees with itself. Answer changes have to be read against that floor. A change that sits inside the noise is not evidence about the update.</p>
+        <h3>Exact test</h3>
+        <p>The manuscript describes an exact test for answer changes beyond that floor. The test asks whether the item-level changes are larger than re-execution noise, rather than whether an average moved.</p>
+        <h3>Release gate</h3>
+        <p>The release gate is an application of the item labels. It can stop a build when stable regressions exceed a limit you set. It is not the exact test, and it is not a certificate that a system is safe to deploy.</p>
+        <h3>Labelled examples</h3>
+        <p>The library question “How often must membership be renewed?” is item q02 in the synthetic demo. The drug question that names Zorvalin and Merdapine is item m01 in <code>web/sample_medicines.csv</code>. Those names, doses, and effects are invented illustration, not a study and not medical guidance. The browser tool labels that file “Invented drug names (illustration only)”.</p>
+
+        <h2 id="software">What this software computes</h2>
+        <div class="callout">
+          <p>ridi-check 0.10.1 reports the execution floor as a comparison of rounded rates. It does not compute the manuscript’s exact test and it does not report a p-value. The math was left as it is. The difference is written out in <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md">docs/STATISTICS.md</a> rather than quietly replaced.</p>
+        </div>
+        <p>For each version, the re-run rate is how often run 2 disagrees with run 1. Each rate is rounded to 6 decimal places. The floor is the larger of the two rates. The between-version change “exceeds the floor” only when its rate is strictly greater. Equal rates do not exceed it. A missing repeated run leaves the comparison undefined. Neither re-run rate is subtracted from the change. Wilson 95% intervals use z = 1.959964. They are not a hypothesis test, and the release gate does not use them.</p>
+        <p>Item labels are separate. “Stable” means every repeated run agreed with that version’s first run, and both versions were run at least twice. Otherwise the item is unstable, or unconfirmed when a version was run once.</p>
+        <p>Exploratory notes in this repository quote two exact McNemar p-values computed outside the package (3 gains versus 5 losses, p = 0.7265625; 16 improvements versus 6 regressions, about 0.05248). Those tests ask whether improvements and regressions are balanced. They are not the execution-floor test, and <code>ridi-check report</code> does not emit them.</p>
+
+        <h2 id="registrations">Preregistrations</h2>
+        <ul>
+          <li>RIDI-24: <a href="https://osf.io/7uzv5" target="_blank" rel="noopener noreferrer">osf.io/7uzv5</a>, DOI <a href="https://doi.org/10.17605/OSF.IO/7UZV5" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/7UZV5</a>.</li>
+          <li>Commercial addendum: <a href="https://osf.io/anbjd" target="_blank" rel="noopener noreferrer">osf.io/anbjd</a>, DOI <a href="https://doi.org/10.17605/OSF.IO/ANBJD" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/ANBJD</a>.</li>
+        </ul>
+        <p>The hypothesis wording lives on those registrations. This page does not paraphrase it beyond the criterion that was reported.</p>
+      </div>
+
+      <div data-lang-block="ar" lang="ar" hidden>
+        <p class="status-pill">مخطوطة قيد المراجعة · النسخة الأولية ستصدر لاحقاً</p>
+        <h1>العلم</h1>
+        <p class="lede">الدرجات المتماثلة للصلة لا تعتمد إجابات الذكاء الاصطناعي المعزّز بالاسترجاع. الدرجة الإجمالية، بما فيها الدرجة نفسها على مقطعين مسترجعين، لا تعتمد أن الإجابة التي سيتصرف بموجبها شخص ما بقيت كما هي.</p>
+        <ul class="page-nav">
+          <li><a href="#method-ar">المنهج</a></li>
+          <li><a href="#software-ar">ما يحسبه البرنامج</a></li>
+          <li><a href="#registrations-ar">التسجيل المسبق</a></li>
+          <li><a href="#replication">التكرار التجاري</a></li>
+          <li><a href="#cite">كيفية الاستشهاد</a></li>
+          <li><a href="#comparison">المقارنة</a></li>
+        </ul>
+
+        <h2 id="method-ar">المنهج بلغة مباشرة</h2>
+        <p>يقدّم الأستاذ نور (جامعة الملك عبدالعزيز) هذه الحجة في مخطوطة. تصف هذه الصفحة المخطوطة بأنها قيد المراجعة. النسخة الأولية ستصدر لاحقاً.</p>
+        <h3>بنود متطابقة</h3>
+        <p>تجيب النسختان عن الأسئلة نفسها بمعرّفات الحالات نفسها. مقارنة تستخدم أسئلة مختلفة لكل نسخة لا تستطيع أن تقول أي الإجابات تحركت.</p>
+        <h3>تشغيلات متكررة</h3>
+        <p>تُشغَّل كل نسخة أكثر من مرة على هذه البنود المتطابقة. تشغيل واحد لا يفصل أثر التحديث عن إجابة كانت ستتغيّر من تلقاء نفسها.</p>
+        <h3>أرضية التنفيذ</h3>
+        <p>أرضية التنفيذ هي خط الأساس لضجيج إعادة التنفيذ: كم مرة تخالف النسخة نفسها نفسها. تُقرأ تغيّرات الإجابات مقابل هذه الأرضية. التغيير الذي يبقى داخل الضجيج ليس دليلاً على التحديث.</p>
+        <h3>الاختبار الدقيق</h3>
+        <p>تصف المخطوطة اختباراً دقيقاً لتغيّرات الإجابات التي تتجاوز هذه الأرضية. يسأل الاختبار إن كانت التغيّرات على مستوى البند أكبر من ضجيج إعادة التنفيذ، لا إن كان المتوسط قد تحرّك.</p>
+        <h3>بوابة الإصدار</h3>
+        <p>بوابة الإصدار تطبيق لتسميات البنود. يمكنها إيقاف البناء عندما تتجاوز التراجعات الثابتة حداً تضعه أنت. ليست الاختبار الدقيق، وليست شهادة بأن النظام آمن للنشر.</p>
+        <h3>أمثلة موسومة</h3>
+        <p>سؤال المكتبة «كم مرة يجب تجديد العضوية؟» هو البند q02 في المثال الاصطناعي. سؤال الدواء الذي يذكر Zorvalin وMerdapine هو البند m01 في <code>web/sample_medicines.csv</code>. الأسماء والجرعات والآثار توضيح مخترع، لا دراسة ولا إرشاد طبي. تعلّم أداة المتصفح الملف بعبارة Invented drug names (illustration only).</p>
+
+        <h2 id="software-ar">ما يحسبه هذا البرنامج</h2>
+        <div class="callout">
+          <p>يعرض ridi-check 0.10.1 أرضية التنفيذ كمقارنة لنسب مُقرَّبة. لا يحسب الاختبار الدقيق الوارد في المخطوطة ولا يُخرج قيمة p. تُركت الحسابات كما هي. الفرق مكتوب في <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md">docs/STATISTICS.md</a> بدل استبداله بصمت.</p>
+        </div>
+        <p>لكل نسخة، نسبة إعادة التشغيل هي كم مرة يختلف التشغيل الثاني عن الأول. تُقرَّب كل نسبة إلى 6 منازل عشرية. الأرضية هي أكبر النسبتين. «تجاوز التغيير للأرضية» لا يقع إلا إذا كانت نسبته أكبر بصرامة. النسب المتساوية لا تتجاوزها. غياب تشغيل متكرر يجعل المقارنة غير معرّفة. لا تُطرح أي نسبة إعادة تشغيل من التغيير. فترات Wilson بنسبة 95% تستخدم z = 1.959964. ليست اختبار فرضية، وبوابة الإصدار لا تستخدمها.</p>
+        <p>تسميات البنود مستقلة. «ثابت» يعني أن كل تشغيل متكرر وافق التشغيل الأول لتلك النسخة، وأن النسختين شُغّلتا مرتين على الأقل. وإلا فالبند غير مستقر، أو غير مؤكَّد إذا شُغّلت نسخة مرة واحدة.</p>
+        <p>تذكر ملاحظات استكشافية في هذا المستودع قيمتي p لاختبار McNemar الدقيق حُسبتا خارج الحزمة (3 مكاسب مقابل 5 خسائر، p = 0.7265625؛ و16 تحسيناً مقابل 6 تراجعات، حوالي 0.05248). هذان الاختباران يسألان إن كانت التحسينات والتراجعات متوازنة. ليسا اختبار أرضية التنفيذ، ولا يُخرجهما <code>ridi-check report</code>.</p>
+
+        <h2 id="registrations-ar">التسجيل المسبق</h2>
+        <ul>
+          <li>RIDI-24: <a href="https://osf.io/7uzv5" target="_blank" rel="noopener noreferrer">osf.io/7uzv5</a>، المعرّف <a href="https://doi.org/10.17605/OSF.IO/7UZV5" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/7UZV5</a>.</li>
+          <li>الملحق التجاري: <a href="https://osf.io/anbjd" target="_blank" rel="noopener noreferrer">osf.io/anbjd</a>، المعرّف <a href="https://doi.org/10.17605/OSF.IO/ANBJD" target="_blank" rel="noopener noreferrer">10.17605/OSF.IO/ANBJD</a>.</li>
+        </ul>
+        <p>صياغة الفرضيات على التسجيلين. لا تعيد هذه الصفحة صياغتها أبعد من المعيار الذي أُبلغ.</p>
+      </div>
+
+      <h2 id="replication">Commercial replication <span lang="ar">/ التكرار التجاري</span></h2>
+      <p data-i18n="replicationLine">Preregistered commercial replication: criterion H1c, support in at least 2 of 3 models after Holm, was not met. Gemini 3.8 Flash +3.47 points [2.47, 4.52] was supported. GPT-5.4 mini +0.98 [-0.24, 2.21] and Claude Sonnet 5.5 +0.74 [-0.23, 1.74] were not. The magnitude is model-dependent and has to be measured for each model.</p>
+      <p data-lang-block="en">Reporting a registered criterion that did not hold is part of the registration. The partial support for one model is not rounded up into a general effect. These figures are the reported result. They were not recomputed from files in this repository.</p>
+      <p data-lang-block="ar" lang="ar" hidden>الإبلاغ عن معيار مسجّل لم يتحقق جزء من التسجيل. الدعم الجزئي لنموذج واحد لا يُرفع إلى أثر عام. هذه الأرقام نتيجة مُبلَّغة ولم تُعد حساباتها من ملفات هذا المستودع.</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <caption data-i18n="repCaption">Preregistered commercial replication. Figures as reported. Not recomputed in this repository.</caption>
+          <thead>
+            <tr>
+              <th scope="col" data-i18n="repModel">Model</th>
+              <th scope="col" data-i18n="repEstimate">Reported difference</th>
+              <th scope="col" data-i18n="repInterval">Interval</th>
+              <th scope="col" data-i18n="repCall">Preregistered reading</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Gemini 3.8 Flash</th>
+              <td>+3.47 points</td>
+              <td>[2.47, 4.52]</td>
+              <td data-i18n="repYes">Supported</td>
+            </tr>
+            <tr>
+              <th scope="row">GPT-5.4 mini</th>
+              <td>+0.98 points</td>
+              <td>[-0.24, 2.21]</td>
+              <td data-i18n="repNo">Not supported</td>
+            </tr>
+            <tr>
+              <th scope="row">Claude Sonnet 5.5</th>
+              <td>+0.74 points</td>
+              <td>[-0.23, 1.74]</td>
+              <td data-i18n="repNo">Not supported</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cite">How to cite</h2>
+      <h3>Software <span lang="ar">/ البرنامج</span></h3>
+      <pre class="cite" tabindex="0">@software{ridi_check_2026,
+  author    = {{Professor NooR}},
+  title     = {ridi-check: item-level change beyond a repeated-run execution floor},
+  year      = {2026},
+  version   = {0.10.1},
+  url       = {https://github.com/adeebnoor/ridi-check},
+  license   = {MIT}
+}</pre>
+      <h3>Manuscript <span lang="ar">/ المخطوطة</span></h3>
+      <pre class="cite" tabindex="0">@unpublished{noor2026identical,
+  author = {{Professor NooR}},
+  title  = {Identical relevance grades cannot certify retrieval-augmented {AI} answers},
+  year   = {2026},
+  note   = {Manuscript under review. Preprint forthcoming. King Abdulaziz University.}
+}</pre>
+      <p data-lang-block="en">Machine-readable software metadata is in <a href="https://github.com/adeebnoor/ridi-check/blob/main/CITATION.cff">CITATION.cff</a>. <a href="https://github.com/adeebnoor/ridi-check/blob/main/.zenodo.json">.zenodo.json</a> is ready for a deposit. No Zenodo record has been created, and this software does not yet have a Zenodo DOI. Versioned release notes are the <a href="https://github.com/adeebnoor/ridi-check/blob/main/CHANGELOG.md">changelog</a>.</p>
+      <p data-lang-block="ar" lang="ar" hidden>البيانات المقروءة آلياً في <a href="https://github.com/adeebnoor/ridi-check/blob/main/CITATION.cff">CITATION.cff</a>. ملف <a href="https://github.com/adeebnoor/ridi-check/blob/main/.zenodo.json">.zenodo.json</a> جاهز للإيداع. لم يُنشأ سجل Zenodo بعد، وليس للبرنامج معرّف Zenodo. ملاحظات الإصدار المرتبة حسب النسخة هي <a href="https://github.com/adeebnoor/ridi-check/blob/main/CHANGELOG.md">سجل التغييرات</a>.</p>
+
+      <h2 id="comparison">Comparison</h2>
+      <p data-lang-block="en">The table says what each tool is for. It is not a ranking. This repository has not run the other tools on the same items and does not invent scores for them. What RIDI adds is a report of item-level transitions beyond a re-execution floor. That is not a claim of superiority. The same table is in <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/COMPARISON.md">docs/COMPARISON.md</a>.</p>
+      <p data-lang-block="ar" lang="ar" hidden>يقول الجدول وظيفة كل أداة. ليس ترتيباً. لم تُشغَّل الأدوات الأخرى على البنود نفسها في هذا المستودع، ولا تُخترع لها درجات. ما تضيفه RIDI تقرير بانتقالات على مستوى البند تتجاوز أرضية إعادة التنفيذ. هذا ليس ادّعاء تفوّق. خلايا الجدول بالإنجليزية حتى تبقى أسماء الأدوات كما هي. الجدول نفسه في <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/COMPARISON.md">docs/COMPARISON.md</a>.</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <caption data-i18n="cmpCaption">What each tool is for. Not a ranking, and not a claim that RIDI is better.</caption>
+          <thead>
+            <tr>
+              <th scope="col" data-i18n="cmpTool">Tool</th>
+              <th scope="col" data-i18n="cmpWhat">What it is</th>
+              <th scope="col" data-i18n="cmpUnit">Usual reported unit</th>
+              <th scope="col" data-i18n="cmpRepeat">Repeated runs</th>
+              <th scope="col" data-i18n="cmpFloor">Item-level transitions beyond a re-execution floor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><a href="https://crfm.stanford.edu/helm/" target="_blank" rel="noopener noreferrer">HELM</a></th>
+              <td>Stanford CRFM. Holistic Evaluation of Language Models: scenarios, metrics, and public leaderboards.</td>
+              <td>Scenario-level metrics.</td>
+              <td>Possible for a scenario. Not the object of an update certificate.</td>
+              <td>Not what HELM publishes. Not run in this repository.</td>
+            </tr>
+            <tr>
+              <th scope="row"><a href="https://inspect.aisi.org.uk/" target="_blank" rel="noopener noreferrer">Inspect</a></th>
+              <td>UK AI Security Institute. A framework for configuring, logging, and scoring model and agent evaluations.</td>
+              <td>Task scores, samples, and logs.</td>
+              <td>A run can be repeated. That is configuration.</td>
+              <td>Not published there as an execution-floor test. Not run in this repository.</td>
+            </tr>
+            <tr>
+              <th scope="row"><a href="https://github.com/EleutherAI/lm-evaluation-harness" target="_blank" rel="noopener noreferrer">lm-evaluation-harness</a></th>
+              <td>EleutherAI. A harness for standard language-model benchmarks.</td>
+              <td>Task scores, with per-sample outputs available.</td>
+              <td>Depends on the task configuration.</td>
+              <td>Not the harness’s usual certificate. Not run in this repository.</td>
+            </tr>
+            <tr>
+              <th scope="row">ridi-check</th>
+              <td>Compares two versions of one system on matched items. The release gate is an application of the item labels.</td>
+              <td>Per-item transition, plus the descriptive execution floor.</td>
+              <td>Part of the method. Run 1 against run 2 is the floor.</td>
+              <td>Yes, as a comparison of rounded rates. The manuscript’s exact test is not computed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p data-lang-block="en"><a href="https://docs.ragas.io/" target="_blank" rel="noopener noreferrer">Ragas</a> is a library of retrieval-augmented generation metrics. No Ragas score is reported here. Earlier notes promised not to invent one.</p>
+      <p data-lang-block="ar" lang="ar" hidden><a href="https://docs.ragas.io/" target="_blank" rel="noopener noreferrer">Ragas</a> مكتبة لمقاييس التوليد المعزّز بالاسترجاع. لا تُذكر لها درجة هنا. وعدت ملاحظات سابقة بعدم اختراع مقارنة.</p>
+      <p data-lang-block="en">Also read the <a href="./limitations.html">limitations</a> and the <a href="./reproducibility.html">reproducibility</a> page. BoolQ label conflicts, including case p0155, stay in force.</p>
+      <p data-lang-block="ar" lang="ar" hidden>اقرأ أيضاً <a href="./limitations.html">الحدود</a> وصفحة <a href="./reproducibility.html">إعادة الإنتاج</a>. تبقى تعارضات تسميات BoolQ، ومنها الحالة p0155، سارية.</p>
+    </article>
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <a class="footer-brand" href="./index.html"><span class="brand-symbol mini" aria-hidden="true"><span></span><span></span><span></span></span> RIDI Check</a>
+      <div class="footer-center"><span data-i18n="footerTag">Open-source research software · Evidence before assertion</span><span class="footer-copy">© <span id="year">2026</span> RIDI Check</span></div>
+      <div class="footer-links"><a href="./limitations.html" data-i18n="navLimits">Limitations</a><a href="./reproducibility.html" data-i18n="navRepro">Reproducibility</a><a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>
+    </div>
+  </footer>
+</body>
+</html>

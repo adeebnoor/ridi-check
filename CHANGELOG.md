@@ -6,6 +6,14 @@ library API may change between minor versions.
 ## Unreleased
 
 ### Added
+- Science, limitations, and reproducibility pages, with the manuscript described as under review and a
+  preprint forthcoming. Preregistrations RIDI-24 (DOI 10.17605/OSF.IO/7UZV5) and the commercial addendum
+  (DOI 10.17605/OSF.IO/ANBJD). The commercial replication is reported as registered: criterion H1c was not
+  met. `CITATION.cff` and `.zenodo.json` (no Zenodo record is created). `docs/STATISTICS.md`,
+  `docs/LIMITATIONS.md`, `docs/REPRODUCIBILITY.md`, and `docs/COMPARISON.md`.
+- `summary.json` field `execution_floor`: the same rounded-rate comparison as
+  `change_exceeds_both_rerun_variations`, named as the execution floor. `exact_test_implemented` is false.
+  Known-answer tests in `tests/test_statistics.py`.
 - `run` writes `evidence.json` when it finishes: the SHA-256 of the record, the table and the manifest,
   with the fingerprints of the questions, the scorer and the adapters' source, and prints the SHA-256 of
   that one file. `verify` compares the folder with it, and `verify --evidence-sha256 HEX` exits 1 when
@@ -17,6 +25,11 @@ library API may change between minor versions.
   `evidence.json`. Checked for syntax; not run on a live repository.
 
 ### Changed
+- Reports, the browser tool, and the site say "execution floor" for the re-run rates, "matched items" and
+  "repeated runs" for the design, and "release gate" for the CI application. The comparison itself is
+  unchanged: rounded rates, strict greater-than, no p-value.
+- The landing examples name signed-run case ids (p1506, p1574, p2179, p2735, and the unstable ids). They
+  no longer paraphrase BoolQ questions. The invented drug-name example stays marked as illustration.
 - `verify` exits 1 when a file of the folder no longer has the fingerprint in `evidence.json`. A record
   and a table edited together, which agreed with each other and passed before, are now reported. A folder
   written by an earlier version has no `evidence.json` and is checked as before, with a note.

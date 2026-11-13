@@ -309,13 +309,19 @@ scorer written for the subject. Every case that the threshold labels differently
 named in the printed summary, in the report and in `summary.json` (`labelled_by_similarity`), so that it
 can be read.
 
-The rates use first runs: the change between versions, and the re-run variation of each version (run 1
-against run 2). Both variations are always shown and neither is subtracted from the change. Each rate
-comes with a 95% Wilson interval (`interval_95` in `summary.json`). The interval treats the cases as a
-random sample of what users ask, which a hand-picked set of questions is not, and it says nothing about
-one case's own re-run variation. No test is applied, and no label or gate decision depends on it. With an answer
-key the change equals regressions plus improvements, mean accuracy moves by their difference, and
-`2 × min(regressions, improvements)` changes cancel out in the mean.
+The rates use first runs on matched items: the change between versions, and the re-run variation of each
+version (run 1 against run 2). Those two re-run rates are the execution floor, and the floor rate is the
+larger of them. Both are always shown and neither is subtracted from the change. Each rate is rounded to
+6 decimal places. The change exceeds the floor only when it is strictly greater than both
+(`change_exceeds_both_rerun_variations`, and the same boolean in `execution_floor`). This is a comparison
+of point estimates. It is not the exact test in the manuscript under review, and the release gate does not
+use it. See [STATISTICS.md](STATISTICS.md).
+
+Each rate comes with a 95% Wilson interval (`interval_95` in `summary.json`, z = 1.959964). The interval
+treats the cases as a random sample of what users ask, which a hand-picked set of questions is not, and it
+says nothing about one case's own re-run variation. No exact test is applied, and no label or gate decision
+depends on the interval. With an answer key the change equals regressions plus improvements, mean accuracy
+moves by their difference, and `2 × min(regressions, improvements)` changes cancel out in the mean.
 
 ## Files written
 

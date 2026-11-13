@@ -16,6 +16,7 @@ from .contract import (
     CONTEXT_SEPARATOR, KEY, NOKEY, Case, ContractError, read_records, read_results, run_column, to_csv,
 )
 from .scoring import check_scores, score_check_lines
+from .statistics import change_exceeds_execution_floor, execution_floor_record
 from .strings import strings_for
 from .util import atomic_write_text, now_iso, read_text, sha256_file
 
@@ -65,8 +66,11 @@ def read_judgments(path: str, case_ids: set[str]) -> dict[str, str]:
 
 
 def wilson(count: int, n: int, z: float = 1.959964) -> tuple[float, float]:
-    """The Wilson score interval for count out of n, 95% by default. It treats the cases as a random
-    sample; it is not a test and nothing in the tool is decided by it."""
+    """The Wilson score interval for count out of n, 95% by default.
+
+    ``z`` is the package constant 1.959964, not a value fitted to data. The interval treats the cases
+    as a random sample. It is not the manuscript's exact test, and nothing in the tool is decided by it.
+    """
     p = count / n
     centre = (p + z * z / (2 * n)) / (1 + z * z / n)
     half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
@@ -85,9 +89,12 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
     key = a.mode == KEY
     change = _rate(a.changed, a.n_compared) or {"count": 0, "n": 0, "rate": 0.0}
     rerun_b, rerun_u = _rate(a.rerun_b, a.rerun_b_n), _rate(a.rerun_u, a.rerun_u_n)
-    exceeds = None
-    if rerun_b and rerun_u:
-        exceeds = change["rate"] > max(rerun_b["rate"], rerun_u["rate"])
+    # Same comparison as before: rates already rounded to 6 decimal places, strict greater-than.
+    exceeds = change_exceeds_execution_floor(
+        change["rate"],
+        None if rerun_b is None else rerun_b["rate"],
+        None if rerun_u is None else rerun_u["rate"],
+    )
     first_run: dict = {
         "change_between_versions": change,
         "rerun_variation_current": rerun_b,
@@ -122,6 +129,11 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
         "case_ids": {s: a.ids(s) for s in a.counts if s not in UNCHANGED_STATES},
         "first_run": first_run,
         "any_run_disagreement": {"current": a.any_run_b, "proposed": a.any_run_u},
+        "execution_floor": execution_floor_record(
+            change["rate"],
+            None if rerun_b is None else rerun_b["rate"],
+            None if rerun_u is None else rerun_u["rate"],
+        ),
     }
     if a.case_only:     # equal after lower-casing, and not equal before it
         summary["differ_only_in_letter_case"] = list(a.case_only)
@@ -176,6 +188,10 @@ def build_summary(a: Analysis, judgments: dict[str, str] | None = None) -> dict:
         )
     notes.append(
         '"Stable" needs at least two runs of both versions. Two runs is a thin estimate of re-run variation.'
+    )
+    notes.append(
+        "Execution floor: the larger of the two re-run rates (run 1 against run 2), compared as rounded "
+        "point estimates. This is not an exact test. The release gate does not use it."
     )
     if key and a.n_compared >= 3 and not a.correct_b and not a.correct_u:
         notes.append(NOTHING_CORRECT)
@@ -474,14 +490,16 @@ def text_summary(summary: dict) -> str:
         return "no second run" if r is None else f"{r['count']}/{r['n']} ({100 * r['rate']:.1f}%)"
 
     lines.append(
-        f"First run: change between versions {show(f['change_between_versions'])}; re-run variation: "
+        f"First run: change between versions {show(f['change_between_versions'])}; "
+        f"execution floor (re-run variation): "
         f"current {show(f['rerun_variation_current'])}, proposed {show(f['rerun_variation_proposed'])}."
     )
     def span(r: dict | None) -> str:
         return "none" if r is None else f"{100 * r['interval_95'][0]:.1f}% to {100 * r['interval_95'][1]:.1f}%"
 
     lines.append(
-        f"95% intervals (Wilson): change {span(f['change_between_versions'])}; re-run variation: current "
+        f"95% intervals (Wilson): change {span(f['change_between_versions'])}; "
+        f"execution floor (re-run variation): current "
         f"{span(f['rerun_variation_current'])}, proposed {span(f['rerun_variation_proposed'])}. They treat the cases "
         "as a random sample of what users ask, which a hand-picked set is not."
     )
