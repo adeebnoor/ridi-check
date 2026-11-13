@@ -49,26 +49,27 @@ COMMON = {
             "incomplete": "Not compared: a call failed",
         },
         "unconfSub": "Not confirmed by a second run",
-        "stableNote": "A case is stable when every run of each version agreed with that version's first run. "
+        "stableNote": "A case is stable when every repeated run of each version agreed with that version's first run. "
                       "Runs per version in this file: current {b}, proposed {u}. "
-                      "Two runs is a thin estimate of re-run variation; more runs make the stable label firmer.",
+                      "Two runs is a thin estimate of the execution floor (re-run variation); more runs make the stable label firmer.",
         "stripNote": "Each cell is one case, in file order. Select a coloured cell to open it.",
         "stripBar": "With more than {max} cases the strip is one bar: each colour's share of the {n} cases.",
         "shownOf": "Showing {a} of {b}.", "showMore": "Show {n} more", "showAll": "Show all {n}",
-        "rates": "Change between versions against re-run variation",
-        "barMain": "Current vs proposed", "barB": "Current, run twice", "barU": "Proposed, run twice",
+        "rates": "Change between versions against the execution floor",
+        "barMain": "Current vs proposed", "barB": "Current repeated runs", "barU": "Proposed repeated runs",
         "of": "{k} of {n}",
-        "rateWithin": "The overall change is no larger than the re-run variation of one version. "
+        "rateWithin": "The overall change is no larger than the execution floor (the re-run variation of one version). "
                       "Read the stable cases below, not the total.",
-        "rateAbove": "The overall change ({t}%) is larger than the re-run variation of both versions "
+        "rateAbove": "The overall change ({t}%) is larger than the execution floor from repeated runs "
                      "({b}% and {u}%). The stable cases below are the changes that held on re-run.",
-        "rateNone": "This file has no second run of both versions, so re-run variation is unknown and "
-                    "no change is confirmed. Add a second run of each version.",
-        "rateFirst": "These rates use the first run of each version and the first two runs for re-run variation.",
+        "rateNone": "This file has no second run of both versions, so the execution floor is unknown and "
+                    "no change is confirmed. Add a repeated run of each version.",
+        "rateFirst": "These rates use the first run of each version. The execution floor uses run 1 against run 2.",
         "interval95": "; 95% interval {a}% to {b}%",
         "intervalNote": "The intervals are Wilson intervals. They treat the cases as a random sample of what users "
                         "ask, which a hand-picked set is not, and they say nothing about one case's own re-run "
-                        "variation. No test is applied and nothing here is decided by them.",
+                        "variation. The execution floor is the larger of the two re-run rates: a comparison of "
+                        "point estimates, not an exact test. Nothing here is decided by these intervals.",
         "anyRun": "With more than two runs a case can be unstable because of a later run. "
                   "Cases where any run differed from the first: current {b}, proposed {u}.",
         "review": "Cases to review", "fAll": "All", "fStable": "Stable", "fUns": "Unstable",
@@ -127,26 +128,27 @@ COMMON = {
             "incomplete": "لم تُقارَن: فشل استدعاء",
         },
         "unconfSub": "لم يؤكدها تشغيل ثانٍ",
-        "stableNote": "تُعدّ الحالة ثابتة عندما يوافق كل تشغيل لكل نسخة تشغيلها الأول. "
+        "stableNote": "تُعدّ الحالة ثابتة عندما يوافق كل تشغيل متكرر لكل نسخة تشغيلها الأول. "
                       "عدد التشغيلات لكل نسخة في هذا الملف: الحالية {b}، المقترحة {u}. "
-                      "تشغيلان تقدير ضعيف لتقلب إعادة التشغيل، وتشغيلات أكثر تجعل وصف «ثابت» أوثق.",
+                      "تشغيلان تقدير ضعيف لأرضية التنفيذ (تقلب إعادة التشغيل)، وتشغيلات أكثر تجعل وصف «ثابت» أوثق.",
         "stripNote": "كل خانة حالة واحدة، بترتيب الملف. اختر خانة ملوّنة لفتحها.",
         "stripBar": "مع أكثر من {max} حالة يُرسم الشريط خطاً واحداً: نصيب كل لون من الحالات وعددها {n}.",
         "shownOf": "المعروض {a} من {b}.", "showMore": "اعرض {n} أخرى", "showAll": "اعرض الكل ({n})",
-        "rates": "التغيّر بين النسختين مقابل تقلب إعادة التشغيل",
-        "barMain": "الحالية مقابل المقترحة", "barB": "الحالية، تشغيلان", "barU": "المقترحة، تشغيلان",
+        "rates": "التغيّر بين النسختين مقابل أرضية التنفيذ",
+        "barMain": "الحالية مقابل المقترحة", "barB": "الحالية، تشغيلات متكررة", "barU": "المقترحة، تشغيلات متكررة",
         "of": "{k} من {n}",
-        "rateWithin": "التغيّر الإجمالي لا يتجاوز تقلب إعادة التشغيل في إحدى النسختين. "
+        "rateWithin": "التغيّر الإجمالي لا يتجاوز أرضية التنفيذ (تقلب إعادة التشغيل في إحدى النسختين). "
                       "اعتمد على الحالات الثابتة أدناه لا على المجموع.",
-        "rateAbove": "التغيّر الإجمالي ({t}%) أكبر من تقلب إعادة التشغيل في النسختين "
+        "rateAbove": "التغيّر الإجمالي ({t}%) أكبر من أرضية التنفيذ من التشغيلات المتكررة "
                      "({b}% و{u}%). الحالات الثابتة أدناه هي التغيّرات التي ثبتت عند الإعادة.",
-        "rateNone": "لا يوجد في هذا الملف تشغيل ثانٍ للنسختين، فتقلب التشغيل مجهول ولا يُؤكَّد أي تغيّر. "
-                    "أضف تشغيلًا ثانيًا لكل نسخة.",
-        "rateFirst": "هذه النسب تعتمد على التشغيل الأول لكل نسخة، وعلى أول تشغيلين لتقلب إعادة التشغيل.",
+        "rateNone": "لا يوجد في هذا الملف تشغيل ثانٍ للنسختين، فأرضية التنفيذ مجهولة ولا يُؤكَّد أي تغيّر. "
+                    "أضف تشغيلاً متكرراً لكل نسخة.",
+        "rateFirst": "هذه النسب تعتمد على التشغيل الأول لكل نسخة. أرضية التنفيذ تقارن التشغيل الأول بالثاني.",
         "interval95": "؛ فترة 95%: من {a}% إلى {b}%",
         "intervalNote": "الفترات هي فترات Wilson. تفترض أن الحالات عينة عشوائية مما يسأله المستخدمون، والمجموعة "
-                        "المنتقاة يدوياً ليست كذلك، ولا تقول شيئاً عن تقلب الحالة الواحدة عند إعادة التشغيل. لا يُطبَّق "
-                        "أي اختبار ولا يُبنى عليها أي قرار هنا.",
+                        "المنتقاة يدوياً ليست كذلك، ولا تقول شيئاً عن تقلب الحالة الواحدة عند إعادة التشغيل. "
+                        "أرضية التنفيذ هي أكبر نسبتي إعادة التشغيل: مقارنة لتقديرات نقطية لا اختباراً دقيقاً. "
+                        "لا يُبنى على هذه الفترات أي قرار هنا.",
         "anyRun": "مع أكثر من تشغيلين قد تكون الحالة متقلبة بسبب تشغيل لاحق. "
                   "الحالات التي خالف فيها أي تشغيل التشغيلَ الأول: الحالية {b}، المقترحة {u}.",
         "review": "حالات للمراجعة", "fAll": "الكل", "fStable": "الثابتة", "fUns": "المتقلبة",

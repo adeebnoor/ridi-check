@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" dir="ltr"
+  data-title-en="Reproducibility — RIDI Check"
+  data-title-ar="إعادة الإنتاج — RIDI Check"
+  data-description-en="Exact commands, seeds, environment pins, and checksums for the ridi-check demo and the signed Qwen runs. The commercial replication is not in this repository."
+  data-description-ar="الأوامر والبذور وقيود البيئة والبصمات لتجربة ridi-check وتشغيلات Qwen الموقّعة. التكرار التجاري ليس في هذا المستودع.">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1221">
+  <meta name="description" content="Exact commands, seeds, environment pins, and checksums for the ridi-check demo and the signed Qwen runs.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="canonical" href="https://adeebnoor.github.io/ridi-check/reproducibility.html">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./assets/site.css">
+  <script src="./assets/site.js" defer></script>
+  <title>Reproducibility — RIDI Check</title>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="./index.html" aria-label="RIDI Check home">
+        <span class="brand-symbol" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-type">RIDI<span class="brand-light">Check</span><small>DECISION INTELLIGENCE</small></span>
+      </a>
+      <nav class="nav-links" id="primaryNav" aria-label="Main navigation">
+        <a href="./index.html" data-i18n="navHome">Home</a>
+        <a href="./research.html" data-i18n="navScience">The science</a>
+        <a href="./limitations.html" data-i18n="navLimits">Limitations</a>
+        <a href="./reproducibility.html" data-i18n="navRepro" aria-current="page">Reproducibility</a>
+      </nav>
+      <div class="header-actions">
+        <button type="button" class="lang-switch" id="langSwitch" aria-label="Switch to Arabic" lang="ar">العربية</button>
+        <a class="btn btn-primary btn-sm header-cta" href="./web/ridi-update-check.html"><span data-i18n="launch">Launch the tool</span><span class="arrow" aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" id="menuToggle" aria-controls="primaryNav" aria-expanded="false" aria-label="Open navigation"><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="page">
+    <article class="shell prose">
+      <div data-lang-block="en">
+        <p class="status-pill">Commands, seeds, pins, checksums</p>
+        <h1>Reproducibility</h1>
+        <p class="lede">Everything below is copied from files in this repository. The commercial replication is not among them, so those model runs cannot be rebuilt from this page. The same note is in <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/REPRODUCIBILITY.md">docs/REPRODUCIBILITY.md</a>.</p>
+        <h2>Package</h2>
+        <p>Runtime dependencies: none. Python 3.10 or later. The test workflow uses Python 3.10, 3.13, and 3.14 on Ubuntu, Windows, and macOS.</p>
+        <pre class="cite" tabindex="0">pip install ".[test]" anthropic
+pytest -q</pre>
+        <p>On Ubuntu with Python 3.13 the workflow also runs <code>pytest -q --cov=ridi_check --cov-branch --cov-fail-under=95</code>. Test packages are pinned only as <code>pytest&gt;=7</code> and <code>pytest-cov&gt;=4</code>. There is no lockfile of transitive test packages.</p>
+        <h2>Offline demo</h2>
+        <p>The toy assistant seeds tie-breaks with <code>SEED = 7</code>. The current version does not use that generator. Questions are the constructed library handbook. Each version runs twice. Data are synthetic.</p>
+        <pre class="cite" tabindex="0">pip install ridi-check
+ridi-check demo</pre>
+      </div>
+      <div data-lang-block="ar" lang="ar" hidden>
+        <p class="status-pill">أوامر وبذور وقيود وبصمات</p>
+        <h1>إعادة الإنتاج</h1>
+        <p class="lede">كل ما يلي منقول من ملفات هذا المستودع. التكرار التجاري ليس بينها، فلا تُعاد بناء تلك التشغيلات من هذه الصفحة. الملاحظة نفسها في <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/REPRODUCIBILITY.md">docs/REPRODUCIBILITY.md</a>.</p>
+        <h2>الحزمة</h2>
+        <p>لا اعتمادات وقت تشغيل. Python 3.10 أو أحدث. يستخدم سير الاختبار إصدارات Python 3.10 و3.13 و3.14 على Ubuntu وWindows وmacOS.</p>
+        <pre class="cite" dir="ltr" tabindex="0">pip install ".[test]" anthropic
+pytest -q</pre>
+        <p>على Ubuntu مع Python 3.13 يشغّل السير أيضاً <code>pytest -q --cov=ridi_check --cov-branch --cov-fail-under=95</code>. أدوات الاختبار مقيّدة فقط بـ <code>pytest&gt;=7</code> و<code>pytest-cov&gt;=4</code>. لا يوجد ملف قفل للاعتمادات العابرة.</p>
+        <h2>التشغيل التجريبي دون شبكة</h2>
+        <p>يبذر المساعد الاصطناعي كسر التعادل بـ <code>SEED = 7</code>. النسخة الحالية لا تستخدم ذلك المولّد. الأسئلة دليل مكتبة مبني. كل نسخة تُشغَّل مرتين. البيانات اصطناعية.</p>
+        <pre class="cite" dir="ltr" tabindex="0">pip install ridi-check
+ridi-check demo</pre>
+      </div>
+
+      <h2>Same weights, prompt update <span lang="ar">/ الأوزان نفسها</span></h2>
+      <p data-lang-block="en">Frozen record: <code>experiments/same_weights_prompt/PRE_RUN_FROZEN.json</code>. Both arms use one Qwen2.5-1.5B GGUF. Decoding is temperature 0 and seed 20261113. The signed run is GitHub Actions <a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer">43317397792</a>. A fixed seed did not make every repeated answer identical across Windows and Ubuntu.</p>
+      <p data-lang-block="ar" lang="ar" hidden>السجل المجمّد: <code>experiments/same_weights_prompt/PRE_RUN_FROZEN.json</code>. الذراعان يستخدمان ملف GGUF واحداً من Qwen2.5-1.5B. فك الترميز بحرارة 0 وبذرة 20261113. التشغيل الموقّع هو GitHub Actions <a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer">43317397792</a>. البذرة الثابتة لم تجعل كل إجابة متكررة متطابقة بين Windows وUbuntu.</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <caption>Same-weights pins. SHA-256 as recorded in the frozen file and the workflow. <span lang="ar">قيود الأوزان نفسها.</span></caption>
+          <thead>
+            <tr><th scope="col">Pin</th><th scope="col">Value</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Model SHA-256</th><td><code>6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e</code></td></tr>
+            <tr><th scope="row">llama.cpp</th><td>release b12327</td></tr>
+            <tr><th scope="row">Linux archive SHA-256</th><td><code>a78e768c62bebc3e8de5e8a04d32b5d6ef3727efcc5f042efc271d03d893bd94</code></td></tr>
+            <tr><th scope="row">Decoding</th><td>temperature 0, seed 20261113</td></tr>
+            <tr><th scope="row">Items</th><td>48 BoolQ dev cases, 24 YES and 24 NO, 3 repeated runs, 288 calls</td></tr>
+            <tr><th scope="row">Questions SHA-256</th><td><code>3fa33a0e7e968c99056ffe17a430a555a9678f717d6fdcc78e1c352dfa4eb462</code></td></tr>
+            <tr><th scope="row">Adapter SHA-256</th><td><code>d91234a6400aa92e6b3ed61dc69c4642d668228d7a76cf0db02f518e49ca04b4</code></td></tr>
+            <tr><th scope="row">Config SHA-256</th><td><code>b79a464d492e8d87f384a36651f44562811a5de095de034f4eb5e021c1ece083</code></td></tr>
+            <tr><th scope="row">BoolQ dev.jsonl SHA-256</th><td><code>ebc29ea3808c5c611672384b3de56e83349fe38fc1fe876fd29b674d81d0a80a</code></td></tr>
+            <tr><th scope="row">Runner</th><td>ubuntu-24.04, Python 3.13</td></tr>
+            <tr><th scope="row">GitHub evidence SHA-256</th><td><code>cf5359da1222170064d95905470aa163b107f4ee55f4c2405a67e23598ffe64e</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <pre class="cite" tabindex="0">python -m pip install -e .
+ridi-check run --config ridi-check.json
+ridi-check verify ridi-out
+ridi-check gate ridi-out/results.csv --strict --check-scores</pre>
+      <p data-lang-block="en">Checksum lines for the downloads are in <code>.github/workflows/ridi-same-weights-prompt.yml</code>. The BoolQ sample is rebuilt only when <code>dev.jsonl</code> matches the checksum above (<code>experiments/qwen_cpu_pilot/boolq_builder.py</code>, seed 20261113).</p>
+      <p data-lang-block="ar" lang="ar" hidden>أسطر البصمات للتنزيلات في <code>.github/workflows/ridi-same-weights-prompt.yml</code>. لا تُعاد بناء عينة BoolQ إلا إذا طابق <code>dev.jsonl</code> البصمة أعلاه (<code>experiments/qwen_cpu_pilot/boolq_builder.py</code>، البذرة 20261113).</p>
+
+      <h2>Two Qwen sizes <span lang="ar">/ حجمان من Qwen</span></h2>
+      <p data-lang-block="en">This is a different experiment: two parameter counts, not one set of weights. Frozen file: <code>experiments/qwen_cpu_pilot/PRE_RUN_FROZEN.json</code>. Signed BoolQ run: <a href="https://github.com/adeebnoor/ridi-check/actions/runs/43312668253" target="_blank" rel="noopener noreferrer">43312668253</a>. Read the scientific audit before quoting a count.</p>
+      <p data-lang-block="ar" lang="ar" hidden>هذه تجربة مختلفة: عددان من المعاملات، لا مجموعة أوزان واحدة. الملف المجمّد: <code>experiments/qwen_cpu_pilot/PRE_RUN_FROZEN.json</code>. تشغيل BoolQ الموقّع: <a href="https://github.com/adeebnoor/ridi-check/actions/runs/43312668253" target="_blank" rel="noopener noreferrer">43312668253</a>. اقرأ التدقيق العلمي قبل نقل أي عدد.</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <caption>Size-substitution pins from the frozen file. <span lang="ar">قيود استبدال الحجم.</span></caption>
+          <thead>
+            <tr><th scope="col">Pin</th><th scope="col">Value</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Current model SHA-256</th><td><code>74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db</code></td></tr>
+            <tr><th scope="row">Proposed model SHA-256</th><td><code>6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e</code></td></tr>
+            <tr><th scope="row">Decoding</th><td>temperature 0, seed 20261113, max_tokens 12</td></tr>
+            <tr><th scope="row">Policy questions SHA-256</th><td><code>9a16f8ddaa542e0bf08e27a7b173d1512742e8ac36a7c2e0edde995a6ed7e69a</code></td></tr>
+            <tr><th scope="row">Adapter SHA-256</th><td><code>716ef2147ed703ce1952778bac9e41698194a0c6b2da495e853dfacd75bb333d</code></td></tr>
+            <tr><th scope="row">Config SHA-256</th><td><code>b413605e8859e893a4c3b4bb21f4cb1a12905b76ab3b6ed1f9c019f610b9842c</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p data-lang-block="en">Commands are in <code>.github/workflows/ridi-qwen-local-pilot.yml</code>. No Zenodo archive of these runs has been minted from this repository.</p>
+      <p data-lang-block="ar" lang="ar" hidden>الأوامر في <code>.github/workflows/ridi-qwen-local-pilot.yml</code>. لم يُصدر أرشيف Zenodo لهذه التشغيلات من هذا المستودع.</p>
+    </article>
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <a class="footer-brand" href="./index.html"><span class="brand-symbol mini" aria-hidden="true"><span></span><span></span><span></span></span> RIDI Check</a>
+      <div class="footer-center"><span data-i18n="footerTag">Open-source research software · Evidence before assertion</span><span class="footer-copy">© <span id="year">2026</span> RIDI Check</span></div>
+      <div class="footer-links"><a href="./research.html" data-i18n="navScience">The science</a><a href="./limitations.html" data-i18n="navLimits">Limitations</a><a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -221,6 +221,30 @@ No dates and no promises; this is what is planned and what is not.
 
 Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issues).
 
+## The science
+
+The manuscript "Identical relevance grades cannot certify retrieval-augmented AI answers" is under review.
+A preprint is forthcoming. The public pages are [the science](https://adeebnoor.github.io/ridi-check/research.html),
+[limitations](https://adeebnoor.github.io/ridi-check/limitations.html) and
+[reproducibility](https://adeebnoor.github.io/ridi-check/reproducibility.html).
+
+The method, in the manuscript's terms: aggregate scores do not certify item-level answers; repeated runs
+on matched items estimate an execution floor (re-execution noise); an exact test asks whether answer
+changes exceed that floor. The release gate is an application of the item labels.
+
+ridi-check 0.10.1 computes the floor as a comparison of rates rounded to 6 decimal places. It does not
+compute the exact test. [docs/STATISTICS.md](https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md)
+records the difference. Preregistrations: [RIDI-24](https://doi.org/10.17605/OSF.IO/7UZV5)
+(osf.io/7uzv5) and the [commercial addendum](https://doi.org/10.17605/OSF.IO/ANBJD) (osf.io/anbjd).
+
+The preregistered commercial criterion H1c (support in at least 2 of 3 models after Holm) was not met.
+Gemini 3.8 Flash +3.47 points [2.47, 4.52] was supported. GPT-5.4 mini +0.98 [-0.24, 2.21] and
+Claude Sonnet 5.5 +0.74 [-0.23, 1.74] were not. The magnitude is model-dependent and has to be measured
+for each model. Those figures are the reported result. They are not recomputed in this repository.
+
+How to cite the software and the manuscript is on the science page. `CITATION.cff` and `.zenodo.json` are
+in the repository. No Zenodo record has been created.
+
 ## Limitations
 
 - It finds change, not correctness. A version that is wrong the same way every time looks stable, and
@@ -231,7 +255,10 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 - It is not a readiness or safety certificate. No output says a system is fit to deploy; the gate prints
   counts and the decision stays yours.
 - Agents that use tools or keep state have a documented pattern and a stand-in example, but the tool has
-  not been tried on a production agent. Not in this version: model-based judging, statistical tests.
+  not been tried on a production agent. Not in this version: model-based judging, or the manuscript's exact
+  test. The tool does report an execution floor: the larger of the two run-1 versus run-2 disagreement
+  rates, as a comparison of rounded point estimates. The release gate does not use that comparison. See
+  [the statistics note](https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md).
 - Size was measured on Linux with Python 3.13 and Chromium only, not on Windows or macOS. There, 100,000
   cases with three runs of each version take about 9 seconds and 354 MB in `report`; the HTML report for
   them is 18.5 MB and opens in under a second, fifty cards at a time; the browser version reads the same
@@ -245,6 +272,11 @@ Tell us what you need in an [issue](https://github.com/adeebnoor/ridi-check/issu
 - [Use cases](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.md): thirteen situations and how to set each one up
 - [Developer guide](https://github.com/adeebnoor/ridi-check/blob/main/docs/DEVELOPER_GUIDE.md): adapters, files, CI, library use
 - [Reference](https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md): every command and option, `results.csv`, the labelling rules
+- [The science](https://adeebnoor.github.io/ridi-check/research.html), and in the repository:
+  [statistics](https://github.com/adeebnoor/ridi-check/blob/main/docs/STATISTICS.md),
+  [limitations](https://github.com/adeebnoor/ridi-check/blob/main/docs/LIMITATIONS.md),
+  [reproducibility](https://github.com/adeebnoor/ridi-check/blob/main/docs/REPRODUCIBILITY.md),
+  [comparison](https://github.com/adeebnoor/ridi-check/blob/main/docs/COMPARISON.md)
 - [Evidence and audit protocol](https://github.com/adeebnoor/ridi-check/blob/main/docs/EVIDENCE.md): what a run records, what each check shows, and what none can show
 - [Transition set](https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions): constructed answer pairs and what the comparison rules see and miss
 - بالعربية: [دليل الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.ar.md) · [حالات الاستخدام](https://github.com/adeebnoor/ridi-check/blob/main/docs/USE_CASES.ar.md) ·

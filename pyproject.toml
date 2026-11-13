@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = []
-authors = [{ name = "ridi-check contributors" }]
+authors = [{ name = "Professor NooR" }]
 keywords = ["llm", "evals", "regression-testing", "ai-agents", "prompt-testing", "rag", "ci"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -34,8 +34,9 @@ classifiers = [
 test = ["pytest>=7", "pytest-cov>=4"]
 
 [project.urls]
-Homepage = "https://github.com/adeebnoor/ridi-check"
-Documentation = "https://github.com/adeebnoor/ridi-check/blob/main/docs/USER_GUIDE.md"
+Homepage = "https://adeebnoor.github.io/ridi-check/"
+Documentation = "https://adeebnoor.github.io/ridi-check/research.html"
+Repository = "https://github.com/adeebnoor/ridi-check"
 Changelog = "https://github.com/adeebnoor/ridi-check/blob/main/CHANGELOG.md"
 Issues = "https://github.com/adeebnoor/ridi-check/issues"
 

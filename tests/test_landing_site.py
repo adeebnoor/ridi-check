@@ -104,6 +104,85 @@ def test_provenance_scopes_and_restrictions_are_visible():
     assert "--check-scores" in (ROOT / "README.md").read_text(encoding="utf-8")
 
 
+ROOT_PAGES = ["index.html", "research.html", "limitations.html", "reproducibility.html"]
+
+
+def test_science_pages_state_the_manuscript_without_a_journal_claim():
+    research = (ROOT / "research.html").read_text(encoding="utf-8")
+    for page_name in ROOT_PAGES:
+        text = (ROOT / page_name).read_text(encoding="utf-8")
+        assert "Nature" not in text, page_name
+        assert "accepted" not in text.lower(), page_name
+        assert "gtag" not in text and "google-analytics" not in text and "plausible" not in text
+    for needed in (
+        "10.17605/OSF.IO/7UZV5",
+        "10.17605/OSF.IO/ANBJD",
+        "osf.io/7uzv5",
+        "osf.io/anbjd",
+        "Manuscript under review",
+        "preprint forthcoming",
+        "Gemini 3.8 Flash",
+        "+3.47 points",
+        "[2.47, 4.52]",
+        "GPT-5.4 mini",
+        "+0.98",
+        "[-0.24, 2.21]",
+        "Claude Sonnet 5.5",
+        "+0.74",
+        "[-0.23, 1.74]",
+        "H1c",
+        "execution floor",
+        "exact test",
+        "not a ranking",
+        "HELM",
+        "Inspect",
+        "lm-evaluation-harness",
+        "Invented",
+        "Zorvalin",
+    ):
+        assert needed in research, needed
+    assert "Mount Fuji" not in (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "tallest" not in (ROOT / "index.html").read_text(encoding="utf-8").lower()
+
+
+def test_root_pages_are_keyboard_and_link_safe():
+    for page_name in ROOT_PAGES:
+        text = (ROOT / page_name).read_text(encoding="utf-8")
+        assert 'class="skip-link"' in text, page_name
+        assert 'id="main"' in text, page_name
+        assert "focus-visible" in CSS
+        parser = Tags()
+        parser.feed(text)
+        for tag, attrs in parser.tags:
+            if tag != "a":
+                continue
+            href = attrs.get("href", "")
+            if href.startswith("./"):
+                path = (ROOT / unquote(urlsplit(href).path)).resolve()
+                assert path.is_file(), f"{page_name} -> {href}"
+            if href.startswith("https://") and attrs.get("target") == "_blank":
+                rel = set(attrs.get("rel", "").split())
+                assert {"noopener", "noreferrer"} <= rel, f"{page_name} {href}"
+        if page_name in {"research.html", "reproducibility.html"}:
+            assert "<table" in text and 'scope="col"' in text and 'scope="row"' in text, page_name
+
+
+def test_citation_files_do_not_invent_a_zenodo_record():
+    import json
+    citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+    assert "cff-version: 1.2.0" in citation
+    assert "version: 0.10.1" in citation
+    assert "10.17605/OSF.IO/7UZV5" in citation
+    assert "10.17605/OSF.IO/ANBJD" in citation
+    assert "Manuscript under review" in citation
+    assert "10.5281" not in citation
+    zenodo = json.loads((ROOT / ".zenodo.json").read_text(encoding="utf-8"))
+    assert zenodo["upload_type"] == "software"
+    assert zenodo["license"] == "MIT"
+    assert "doi" not in zenodo
+    assert "10.5281" not in json.dumps(zenodo)
+
+
 def test_small_screen_overflow_guards_are_present():
     assert ".ambient{position:fixed;" in CSS
     assert "inset:20px 0 0 0;" in CSS

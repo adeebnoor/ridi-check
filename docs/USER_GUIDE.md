@@ -99,9 +99,11 @@ How many calls will it make? questions × 2 versions × runs. 50 questions with 
 | Not re-run | You ran each version only once | Nothing can be confirmed. Run twice. |
 | Not compared | A call to your assistant failed | Run the same command again to retry. |
 
-**Change between versions against re-run variation.** Three bars: how many answers differ between
-the two versions, and how many differ when the *same* version is asked twice. If the first bar is no
-longer than the others, the total tells you little: read the stable cases instead.
+**Change between versions against the execution floor.** Three bars: how many answers differ between
+the two versions, and how many differ when the *same* version is asked twice. Those two re-run bars are
+the execution floor (re-execution noise) from repeated runs on matched items. If the first bar is no
+longer than the others, the total tells you little: read the stable cases instead. The comparison is not
+an exact test, and the release gate does not use it.
 
 **Score and answer text, side by side.** With an answer key, one table counts the cases by what the score
 did (the rows) and by what the answer text did (the columns). An answer that changed while the score stayed

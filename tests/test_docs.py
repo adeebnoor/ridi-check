@@ -56,7 +56,8 @@ def test_links_into_the_repository_resolve(page):
 def test_readme_is_a_front_page():
     text = read("README.md")
     order = ["## What you will see", "## Who it is for", "## Start in one minute", "## Use it in CI",
-             "## Connect your assistant", "## FAQ", "## Roadmap", "## Limitations", "## Contributing", "## Licence"]
+             "## Connect your assistant", "## FAQ", "## Roadmap", "## The science", "## Limitations",
+             "## Contributing", "## Licence"]
     positions = [text.index(heading) for heading in order]
     assert positions == sorted(positions)
     assert "docs/img/report.png" in text and "actions/workflows/tests.yml/badge.svg" in text
@@ -122,11 +123,11 @@ def test_release_workflow_publishes_without_any_stored_secret():
 
 def test_package_metadata():
     text = read("pyproject.toml")
-    for needed in ('license = "MIT"', 'readme = "README.md"', "[project.urls]", "Homepage", "Changelog", "Issues",
+    for needed in ('license = "MIT"', 'readme = "README.md"', "[project.urls]", "Homepage", "Documentation", "Changelog", "Issues",
                    '"regression-testing"', "Programming Language :: Python :: 3.10", "Topic :: Software Development :: Testing"):
         assert needed in text, needed
     assert "License ::" not in text                         # the licence is given once, as an SPDX expression
-    assert 'authors = [{ name = "ridi-check contributors" }]' in text and "email" not in text
+    assert 'authors = [{ name = "Professor NooR" }]' in text and "email" not in text
     version = re.search(r'__version__ = "([^"]+)"', read(os.path.join("src", "ridi_check", "__init__.py"))).group(1)
     assert f"## {version}" in read("CHANGELOG.md"), "the changelog has no section for the current version"
 

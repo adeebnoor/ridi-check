@@ -1,0 +1,51 @@
+cff-version: 1.2.0
+title: ridi-check
+message: >-
+  If you use this software, please cite it as below. The manuscript is under
+  review and is not yet a publication. Cite that work as under review.
+type: software
+authors:
+  - family-names: NooR
+    given-names: Professor
+    affiliation: King Abdulaziz University
+repository-code: https://github.com/adeebnoor/ridi-check
+url: https://adeebnoor.github.io/ridi-check/
+abstract: >-
+  Compare two versions of a retrieval-augmented assistant on matched items.
+  Repeated runs estimate an execution floor (re-execution noise). The release
+  gate is an application of the item-level labels. This version does not
+  compute the manuscript's exact test.
+keywords:
+  - evaluation
+  - retrieval-augmented generation
+  - execution floor
+  - repeated runs
+  - matched items
+license: MIT
+version: 0.10.1
+date-released: 2026-11-12
+references:
+  - type: report
+    title: "RIDI-24 preregistration"
+    authors:
+      - family-names: NooR
+        given-names: Professor
+        affiliation: King Abdulaziz University
+    doi: 10.17605/OSF.IO/7UZV5
+    url: https://osf.io/7uzv5
+  - type: report
+    title: "Commercial replication addendum"
+    authors:
+      - family-names: NooR
+        given-names: Professor
+        affiliation: King Abdulaziz University
+    doi: 10.17605/OSF.IO/ANBJD
+    url: https://osf.io/anbjd
+  - type: unpublished
+    title: "Identical relevance grades cannot certify retrieval-augmented AI answers"
+    authors:
+      - family-names: NooR
+        given-names: Professor
+        affiliation: King Abdulaziz University
+    year: 2026
+    notes: "Manuscript under review. Preprint forthcoming."

@@ -36,7 +36,7 @@
         <a href="#problem" data-i18n="navWhy">Why RIDI</a>
         <a href="#method" data-i18n="navHow">How it works</a>
         <a href="#evidence" data-i18n="navEvidence">Verified evidence</a>
-        <a href="#research" data-i18n="navResearch">Research</a>
+        <a href="./research.html" data-i18n="navScience">The science</a>
         <a href="#start" data-i18n="navStart">Get started</a>
       </nav>
       <div class="header-actions">
@@ -52,7 +52,7 @@
       <div class="hero-copy">
         <div class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span><span data-i18n="eyebrow">OPEN-SOURCE AI UPDATE ASSURANCE</span><span class="eyebrow-line"></span><span class="eyebrow-v">v0.10.1</span></div>
         <h1 id="heroTitle"><span data-i18n="heroLine1">Your benchmark</span><span data-i18n="heroLine2">can stay the same.</span><span class="hero-em" data-i18n="heroLine3">The decision may not.</span></h1>
-        <p class="hero-lead" data-i18n="heroLead">Model swaps, prompt edits, and retrieval changes can alter individual answers while average scores obscure the shifts. RIDI checks the answers that changed, whether they hold across repeated runs, and the evidence behind them.</p>
+        <p class="hero-lead" data-i18n="heroLead">Model swaps, prompt edits, and retrieval changes can alter individual answers on matched items while an aggregate score stays put. Repeated runs estimate an execution floor. The release gate is an application of the item-level labels, not a certificate.</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn-lg" href="./web/ridi-update-check.html"><span data-i18n="heroCta">Explore the live demo</span><span aria-hidden="true">↗</span></a>
           <a class="btn btn-outline btn-lg" href="#evidence"><span data-i18n="heroSecondary">Inspect signed evidence</span><span aria-hidden="true">↓</span></a>
@@ -64,7 +64,7 @@
         </div>
       </div>
 
-      <div class="hero-visual" aria-label="Illustrative results from the signed 48-case Qwen prompt update experiment">
+      <div class="hero-visual" role="figure" aria-label="Signed GitHub run: 34 of 48 before, 32 of 48 after, four stable published-label regressions (p1506, p1574, p2179, p2735) and three unstable cases (p0358, p0746, p1686). Question text is not restated.">
         <div class="visual-glow" aria-hidden="true"></div>
         <div class="monitor">
           <div class="monitor-top">
@@ -80,21 +80,21 @@
               <span class="score-pill" data-i18n="monitorNotEnough">Score alone misses the cases</span>
             </div>
             <div class="monitor-divider"></div>
-            <div class="monitor-subhead"><span data-i18n="monitorTransitions">DECISION TRANSITIONS</span><span class="mono-muted">N = 48</span></div>
-            <div class="transition-list">
-              <div class="transition-row"><span class="trans-id">p1506</span><span class="trans-question" data-i18n="case1">Mount Fuji: tallest in the world?</span><span class="trans-answer"><em>NO</em><b aria-hidden="true">→</b><strong>YES</strong></span><span class="trans-indicator" aria-label="Published-label regression"></span></div>
-              <div class="transition-row"><span class="trans-id">p2179</span><span class="trans-question" data-i18n="case2">First country to have a president?</span><span class="trans-answer"><em>NO</em><b aria-hidden="true">→</b><strong>YES</strong></span><span class="trans-indicator" aria-label="Published-label regression"></span></div>
-              <div class="transition-row"><span class="trans-id">p2735</span><span class="trans-question" data-i18n="case3">Minimum drinking age in all states?</span><span class="trans-answer"><em>NO</em><b aria-hidden="true">→</b><strong>YES</strong></span><span class="trans-indicator" aria-label="Published-label regression"></span></div>
-              <div class="transition-row fade-row"><span class="trans-id">p0358</span><span class="trans-question" data-i18n="case4">Game-show winnings?</span><span class="trans-answer"><em>↔</em><b aria-hidden="true">·</b><strong data-i18n="case4state">VARIED</strong></span><span class="trans-indicator warn" aria-label="Unstable across repeats"></span></div>
-            </div>
+            <div class="monitor-subhead"><span data-i18n="monitorTransitions">MATCHED ITEMS</span><span class="mono-muted">N = 48</span></div>
+            <ul class="transition-list">
+              <li class="transition-row"><span class="trans-id">p1506</span><span class="trans-question" data-i18n="caseItem">Matched BoolQ item</span><span class="trans-answer"><strong data-i18n="caseReg">Stable regression</strong></span><span class="trans-indicator" aria-hidden="true"></span></li>
+              <li class="transition-row"><span class="trans-id">p1574</span><span class="trans-question" data-i18n="caseItem">Matched BoolQ item</span><span class="trans-answer"><strong data-i18n="caseReg">Stable regression</strong></span><span class="trans-indicator" aria-hidden="true"></span></li>
+              <li class="transition-row"><span class="trans-id">p2179</span><span class="trans-question" data-i18n="caseItem">Matched BoolQ item</span><span class="trans-answer"><strong data-i18n="caseReg">Stable regression</strong></span><span class="trans-indicator" aria-hidden="true"></span></li>
+              <li class="transition-row"><span class="trans-id">p2735</span><span class="trans-question" data-i18n="caseItem">Matched BoolQ item</span><span class="trans-answer"><strong data-i18n="caseReg">Stable regression</strong></span><span class="trans-indicator" aria-hidden="true"></span></li>
+            </ul>
             <div class="monitor-bottom">
               <div class="flag-stat"><span class="flag-num">04</span><span data-i18n="flagReg">STABLE REGRESSIONS</span></div>
               <div class="flag-stat"><span class="flag-num warning">03</span><span data-i18n="flagUnst">UNSTABLE CASES</span></div>
-              <span class="release-state"><span aria-hidden="true">⊘</span><span data-i18n="releaseBlocked">GATE BLOCKED</span></span>
+              <span class="release-state"><span aria-hidden="true">⊘</span><span data-i18n="releaseBlocked">RELEASE GATE BLOCKED</span></span>
             </div>
           </div>
         </div>
-        <div class="visual-caption"><span data-i18n="visualCaption">Actual GitHub CPU results · 48 selected BoolQ questions · published labels, not independent adjudication</span><a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer" aria-label="View the signed run on GitHub">↗</a></div>
+        <div class="visual-caption"><span data-i18n="visualCaption">Signed GitHub run · stable published-label regressions p1506, p1574, p2179, p2735 · unstable on repeated runs p0358, p0746, p1686 · published labels, not adjudicated truth. Question text is not restated.</span><a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer" aria-label="View the signed run on GitHub">↗</a></div>
       </div>
     </section>
 
@@ -102,7 +102,7 @@
       <div class="shell ribbon-inner">
         <div class="ribbon-title"><span class="ribbon-dot"></span><span data-i18n="ribbonTitle">A reproducible evaluation, not a marketing claim</span></div>
         <div class="ribbon-facts">
-          <div><strong>48</strong><span data-i18n="ribbonCases">matched questions</span></div>
+          <div><strong>48</strong><span data-i18n="ribbonCases">matched items</span></div>
           <div><strong>288</strong><span data-i18n="ribbonCalls">real model calls</span></div>
           <div><strong>3×</strong><span data-i18n="ribbonRepeats">runs per version</span></div>
           <a href="https://github.com/adeebnoor/ridi-check/actions/runs/43317397792" target="_blank" rel="noopener noreferrer" class="ribbon-link"><span data-i18n="ribbonProof">View proof</span><span aria-hidden="true">↗</span></a>
@@ -120,7 +120,7 @@
       </div>
       <div class="principles">
         <article class="principle"><div class="principle-icon"><span>01</span><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 28V8m0 20h26M10 23l7-8 5 4 8-11"/><circle cx="17" cy="15" r="2"/></svg></div><h3 data-i18n="p1Title">Look beneath the average.</h3><p data-i18n="p1Body">See the individual responses that moved, even when an overall score looks acceptable.</p></article>
-        <article class="principle"><div class="principle-icon"><span>02</span><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 10h19m-19 8h19m-19 8h12"/><path d="m24 23 3 3 5-6"/></svg></div><h3 data-i18n="p2Title">Separate change from noise.</h3><p data-i18n="p2Body">Repeat both versions. Distinguish a consistent transition from answers that vary on re-run.</p></article>
+          <article class="principle"><div class="principle-icon"><span>02</span><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 10h19m-19 8h19m-19 8h12"/><path d="m24 23 3 3 5-6"/></svg></div><h3 data-i18n="p2Title">Separate change from the execution floor.</h3><p data-i18n="p2Body">Repeat both versions on the matched items. The execution floor is re-execution noise. A change that does not clear it is not evidence about the update.</p></article>
         <article class="principle"><div class="principle-icon"><span>03</span><svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m18 3 12 6v9c0 7-5 12-12 15C11 30 6 25 6 18V9L18 3Z"/><path d="m13 18 3 3 7-8"/></svg></div><h3 data-i18n="p3Title">Make the result auditable.</h3><p data-i18n="p3Body">Connect findings to frozen inputs, run records, checksums, and a release gate that can fail.</p></article>
       </div>
     </section>
@@ -133,10 +133,32 @@
         </div>
         <div class="steps">
           <article class="step"><span class="step-number">01</span><div class="step-icon" aria-hidden="true">≡</div><h3 data-i18n="step1Title">Hold the questions constant</h3><p data-i18n="step1Body">Compare the current and proposed configurations on matched inputs, with optional evidence passages.</p></article>
-          <article class="step"><span class="step-number">02</span><div class="step-icon" aria-hidden="true">↺</div><h3 data-i18n="step2Title">Repeat both versions</h3><p data-i18n="step2Body">Capture repeated outputs to reveal run-to-run instability rather than assume determinism.</p></article>
+          <article class="step"><span class="step-number">02</span><div class="step-icon" aria-hidden="true">↺</div><h3 data-i18n="step2Title">Repeat both versions</h3><p data-i18n="step2Body">Repeated runs estimate the execution floor: how often a version disagrees with itself.</p></article>
           <article class="step"><span class="step-number">03</span><div class="step-icon" aria-hidden="true">↗</div><h3 data-i18n="step3Title">Inspect individual transitions</h3><p data-i18n="step3Body">Review regressions, improvements, stable changes, and cases whose answers vary.</p></article>
-          <article class="step"><span class="step-number">04</span><div class="step-icon" aria-hidden="true">◇</div><h3 data-i18n="step4Title">Verify before release</h3><p data-i18n="step4Body">Check recorded scores and run evidence. Optionally enforce strict limits in continuous integration.</p></article>
+          <article class="step"><span class="step-number">04</span><div class="step-icon" aria-hidden="true">◇</div><h3 data-i18n="step4Title">Apply a release gate</h3><p data-i18n="step4Body">The release gate is an application. It can fail a build when stable regressions exceed a limit you set. It does not certify the system.</p></article>
         </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="examples" aria-labelledby="examplesTitle">
+      <div class="section-intro">
+        <span class="section-kicker"><span class="kicker-index">·</span> <span data-i18n="examplesKicker">LABELLED EXAMPLES</span></span>
+        <div class="intro-grid">
+          <h2 id="examplesTitle" data-i18n="examplesTitle">Examples with their labels on them.</h2>
+          <p data-i18n="examplesBody">The lines below are copied from files in this repository. The medical card uses invented names and invented effects. It is not a study and not guidance.</p>
+        </div>
+      </div>
+      <div class="example-grid">
+        <article class="example-card">
+          <p class="example-kicker safe" data-i18n="ex1Kicker">SYNTHETIC · IN THIS REPOSITORY</p>
+          <h3 data-i18n="ex1Title">Library handbook, item q02</h3>
+          <p data-i18n="ex1Body">Question: “How often must membership be renewed?” The offline demo lists q02 among the stable regressions. The handbook and the answers are constructed. They are not a model study.</p>
+        </article>
+        <article class="example-card">
+          <p class="example-kicker" data-i18n="ex2Kicker">INVENTED · ILLUSTRATION ONLY</p>
+          <h3 data-i18n="ex2Title">Invented drug interaction, item m01</h3>
+          <p data-i18n="ex2Body">The question uses the invented names Zorvalin and Merdapine. Doses and effects are invented and are not medical guidance. The browser tool labels this set “Invented drug names (illustration only)”.</p>
+        </article>
       </div>
     </section>
 
@@ -171,10 +193,12 @@
     <section class="section research-section" id="research">
       <div class="shell research-grid">
         <div class="research-copy">
-          <span class="section-kicker"><span class="kicker-index">04 /</span> <span data-i18n="researchKicker">RESEARCH WITH RESTRAINT</span></span>
+          <span class="section-kicker"><span class="kicker-index">04 /</span> <span data-i18n="researchKicker">THE SCIENCE</span></span>
           <h2 data-i18n="researchTitle">Designed for scrutiny, not unquestioned trust.</h2>
-          <p data-i18n="researchBody">RIDI makes observed changes easier to inspect. It does not determine whether a medical, legal, or other high-stakes decision is safe; it cannot replace human review or prove causal harm.</p>
-          <div class="research-links"><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/research/prior_art_boolq_temporal_drift_20261113.md" target="_blank" rel="noopener noreferrer"><span data-i18n="priorArtLink">Prior art and label limitations</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions" target="_blank" rel="noopener noreferrer"><span data-i18n="benchmarkLink">Constructed transition benchmark</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md" target="_blank" rel="noopener noreferrer"><span data-i18n="referenceLink">Technical reference</span><span aria-hidden="true">↗</span></a></div>
+          <p data-i18n="researchBody">RIDI compares matched items across repeated runs and sets the change next to an execution floor. The manuscript's exact test is not computed in this version of the software. Nothing here is clinical clearance.</p>
+          <p data-i18n="manuscriptLine">Manuscript under review. Preprint forthcoming. Title: Identical relevance grades cannot certify retrieval-augmented AI answers.</p>
+          <p data-i18n="replicationLine">Preregistered commercial replication: criterion H1c, support in at least 2 of 3 models after Holm, was not met. Gemini 3.8 Flash +3.47 points [2.47, 4.52] was supported. GPT-5.4 mini +0.98 [-0.24, 2.21] and Claude Sonnet 5.5 +0.74 [-0.23, 1.74] were not. The magnitude is model-dependent and has to be measured for each model.</p>
+          <div class="research-links"><a href="./research.html"><span data-i18n="sciencePage">Read the science page</span><span aria-hidden="true">↗</span></a><a href="./limitations.html"><span data-i18n="navLimits">Limitations</span><span aria-hidden="true">↗</span></a><a href="./reproducibility.html"><span data-i18n="navRepro">Reproducibility</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/research/prior_art_boolq_temporal_drift_20261113.md" target="_blank" rel="noopener noreferrer"><span data-i18n="priorArtLink">Prior art and label limitations</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/tree/main/benchmarks/transitions" target="_blank" rel="noopener noreferrer"><span data-i18n="benchmarkLink">Constructed transition benchmark</span><span aria-hidden="true">↗</span></a><a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/REFERENCE.md" target="_blank" rel="noopener noreferrer"><span data-i18n="referenceLink">Technical reference</span><span aria-hidden="true">↗</span></a></div>
         </div>
         <div class="research-panel">
           <div class="research-panel-header"><span data-i18n="researchNot">WHAT WE DO NOT CLAIM</span><span aria-hidden="true">◌</span></div>
@@ -195,7 +219,7 @@
         <div class="start-card start-browser">
           <div class="start-icon" aria-hidden="true">↗</div>
           <h3 data-i18n="startBrowserTitle">No installation. Open the experiment.</h3>
-          <p data-i18n="startBrowserBody">Explore the existing 30-case example, switch to invented drug-name illustrations, or upload your own results locally.</p>
+          <p data-i18n="startBrowserBody">Explore the 30-case library example, switch to the set marked invented drug names (illustration only), or upload your own results locally.</p>
           <a class="btn btn-primary" href="./web/ridi-update-check.html"><span data-i18n="startBrowserCta">Open browser tool</span><span aria-hidden="true">↗</span></a>
           <span class="privacy-note"><span aria-hidden="true">◈</span><span data-i18n="privacyNote">Files are analysed in your browser, not uploaded to a RIDI server.</span></span>
         </div>
@@ -227,7 +251,7 @@
     <div class="shell footer-inner">
       <a class="footer-brand" href="#top"><span class="brand-symbol mini" aria-hidden="true"><span></span><span></span><span></span></span> RIDI Check</a>
       <div class="footer-center"><span data-i18n="footerTag">Open-source research software · Evidence before assertion</span><span class="footer-copy">© <span id="year">2026</span> RIDI Check</span></div>
-      <div class="footer-links"><a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="https://github.com/adeebnoor/ridi-check/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License ↗</a><a href="https://github.com/adeebnoor/ridi-check/issues" target="_blank" rel="noopener noreferrer" data-i18n="footerContact">Feedback ↗</a></div>
+      <div class="footer-links"><a href="./research.html" data-i18n="navScience">The science</a><a href="./limitations.html" data-i18n="navLimits">Limitations</a><a href="./reproducibility.html" data-i18n="navRepro">Reproducibility</a><a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="https://github.com/adeebnoor/ridi-check/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License ↗</a><a href="https://github.com/adeebnoor/ridi-check/issues" target="_blank" rel="noopener noreferrer" data-i18n="footerContact">Feedback ↗</a></div>
     </div>
   </footer>
 </body>

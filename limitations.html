@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" dir="ltr"
+  data-title-en="Limitations — RIDI Check"
+  data-title-ar="الحدود — RIDI Check"
+  data-description-en="Limits of ridi-check: not clinical clearance, BoolQ label conflicts, no exact test in the package, and no ranking against other evaluation tools."
+  data-description-ar="حدود ridi-check: ليست اعتماداً سريرياً، وتعارضات تسميات BoolQ، ولا اختباراً دقيقاً داخل الحزمة، ولا ترتيباً مقابل أدوات التقييم الأخرى.">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1221">
+  <meta name="description" content="Limits of ridi-check: not clinical clearance, BoolQ label conflicts, no exact test in the package, and no ranking against other evaluation tools.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="canonical" href="https://adeebnoor.github.io/ridi-check/limitations.html">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./assets/site.css">
+  <script src="./assets/site.js" defer></script>
+  <title>Limitations — RIDI Check</title>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="./index.html" aria-label="RIDI Check home">
+        <span class="brand-symbol" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-type">RIDI<span class="brand-light">Check</span><small>DECISION INTELLIGENCE</small></span>
+      </a>
+      <nav class="nav-links" id="primaryNav" aria-label="Main navigation">
+        <a href="./index.html" data-i18n="navHome">Home</a>
+        <a href="./research.html" data-i18n="navScience">The science</a>
+        <a href="./limitations.html" data-i18n="navLimits" aria-current="page">Limitations</a>
+        <a href="./reproducibility.html" data-i18n="navRepro">Reproducibility</a>
+      </nav>
+      <div class="header-actions">
+        <button type="button" class="lang-switch" id="langSwitch" aria-label="Switch to Arabic" lang="ar">العربية</button>
+        <a class="btn btn-primary btn-sm header-cta" href="./web/ridi-update-check.html"><span data-i18n="launch">Launch the tool</span><span class="arrow" aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" id="menuToggle" aria-controls="primaryNav" aria-expanded="false" aria-label="Open navigation"><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="page">
+    <article class="shell prose">
+      <div data-lang-block="en">
+        <p class="status-pill">Limits kept in view</p>
+        <h1>Limitations</h1>
+        <p class="lede">ridi-check finds change. It does not clear a system for use. The same limits are in <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/LIMITATIONS.md">docs/LIMITATIONS.md</a>.</p>
+
+        <h2>Not clinical clearance</h2>
+        <p>No independent clinical safety validation has been done. The drug-name file in the browser tool is invented illustration. The names, doses, and effects are made up and are not medical guidance. A release gate that fails on those rows checks the software, not a formulary.</p>
+
+        <h2>Not a certificate</h2>
+        <p>The release gate prints counts and can exit 1. No output says a system is fit to deploy. Passages are shown, not graded. Without an answer key, a difference is a change, not a regression. The gate is an application of the item labels. It is not the manuscript’s exact test.</p>
+
+        <h2>The execution floor is thin</h2>
+        <p>Two repeated runs are a thin estimate of re-execution noise. The shipped comparison asks whether the between-version change rate is strictly above both run-1 versus run-2 rates after rounding to 6 decimal places. That comparison is not the exact test described in the manuscript. See <a href="./research.html#software">what the software computes</a>.</p>
+
+        <h2>BoolQ labels are not ground truth</h2>
+        <p>In the 48-item pilots, “regression” means a change against the published BoolQ key.</p>
+        <ul>
+          <li><code>p0155</code> asks whether Hindi is India’s national language. The gold label is YES. The passage says the constitution declares no national language. Dzendzik, Vogel and Foster (2020), <a href="https://doi.org/10.18653/v1/2020.insights-1.2" target="_blank" rel="noopener noreferrer">DOI 10.18653/v1/2020.insights-1.2</a>, already reported this conflict. At least one “stable regression” in the size-substitution pilot is a label problem. The raw label is kept.</li>
+          <li><code>p0315</code> needs a domain reading of the passage before the gold label is treated as anatomy.</li>
+          <li><code>p1686</code> asks about U.S. Air Force warrant officers. The passage predates their reintroduction in December 2024.</li>
+          <li><code>p0746</code> asks whether Flint water is drinkable “now”. The question moves with time.</li>
+        </ul>
+        <p>The flagged transitions have not been newly blinded and adjudicated. BoolQ dev is public, so training contamination is possible. The same-weights McNemar p-value 0.7265625 and the BoolQ figure of about 0.05248 were computed outside the package. Neither was significant at an unadjusted 0.05. They are not results of <code>ridi-check report</code>.</p>
+
+        <h2>The same seed did not fix every answer</h2>
+        <p>With temperature 0 and seed 20261113, one later GitHub run of the fictional policy set changed baseline answers for <code>p03</code> and <code>p06</code>. BoolQ first-run answers matched across Windows and GitHub; some repeated answers did not.</p>
+
+        <h2>Not a ranking of other tools</h2>
+        <p>This repository has not run HELM, Inspect, lm-evaluation-harness, or Ragas on the same items. The <a href="./research.html#comparison">comparison</a> is not a claim that ridi-check is better.</p>
+
+        <h2>Commercial replication</h2>
+        <p>The preregistered criterion H1c, support in at least 2 of 3 models after Holm, was not met. Gemini 3.8 Flash +3.47 points [2.47, 4.52] was supported. GPT-5.4 mini +0.98 [-0.24, 2.21] and Claude Sonnet 5.5 +0.74 [-0.23, 1.74] were not. The magnitude is model-dependent. Those figures were not recomputed here.</p>
+
+        <h2>Agents and measured size</h2>
+        <p>Tool-using agents have a documented wrapper and a stand-in, and have not been tried on a production agent. Size was measured on Linux with Python 3.13 and Chromium, not on Windows or macOS.</p>
+      </div>
+
+      <div data-lang-block="ar" lang="ar" hidden>
+        <p class="status-pill">حدود تبقى ظاهرة</p>
+        <h1>الحدود</h1>
+        <p class="lede">يجد ridi-check التغيير. لا يُجيز نظاماً للاستخدام. الحدود نفسها في <a href="https://github.com/adeebnoor/ridi-check/blob/main/docs/LIMITATIONS.md">docs/LIMITATIONS.md</a>.</p>
+
+        <h2>ليست اعتماداً سريرياً</h2>
+        <p>لم يُجرَ تحقق سريري مستقل من السلامة. ملف أسماء الأدوية في أداة المتصفح توضيح مخترع. الأسماء والجرعات والآثار مختلقة وليست إرشاداً طبياً. بوابة إصدار تفشل على هذه الصفوف تفحص البرنامج لا دليلاً علاجياً.</p>
+
+        <h2>ليست شهادة</h2>
+        <p>تطبع بوابة الإصدار الأعداد ويمكنها الخروج بالحالة 1. لا يقول أي مخرج إن النظام صالح للنشر. المقاطع تُعرض ولا تُقيَّم. من دون مفتاح إجابات، الاختلاف تغيير لا تراجع. البوابة تطبيق لتسميات البنود. ليست الاختبار الدقيق في المخطوطة.</p>
+
+        <h2>أرضية التنفيذ رقيقة</h2>
+        <p>تشغيلان متكرران تقدير رقيق لضجيج إعادة التنفيذ. المقارنة المنشورة تسأل إن كانت نسبة التغيير بين النسختين أكبر بصرامة من نسبتي التشغيل الأول مقابل الثاني بعد التقريب إلى 6 منازل. هذه المقارنة ليست الاختبار الدقيق الموصوف في المخطوطة. انظر <a href="./research.html#software-ar">ما يحسبه البرنامج</a>.</p>
+
+        <h2>تسميات BoolQ ليست حقيقة واقعة</h2>
+        <p>في تجارب البنود الثمانية والأربعين، «تراجع» يعني اختلافاً عن مفتاح BoolQ المنشور.</p>
+        <ul>
+          <li><code>p0155</code> تسأل إن كانت الهندية اللغة الوطنية للهند. التسمية الذهبية YES. يقول المقطع إن الدستور لا يعلن لغة وطنية. أبلغ Dzendzik وVogel وFoster (2020)، <a href="https://doi.org/10.18653/v1/2020.insights-1.2" target="_blank" rel="noopener noreferrer">DOI 10.18653/v1/2020.insights-1.2</a>، عن هذا التعارض من قبل. تراجع «ثابت» واحد على الأقل في تجربة استبدال الحجم مشكلة تسمية. التسمية الخام تبقى.</li>
+          <li><code>p0315</code> تحتاج قراءة تخصصية للمقطع قبل معاملة التسمية الذهبية كتشريح.</li>
+          <li><code>p1686</code> تسأل عن ضباط الصف في سلاح الجو الأمريكي. المقطع يسبق إعادتهم في ديسمبر 2024.</li>
+          <li><code>p0746</code> تسأل إن كان ماء فلينت صالحاً للشرب «الآن». السؤال يتحرك مع الزمن.</li>
+        </ul>
+        <p>الانتقالات المعلَّمة لم تُحكَّم تحكيماً أعمى جديداً. مجموعة BoolQ التطويرية عامة، فتلويث التدريب ممكن. قيمة McNemar ‏0.7265625 في تجربة الأوزان نفسها والرقم حوالي 0.05248 في BoolQ حُسبا خارج الحزمة. لم يكن أي منهما معنوياً عند 0.05 غير معدَّل. ليسا من مخرجات <code>ridi-check report</code>.</p>
+
+        <h2>البذرة نفسها لم تثبّت كل إجابة</h2>
+        <p>مع حرارة 0 وبذرة 20261113، غيّر تشغيل لاحق على GitHub إجابات الأساس للحالتين <code>p03</code> و<code>p06</code> في مجموعة السياسة الخيالية. تطابقت إجابات التشغيل الأول لـ BoolQ بين Windows وGitHub، وبعض الإجابات المتكررة لم تتطابق.</p>
+
+        <h2>ليس ترتيباً للأدوات الأخرى</h2>
+        <p>لم يُشغَّل HELM أو Inspect أو lm-evaluation-harness أو Ragas على البنود نفسها في هذا المستودع. <a href="./research.html#comparison">المقارنة</a> ليست ادّعاء أن ridi-check أفضل.</p>
+
+        <h2>التكرار التجاري</h2>
+        <p>المعيار المسجّل H1c، أي الدعم في نموذجين على الأقل من ثلاثة بعد Holm، لم يتحقق. Gemini 3.8 Flash +3.47 نقطة [2.47, 4.52] مدعوم. GPT-5.4 mini +0.98 [-0.24, 2.21] وClaude Sonnet 5.5 +0.74 [-0.23, 1.74] غير مدعومين. المقدار يعتمد على النموذج. لم تُعد هذه الأرقام هنا.</p>
+
+        <h2>الوكلاء والحجم المقاس</h2>
+        <p>للوكلاء الذين يستخدمون أدوات غلاف موثّق ومثال بديل، ولم يُجرَّبوا على وكيل إنتاج. قِيس الحجم على Linux مع Python 3.13 وChromium، لا على Windows أو macOS.</p>
+      </div>
+    </article>
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <a class="footer-brand" href="./index.html"><span class="brand-symbol mini" aria-hidden="true"><span></span><span></span><span></span></span> RIDI Check</a>
+      <div class="footer-center"><span data-i18n="footerTag">Open-source research software · Evidence before assertion</span><span class="footer-copy">© <span id="year">2026</span> RIDI Check</span></div>
+      <div class="footer-links"><a href="./research.html" data-i18n="navScience">The science</a><a href="./reproducibility.html" data-i18n="navRepro">Reproducibility</a><a href="https://github.com/adeebnoor/ridi-check" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>
+    </div>
+  </footer>
+</body>
+</html>
