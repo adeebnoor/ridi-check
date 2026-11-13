@@ -16,6 +16,9 @@ jobs:
       # anthropic is needed only by the test of examples/adapters/anthropic_adapter.py
       - run: pip install ".[test]" anthropic
       - run: pytest -q
+      - name: link check
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        run: python3 tools/check_links.py
       - name: coverage must not fall below the measured floor
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
         # Statements and branches of the installed package. Raise the floor when coverage rises; do not
